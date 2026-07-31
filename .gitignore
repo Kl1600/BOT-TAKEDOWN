@@ -1,0 +1,7 @@
+node_modules/
+logs/
+database.sqlite
+database.sqlite-wal
+database.sqlite-shm
+.env
+*.zip

@@ -1,0 +1,146 @@
+{
+  "errors": {
+    "no_permission": "-# You do not possess the required permissions.",
+    "command_error": "-# An error occurred while executing this command.",
+    "only_guild": "-# This command can only be used in a server.",
+    "no_ticket_category": "-# Ticket category not found in the configuration.",
+    "ticket_already_exists": "-# You already have an open ticket.",
+    "ticket_not_found": "-# Ticket not found in the database.",
+    "ticket_creation_failed": "-# Unable to create the ticket channel.",
+    "not_in_ticket": "-# This action must be performed inside a ticket.",
+    "ticket_already_closed": "-# This ticket is already closed.",
+    "french_cannot_translate": "-# Translation unavailable for French role holders.",
+    "already_claimed": "-# This ticket is already claimed.",
+    "english_only_translate": "-# Translation is reserved for members who only have the English role.",
+    "translation_not_allowed": "-# This panel cannot be translated."
+  },
+  "commands": {
+    "annonce": {
+      "description": "Publish an announcement",
+      "args": {
+        "contenu": "Announcement content"
+      },
+      "success": "Announcement published."
+    },
+    "patchnote": {
+      "description": "Publish a patch note",
+      "args": {
+        "contenu": "Patch note content"
+      },
+      "success": "Patch note published."
+    },
+    "guide": {
+      "description": "Display the server guide",
+      "content": "### WELCOME TO TAKEDOWN\n\nTakedown is a FiveM server focused on **high-speed chases** and competitive game modes. Every member has a place in a world driven by speed, strategy, and adrenaline.\n\nOur community is built around immersion, team play, and a unique atmosphere with events, tournaments, and mutual support.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n### GET STARTED\n> <#1520743657425211392> — Join the connection channel to get the direct link and server address.\n> <#{rules}> — Read the rules **before** taking part.\n\n### STAY INFORMED\n> <#{announcements}> — Official announcements.\n> <#1519999182663061525> — Updates and patch notes.\n> <#1527375640817307758> — Server status and live information.\n\n### NEED HELP?\n> <#{support}> — Open a ticket for any question or report.\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nHave a good ride on Takedown."
+    },
+    "ticket": {
+      "description": "Send the ticket panel",
+      "panel": {
+        "title": "TAKEDOWN SUPPORT",
+        "description": "🇫🇷 Besoin d'aide, de poser une question ou de signaler un problème ? Ouvrez un ticket et notre équipe s'occupe de tout.\n🇬🇧 Need help, have a question, or want to report an issue? Open a ticket and our team will take care of everything.\n\n🇫🇷 Cliquez ci-dessous pour ouvrir un ticket.\n🇬🇧 Click below to open a ticket.",
+        "button": "Open"
+      }
+    },
+    "staffapply": {
+      "description": "Send the staff recruitment panel",
+      "panel": {
+        "title": "STAFF RECRUITMENT",
+        "description": "Would you like to join our team to help develop and moderate the server?\n\nClick the button below to fill out the application form.",
+        "button": "Apply"
+      }
+    }
+  },
+  "tickets": {
+    "opened_msg": "Your request has been successfully received. A staff member will assist you shortly.\n\n*Please describe your issue with as much detail as possible (screenshots, explanations) to speed up the process.*",
+    "reason": "Reason",
+    "lang_selector": {
+      "title": "LANGUAGE SELECTION / SÉLECTION DE LA LANGUE",
+      "description": "Choose your language for the ticket.\nVeuillez choisir votre langue pour le ticket."
+    },
+    "modal": {
+      "title": "Ticket Reason",
+      "label": "Subject of your request",
+      "placeholder": "What is the subject of your ticket?"
+    },
+    "buttons": {
+      "close": "Close",
+      "reopen": "Reopen",
+      "delete": "Delete",
+      "transcript": "Transcript",
+      "claim": "Claim"
+    },
+    "status": {
+      "open_title": "Open (Unassigned)",
+      "status_label": "Status",
+      "creator_label": "Creator",
+      "closed": "The ticket has been closed.",
+      "closed_panel": "### TICKET CLOSED\nThis ticket has been closed by a staff member. The channel is no longer accessible to the user.\n\n**Management actions**\nSelect one of the options below to manage this channel.",
+      "reopened": "### TICKET REOPENED\nThe ticket has been reopened by a staff member. The user has access to the channel again.",
+      "deleting": "### DELETION\nThe channel will be deleted in 5 seconds.",
+      "claimed": "### CLAIMED\nThe ticket has been claimed.",
+      "claimed_panel": "Claimed by {staff}."
+    },
+    "logs": {
+      "open_title": "Ticket opened",
+      "close_title": "Ticket closed",
+      "delete_title": "Ticket deleted",
+      "fields": {
+        "ticket": "Ticket",
+        "creator": "Creator",
+        "closed_by": "Closed by",
+        "deleted_by": "Deleted by",
+        "channel": "Channel"
+      }
+    }
+  },
+  "welcome": {
+    "title": "### Welcome to Takedown",
+    "description": "Welcome {member} to Takedown, you are our {count}th member."
+  },
+  "faq": {
+    "title": "FAQ TAKEDOWN",
+    "intro_fr": "🇫🇷 Choose a question below.",
+    "intro_en": "🇬🇧 Choose a question below."
+  },
+  "recruitment": {
+    "already_applied": "-# You already have a pending application under review.",
+    "modal": {
+      "title": "Staff Application",
+      "age_label": "What is your age?",
+      "age_placeholder": "E.g. 18",
+      "dispo_label": "Your availabilities",
+      "dispo_placeholder": "E.g. Weekdays after 6pm, weekends...",
+      "xp_label": "Your experience in moderation/staff",
+      "xp_placeholder": "Detail your past experiences (FiveM, Discord...)",
+      "motiv_label": "Your motivations",
+      "motiv_placeholder": "Why do you want to join us?",
+      "exp_label": "Additional experience (optional)",
+      "exp_placeholder": "Any other relevant experience or skill..."
+    },
+    "success_applied": "Your application has been successfully submitted and is under review by our team!",
+    "review": {
+      "title": "NEW STAFF APPLICATION",
+      "title_rejected": "APPLICATION REJECTED",
+      "title_contacted": "APPLICATION UNDER CONTACT",
+      "candidate": "Candidate",
+      "age": "Age",
+      "dispo": "Availabilities",
+      "xp": "Experience",
+      "motiv": "Motivations",
+      "buttons": {
+        "reject": "Reject",
+        "contact": "Contact"
+      },
+      "rejected_by": "Rejected by {staff}",
+      "contacted_by": "Contacted by {staff}"
+    },
+    "dm": {
+      "rejected": "Hello, your application to join the staff team has been rejected after review by our administrators. You will be able to submit a new application in 7 days."
+    },
+    "ticket": {
+      "reason": "Staff Recruitment",
+      "welcome_title": "RECRUITMENT INTERVIEW",
+      "welcome_desc": "Hello {member}, a team member wants to contact you regarding your staff application.\n\nPlease wait or detail your motivations further while a manager joins the channel to speak with you."
+    }
+  }
+}

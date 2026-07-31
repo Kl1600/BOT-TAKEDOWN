@@ -1,0 +1,16 @@
+{
+  "name": "TAKEDOWN BOT",
+  "version": "1.0.0",
+  "description": "Bot Discord officielle de Takedown",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js --debug",
+    "test": "node tests/validate.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.18.0",
+    "dotenv": "^16.4.5"
+  }
+}

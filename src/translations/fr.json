@@ -1,0 +1,146 @@
+{
+  "errors": {
+    "no_permission": "-# Vous ne possédez pas les permissions nécessaires.",
+    "command_error": "-# Une erreur est survenue lors de l'exécution de cette commande.",
+    "only_guild": "-# Cette commande ne peut être utilisée que dans un serveur.",
+    "no_ticket_category": "-# Catégorie de tickets introuvable dans la configuration.",
+    "ticket_already_exists": "-# Vous avez déjà un ticket ouvert.",
+    "ticket_not_found": "-# Ticket introuvable dans la base de données.",
+    "ticket_creation_failed": "-# Impossible de créer le salon du ticket.",
+    "not_in_ticket": "-# Cette action doit être effectuée dans un ticket.",
+    "ticket_already_closed": "-# Ce ticket est déjà fermé.",
+    "french_cannot_translate": "-# Traduction indisponible pour le rôle français.",
+    "already_claimed": "-# Ce ticket est déjà pris en charge.",
+    "english_only_translate": "-# La traduction est réservée aux membres ayant uniquement le rôle anglais.",
+    "translation_not_allowed": "-# Ce panneau ne peut pas être traduit."
+  },
+  "commands": {
+    "annonce": {
+      "description": "Publier une annonce",
+      "args": {
+        "contenu": "Contenu de l'annonce"
+      },
+      "success": "Annonce publiée."
+    },
+    "patchnote": {
+      "description": "Publier un patch note",
+      "args": {
+        "contenu": "Contenu du patch note"
+      },
+      "success": "Patch note publié."
+    },
+    "guide": {
+      "description": "Afficher le guide du serveur",
+      "content": "### BIENVENUE SUR TAKEDOWN\n\nTakedown est un serveur FiveM centré sur les **courses-poursuites** et les modes compétitifs. Ici, chaque membre trouve sa place dans un univers où la vitesse, la stratégie et l'adrénaline rythment le jeu.\n\nNotre communauté repose sur l'immersion, le jeu collectif et une ambiance unique avec des événements, des tournois et de l'entraide.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n### POUR BIEN DÉMARRER\n> <#1520743657425211392> — Rejoins le salon de connexion pour récupérer le lien direct et l'adresse du serveur.\n> <#{rules}> — Lis le règlement **obligatoirement** avant de participer.\n\n### RESTEZ INFORMÉ\n> <#{announcements}> — Toutes les annonces officielles.\n> <#1519999182663061525> — Les mises à jour et patch notes.\n> <#1527375640817307758> — Le statut du serveur et les informations en direct.\n\n### BESOIN D'AIDE ?\n> <#{support}> — Ouvre un ticket pour toute question ou signalement.\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nBonne route sur Takedown."
+    },
+    "ticket": {
+      "description": "Envoyer le panneau de ticket",
+      "panel": {
+        "title": "SUPPORT TAKEDOWN",
+        "description": "🇫🇷 Besoin d'aide, de poser une question ou de signaler un problème ? Ouvrez un ticket et notre équipe s'occupe de tout.\n🇬🇧 Need help, have a question, or want to report an issue? Open a ticket and our team will take care of everything.\n\n🇫🇷 Cliquez ci-dessous pour ouvrir un ticket.\n🇬🇧 Click below to open a ticket.",
+        "button": "Ouvrir"
+      }
+    },
+    "staffapply": {
+      "description": "Envoyer le panneau de recrutement staff",
+      "panel": {
+        "title": "RECRUTEMENT STAFF",
+        "description": "Vous souhaitez rejoindre notre équipe pour contribuer au développement et à l'encadrement du serveur ?\n\nCliquez sur le bouton ci-dessous pour remplir le formulaire de candidature.",
+        "button": "Postuler"
+      }
+    }
+  },
+  "tickets": {
+    "opened_msg": "Votre demande a été prise en compte. Un membre de l'équipe du staff va prendre en charge votre dossier sous peu.\n\n*Veuillez expliquer votre problème avec le plus de détails possible (captures d'écran, explications) pour faciliter le traitement.*",
+    "reason": "Raison",
+    "lang_selector": {
+      "title": "SÉLECTION DE LA LANGUE / LANGUAGE SELECTION",
+      "description": "Veuillez choisir votre langue pour le ticket.\nChoose your language for the ticket."
+    },
+    "modal": {
+      "title": "Raison du Ticket",
+      "label": "Sujet de votre demande",
+      "placeholder": "Quel est le sujet de votre ticket ?"
+    },
+    "buttons": {
+      "close": "Fermer",
+      "reopen": "Réouvrir",
+      "delete": "Supprimer",
+      "transcript": "Transcript",
+      "claim": "Claim"
+    },
+    "status": {
+      "open_title": "Ouvert (Non attribué)",
+      "status_label": "Statut",
+      "creator_label": "Créateur",
+      "closed": "Le ticket a été fermé.",
+      "closed_panel": "### TICKET FERMÉ\nCe ticket a été fermé par un membre du staff. Le salon n'est plus accessible pour l'utilisateur.\n\n**Actions de gestion**\nSélectionnez l'une des options ci-dessous pour gérer ce salon.",
+      "reopened": "### TICKET RÉOUVERT\nLe ticket a été rouvert par un membre du staff. L'utilisateur a de nouveau accès au salon.",
+      "deleting": "### SUPPRESSION\nLe salon sera supprimé dans 5 secondes.",
+      "claimed": "### PRISE EN CHARGE\nLe ticket est maintenant attribué.",
+      "claimed_panel": "Pris en charge par {staff}."
+    },
+    "logs": {
+      "open_title": "Ticket ouvert",
+      "close_title": "Ticket fermé",
+      "delete_title": "Ticket supprimé",
+      "fields": {
+        "ticket": "Ticket",
+        "creator": "Créateur",
+        "closed_by": "Fermé par",
+        "deleted_by": "Supprimé par",
+        "channel": "Salon"
+      }
+    }
+  },
+  "welcome": {
+    "title": "### Bienvenue sur Takedown",
+    "description": "Bienvenue {member} sur Takedown, tu es notre {count}e membre."
+  },
+  "faq": {
+    "title": "FAQ TAKEDOWN",
+    "intro_fr": "🇫🇷 Choisis une question ci-dessous.",
+    "intro_en": "🇬🇧 Choose a question below."
+  },
+  "recruitment": {
+    "already_applied": "-# Vous avez déjà une candidature en cours d'examen.",
+    "modal": {
+      "title": "Candidature Staff",
+      "age_label": "Quel est votre âge ?",
+      "age_placeholder": "Ex : 18",
+      "dispo_label": "Vos disponibilités",
+      "dispo_placeholder": "Ex : En semaine à partir de 18h, le week-end...",
+      "xp_label": "Vos expériences dans la modération/staff",
+      "xp_placeholder": "Détaillez vos anciennes expériences (FiveM, Discord...)",
+      "motiv_label": "Vos motivations",
+      "motiv_placeholder": "Pourquoi souhaitez-vous nous rejoindre ?",
+      "exp_label": "Expériences complémentaires (optionnel)",
+      "exp_placeholder": "Toute autre expérience ou compétence utile..."
+    },
+    "success_applied": "Votre candidature a été envoyée avec succès et est en cours d'examen par notre équipe !",
+    "review": {
+      "title": "NOUVELLE CANDIDATURE STAFF",
+      "title_rejected": "CANDIDATURE REFUSÉE",
+      "title_contacted": "CANDIDATURE EN COURS DE CONTACT",
+      "candidate": "Candidat",
+      "age": "Âge",
+      "dispo": "Disponibilités",
+      "xp": "Expériences",
+      "motiv": "Motivations",
+      "buttons": {
+        "reject": "Refuser",
+        "contact": "Contacter"
+      },
+      "rejected_by": "Refusé par {staff}",
+      "contacted_by": "Contacté par {staff}"
+    },
+    "dm": {
+      "rejected": "Bonjour, votre candidature pour rejoindre l'équipe du staff a été refusée après examen de nos administrateurs. Vous pourrez déposer une nouvelle candidature dans 7 jours."
+    },
+    "ticket": {
+      "reason": "Recrutement Staff",
+      "welcome_title": "ENTRETIEN RECRUTEMENT",
+      "welcome_desc": "Bonjour {member}, un membre de l'équipe souhaite vous contacter concernant votre candidature staff.\n\nVeuillez patienter ou expliquer vos motivations plus en détail en attendant qu'un responsable vienne s'entretenir avec vous."
+    }
+  }
+}
