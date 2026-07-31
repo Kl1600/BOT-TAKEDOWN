@@ -1,5 +1,5 @@
 import { logVoice } from '../../services/logService.js';
-import { handleJoinGenerator, handleLeaveDynamic } from '../../services/voiceService.js';
+import { handleJoinGenerator, handleLeaveDynamic, handleStaffWaitVoiceState } from '../../services/voiceService.js';
 import { handleXpVoiceState } from '../../services/xpService.js';
 
 export default {
@@ -22,6 +22,8 @@ export default {
     if (oldChannel && (!newChannel || oldChannel.id !== newChannel.id)) {
       await handleLeaveDynamic(oldState);
     }
+
+    handleStaffWaitVoiceState(oldState, newState);
 
     await handleXpVoiceState(oldState, newState).catch(() => null);
 
