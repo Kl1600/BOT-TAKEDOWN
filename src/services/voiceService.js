@@ -77,8 +77,8 @@ async function sendStaffWaitAlert(client, guildId, userId, channelId, joinedAt) 
     const embed = new EmbedBuilder()
       .setColor(0xED4245)
       .setDescription([
-        `<@${userId}> est en attente staff.`,
-        `Attend depuis ${formatDuration(Date.now() - joinedAt)}.`,
+        `**<@${userId}>** est en attente staff.`,
+        `Attend depuis <t:${Math.floor(joinedAt / 1000)}:R>.`,
         '-# Merci d\'essayer de prendre en charge le membre rapidement.'
       ].join('\n'))
       .setTimestamp();
