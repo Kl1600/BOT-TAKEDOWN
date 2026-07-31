@@ -87,7 +87,8 @@ function buildHelpContainer(prefix) {
     ],
     [
       `### Rôles`,
-      `> \`/panelrol\` \`${p}panelrol\` — Envoyer le panel de rôles`
+      `> \`/panelrol\` \`${p}panelrol\` — Envoyer le panel de rôles`,
+      `> \`/rolestaff\` \`${p}rolestaff\` — Envoyer le panel des rôles staff`
     ],
     [
       `### Bienvenue`,

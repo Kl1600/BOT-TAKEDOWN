@@ -12,7 +12,11 @@ const ROLE_BUTTONS = [
   { customId: 'rolepanel_en', label: '🇬🇧 Role EN', roleId: '1519750127323975793' }
 ];
 
-const ROLE_BUTTON_MAP = new Map(ROLE_BUTTONS.map(button => [button.customId, button]));
+const STAFF_ROLE_BUTTONS = [
+  { customId: 'rolepanel_staff_bda', label: 'Notif BDA', roleId: '1532824877516718141' }
+];
+
+const ROLE_BUTTON_MAP = new Map([...ROLE_BUTTONS, ...STAFF_ROLE_BUTTONS].map(button => [button.customId, button]));
 
 export async function sendRolePanel(interaction) {
   if (typeof interaction.deferReply === 'function') {
@@ -29,6 +33,41 @@ export async function sendRolePanel(interaction) {
   const rows = [];
   for (let i = 0; i < ROLE_BUTTONS.length; i += 5) {
     const chunk = ROLE_BUTTONS.slice(i, i + 5);
+    const row = new ActionRowBuilder();
+    for (const button of chunk) {
+      row.addComponents(
+        new ButtonBuilder()
+          .setCustomId(button.customId)
+          .setLabel(button.label)
+          .setStyle(ButtonStyle.Secondary)
+      );
+    }
+    rows.push(row);
+  }
+
+  const container = new ContainerBuilder()
+    .setAccentColor(config.colors.primary)
+    .addTextDisplayComponents(text)
+    .addActionRowComponents(...rows);
+
+  await sendV2Container(interaction.channel, container);
+  if (typeof interaction.deleteReply === 'function') {
+    await interaction.deleteReply().catch(() => null);
+  }
+}
+
+export async function sendStaffRolePanel(interaction) {
+  if (typeof interaction.deferReply === 'function') {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral }).catch(() => null);
+  }
+
+  const text = new TextDisplayBuilder().setContent(
+    `### Role Staff\n\nVoici les différents rôles disponibles, cliquez pour vous ajoutez ou retirez le role.`
+  );
+
+  const rows = [];
+  for (let i = 0; i < STAFF_ROLE_BUTTONS.length; i += 5) {
+    const chunk = STAFF_ROLE_BUTTONS.slice(i, i + 5);
     const row = new ActionRowBuilder();
     for (const button of chunk) {
       row.addComponents(
@@ -115,5 +154,6 @@ export async function handleRolePanelButton(interaction) {
 
 export default {
   sendRolePanel,
+  sendStaffRolePanel,
   handleRolePanelButton
 };
