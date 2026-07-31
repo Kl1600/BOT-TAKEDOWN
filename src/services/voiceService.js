@@ -48,13 +48,19 @@ function getStatusLabel(status) {
 }
 
 function buildStaffWaitEmbed(userId, joinedAt, status) {
+  const descriptionLines = [
+    `**<@${userId}>** est en attente staff.`
+  ];
+
+  if (status === 'waiting') {
+    descriptionLines.push(`Attend depuis <t:${Math.floor(joinedAt / 1000)}:R>.`);
+  }
+
+  descriptionLines.push(`-# Merci d'essayer de prendre en charge le membre rapidement.`);
+
   return new EmbedBuilder()
     .setColor(0xED4245)
-    .setDescription([
-      `**<@${userId}>** est en attente staff.`,
-      `Attend depuis <t:${Math.floor(joinedAt / 1000)}:R>.`,
-      '-# Merci d\'essayer de prendre en charge le membre rapidement.'
-    ].join('\n'))
+    .setDescription(descriptionLines.join('\n'))
     .addFields({
       name: 'Statut',
       value: `\`${getStatusLabel(status)}\``,
