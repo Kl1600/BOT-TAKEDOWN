@@ -20,20 +20,18 @@ async function syncGuildCommands(client, guildId) {
   }
 
   const rest = new REST({ version: '10' }).setToken(config.token);
-  if (config.guildId) {
-    await rest.put(Routes.applicationGuildCommands(client.user.id, guildId), {
-      body: slashCommandsData
-    });
-    await rest.put(Routes.applicationCommands(client.user.id), {
-      body: []
-    });
-  } else {
-    await rest.put(Routes.applicationCommands(client.user.id), {
-      body: slashCommandsData
-    });
+  const targetGuildId = config.guildId || guildId;
+  await rest.put(Routes.applicationGuildCommands(client.user.id, targetGuildId), {
+    body: slashCommandsData
+  });
+  await rest.put(Routes.applicationCommands(client.user.id), {
+    body: []
+  });
+
+  if (config.guildId && String(guildId) !== String(config.guildId)) {
     await rest.put(Routes.applicationGuildCommands(client.user.id, guildId), {
       body: []
-    });
+    }).catch(() => null);
   }
 
   return slashCommandsData.length;

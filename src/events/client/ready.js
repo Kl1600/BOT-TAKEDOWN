@@ -46,19 +46,23 @@ export default {
     const rest = new REST({ version: '10' }).setToken(config.token);
 
     try {
-      if (config.guildId) {
-        await rest.put(Routes.applicationGuildCommands(client.user.id, config.guildId), {
-          body: slashCommandsData
-        });
-        await rest.put(Routes.applicationCommands(client.user.id), {
-          body: []
-        });
-      } else {
-        await rest.put(Routes.applicationCommands(client.user.id), {
-          body: slashCommandsData
-        });
+      const targetGuildIds = config.guildId
+        ? [config.guildId]
+        : [...client.guilds.cache.keys()];
 
+      for (const guildId of targetGuildIds) {
+        await rest.put(Routes.applicationGuildCommands(client.user.id, guildId), {
+          body: slashCommandsData
+        });
+      }
+
+      await rest.put(Routes.applicationCommands(client.user.id), {
+        body: []
+      });
+
+      if (config.guildId) {
         for (const guild of client.guilds.cache.values()) {
+          if (String(guild.id) === String(config.guildId)) continue;
           await rest.put(Routes.applicationGuildCommands(client.user.id, guild.id), {
             body: []
           }).catch(() => null);
