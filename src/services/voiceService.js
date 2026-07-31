@@ -31,66 +31,112 @@ function sanitizeVoiceName(name) {
     .slice(0, 90) || 'salon-vocal';
 }
 
-function formatDuration(totalMilliseconds) {
-  const totalSeconds = Math.max(0, Math.floor((totalMilliseconds || 0) / 1000));
-  if (totalSeconds < 60) {
-    return `${totalSeconds}s`;
-  }
-
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  if (minutes < 60) {
-    return seconds > 0 ? `${minutes}m${String(seconds).padStart(2, '0')}` : `${minutes}m`;
-  }
-
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return `${hours}h${String(remainingMinutes).padStart(2, '0')}`;
-}
-
 function getStaffWaitKey(guildId, userId) {
   return `${guildId}:${userId}`;
 }
 
-function clearStaffWaitTimer(guildId, userId) {
-  const key = getStaffWaitKey(guildId, userId);
-  const entry = staffWaitTimers.get(key);
-  if (!entry) return;
-
-  clearTimeout(entry.timeoutId);
-  staffWaitTimers.delete(key);
+function getStatusLabel(status) {
+  switch (status) {
+    case 'claimed':
+      return 'Pris en charge';
+    case 'left':
+      return 'A quitté la vocal';
+    case 'waiting':
+    default:
+      return 'Attente prise en charge';
+  }
 }
 
-async function sendStaffWaitAlert(client, guildId, userId, channelId, joinedAt) {
+function buildStaffWaitEmbed(userId, joinedAt, status) {
+  return new EmbedBuilder()
+    .setColor(0xED4245)
+    .setDescription([
+      `**<@${userId}>** est en attente staff.`,
+      `Attend depuis <t:${Math.floor(joinedAt / 1000)}:R>.`,
+      '-# Merci d\'essayer de prendre en charge le membre rapidement.'
+    ].join('\n'))
+    .addFields({
+      name: 'Statut',
+      value: getStatusLabel(status),
+      inline: false
+    })
+    .setTimestamp();
+}
+
+function getOrCreateStaffWaitRecord(guildId, userId) {
+  const key = getStaffWaitKey(guildId, userId);
+  let record = staffWaitTimers.get(key);
+  if (!record) {
+    record = {
+      guildId,
+      userId,
+      status: 'waiting',
+      alerted: false,
+      joinedAt: Date.now(),
+      channelId: null,
+      timeoutId: null,
+      messageId: null,
+      messageChannelId: null
+    };
+    staffWaitTimers.set(key, record);
+  }
+  return record;
+}
+
+function clearStaffWaitTimer(record) {
+  if (!record?.timeoutId) return;
+  clearTimeout(record.timeoutId);
+  record.timeoutId = null;
+}
+
+async function updateStaffWaitAlert(client, record, nextStatus) {
   try {
-    const guild = client.guilds.cache.get(guildId) || await client.guilds.fetch(guildId).catch(() => null);
+    if (!record?.alerted || !record.messageId || !record.messageChannelId) return;
+
+    const alertChannel = client.channels.cache.get(record.messageChannelId)
+      || await client.channels.fetch(record.messageChannelId).catch(() => null);
+    if (!alertChannel?.isTextBased()) return;
+
+    const message = await alertChannel.messages.fetch(record.messageId).catch(() => null);
+    if (!message) return;
+
+    record.status = nextStatus;
+    await message.edit({
+      content: `<@&${STAFF_WAIT_ROLE_ID}>`,
+      embeds: [buildStaffWaitEmbed(record.userId, record.joinedAt, nextStatus)]
+    }).catch(() => null);
+  } catch (err) {
+    logger.error('Erreur lors de la mise à jour du ping staff vocal:', err);
+  }
+}
+
+async function sendStaffWaitAlert(client, record) {
+  try {
+    const guild = client.guilds.cache.get(record.guildId) || await client.guilds.fetch(record.guildId).catch(() => null);
     if (!guild) return;
 
-    const member = await guild.members.fetch(userId).catch(() => null);
-    if (!member?.voice?.channelId || member.voice.channelId !== channelId) return;
+    const member = await guild.members.fetch(record.userId).catch(() => null);
+    if (!member?.voice?.channelId || member.voice.channelId !== record.channelId) return;
     if (!STAFF_WAIT_CHANNEL_IDS.has(member.voice.channelId)) return;
 
     const alertChannel = client.channels.cache.get(STAFF_WAIT_ALERT_CHANNEL_ID)
       || await client.channels.fetch(STAFF_WAIT_ALERT_CHANNEL_ID).catch(() => null);
     if (!alertChannel?.isTextBased()) return;
 
-    const embed = new EmbedBuilder()
-      .setColor(0xED4245)
-      .setDescription([
-        `**<@${userId}>** est en attente staff.`,
-        `Attend depuis <t:${Math.floor(joinedAt / 1000)}:R>.`,
-        '-# Merci d\'essayer de prendre en charge le membre rapidement.'
-      ].join('\n'))
-      .setTimestamp();
-
-    await alertChannel.send({
+    const message = await alertChannel.send({
       content: `<@&${STAFF_WAIT_ROLE_ID}>`,
-      embeds: [embed]
+      embeds: [buildStaffWaitEmbed(record.userId, record.joinedAt, 'waiting')]
     }).catch(() => null);
+
+    if (!message) return;
+
+    record.alerted = true;
+    record.messageId = message.id;
+    record.messageChannelId = alertChannel.id;
+    record.status = 'waiting';
+    clearStaffWaitTimer(record);
   } catch (err) {
     logger.error('Erreur lors de l\'envoi du ping staff vocal:', err);
-  } finally {
-    clearStaffWaitTimer(guildId, userId);
   }
 }
 
@@ -100,20 +146,15 @@ function scheduleStaffWaitAlert(newState) {
   if (!member || !channel) return;
   if (!STAFF_WAIT_CHANNEL_IDS.has(channel.id)) return;
 
-  const guildId = member.guild.id;
-  const userId = member.id;
-  clearStaffWaitTimer(guildId, userId);
+  const record = getOrCreateStaffWaitRecord(member.guild.id, member.id);
+  record.channelId = channel.id;
+  record.joinedAt = Date.now();
+  record.status = 'waiting';
+  clearStaffWaitTimer(record);
 
-  const joinedAt = Date.now();
-  const timeoutId = setTimeout(() => {
-    void sendStaffWaitAlert(member.client, guildId, userId, channel.id, joinedAt);
+  record.timeoutId = setTimeout(() => {
+    void sendStaffWaitAlert(member.client, record);
   }, STAFF_WAIT_DELAY_MS);
-
-  staffWaitTimers.set(getStaffWaitKey(guildId, userId), {
-    timeoutId,
-    channelId: channel.id,
-    joinedAt
-  });
 }
 
 /**
@@ -190,17 +231,37 @@ export function handleStaffWaitVoiceState(oldState, newState) {
 
   const oldChannelId = oldState.channelId;
   const newChannelId = newState.channelId;
+  const oldIsTarget = Boolean(oldChannelId && STAFF_WAIT_CHANNEL_IDS.has(oldChannelId));
+  const newIsTarget = Boolean(newChannelId && STAFF_WAIT_CHANNEL_IDS.has(newChannelId));
+  const recordKey = getStaffWaitKey(member.guild.id, member.id);
+  const record = staffWaitTimers.get(recordKey);
 
-  if (oldChannelId && STAFF_WAIT_CHANNEL_IDS.has(oldChannelId) && oldChannelId !== newChannelId) {
-    clearStaffWaitTimer(member.guild.id, member.id);
-  }
-
-  if (newChannelId && STAFF_WAIT_CHANNEL_IDS.has(newChannelId) && oldChannelId !== newChannelId) {
+  if (!oldIsTarget && newIsTarget) {
     scheduleStaffWaitAlert(newState);
+    return;
   }
 
-  if (!newChannelId) {
-    clearStaffWaitTimer(member.guild.id, member.id);
+  if (oldIsTarget && newIsTarget && oldChannelId !== newChannelId) {
+    scheduleStaffWaitAlert(newState);
+    return;
+  }
+
+  if (oldIsTarget && !newIsTarget) {
+    if (record) {
+      clearStaffWaitTimer(record);
+      if (record.alerted) {
+        const nextStatus = newChannelId ? 'claimed' : 'left';
+        void updateStaffWaitAlert(member.client, record, nextStatus);
+      } else {
+        staffWaitTimers.delete(recordKey);
+      }
+    }
+    return;
+  }
+
+  if (!newChannelId && record && record.alerted) {
+    clearStaffWaitTimer(record);
+    void updateStaffWaitAlert(member.client, record, 'left');
   }
 }
 
