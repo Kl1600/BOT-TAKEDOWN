@@ -57,7 +57,7 @@ function buildStaffWaitEmbed(userId, joinedAt, status) {
     ].join('\n'))
     .addFields({
       name: 'Statut',
-      value: getStatusLabel(status),
+      value: `\`${getStatusLabel(status)}\``,
       inline: false
     })
     .setTimestamp();
@@ -105,6 +105,9 @@ async function updateStaffWaitAlert(client, record, nextStatus) {
       content: `<@&${STAFF_WAIT_ROLE_ID}>`,
       embeds: [buildStaffWaitEmbed(record.userId, record.joinedAt, nextStatus)]
     }).catch(() => null);
+
+    clearStaffWaitTimer(record);
+    staffWaitTimers.delete(getStaffWaitKey(record.guildId, record.userId));
   } catch (err) {
     logger.error('Erreur lors de la mise à jour du ping staff vocal:', err);
   }
@@ -260,7 +263,6 @@ export function handleStaffWaitVoiceState(oldState, newState) {
   }
 
   if (!newChannelId && record && record.alerted) {
-    clearStaffWaitTimer(record);
     void updateStaffWaitAlert(member.client, record, 'left');
   }
 }
