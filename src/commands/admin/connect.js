@@ -59,7 +59,7 @@ function buildConnectPanel(lang, translateDisabled = false) {
 
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `${copy.optionsTitle}\n\n${copy.firstStep}\n   ou\n${copy.secondStep}\n   \`\`\`connect play.takedown-fivem.com\`\`\`\n   ou\n${copy.thirdStep}\n\n${translateHint}`
+      `${copy.optionsTitle}\n\n${copy.firstStep}\n${copy.secondStep}\n\`\`\`connect play.takedown-fivem.com\`\`\`\n${copy.thirdStep}\n\n${translateHint}`
     )
   );
 
