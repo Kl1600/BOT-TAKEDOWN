@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import * as logger from '../utils/logger.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -25,7 +25,7 @@ export async function loadEvents(client) {
     for (const file of files) {
       const filePath = join(folderPath, file);
       try {
-        const { default: event } = await import(`file://${filePath}`);
+        const { default: event } = await import(pathToFileURL(filePath).href);
         if (event && event.name) {
           const names = [event.name];
           const execute = async (...args) => {

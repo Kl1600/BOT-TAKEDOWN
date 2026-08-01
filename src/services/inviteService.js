@@ -23,13 +23,6 @@ function getUnixNow() {
   return Math.floor(Date.now() / 1000);
 }
 
-function getLeaderboardChannelId() {
-  return '1526555931624865793'
-    || config.channels.logs
-    || config.logs.general
-    || '';
-}
-
 function getDisplayTag(user) {
   return user?.tag || user?.username || 'Utilisateur inconnu';
 }
@@ -64,7 +57,8 @@ function getInviteCopy(lang = 'fr') {
     stillPresent: 'Toujours présents',
     leftServer: 'Ont quitté',
     invitedMembers: 'Membres invités',
-    noInvites: "Tu n'as encore invité personne."
+    noInvites: "Tu n'as encore invité personne.",
+    classement: 'Classement'
   };
 }
 
@@ -210,7 +204,7 @@ async function buildInviteProfileContainer({ guild, inviterId, referrals, member
 function buildInviteLeaderboardContainer(guild, leaderboardRows) {
   const lines = leaderboardRows.length === 0
     ? ['> Aucun parrainage enregistré pour le moment.']
-    : leaderboardRows.map((row, index) => `**${index + 1}.** <@${row.inviter_id}> — **${row.total_invites}** invitation(s)\nID : \`${row.inviter_id}\``);
+    : leaderboardRows.map((row, index) => `**${index + 1}.** ${row.inviter_id} — **${row.total_invites}** invitation(s)\nID : \`${row.inviter_id}\``);
 
   const container = new ContainerBuilder()
     .setAccentColor(config.colors.primary)
