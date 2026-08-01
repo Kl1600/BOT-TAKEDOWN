@@ -3,6 +3,7 @@ import { getLanguage, t } from '../../utils/language.js';
 import * as logger from '../../utils/logger.js';
 import { handleStaffApplyChatMessage } from '../../services/recruitmentService.js';
 import { handleAntiLinkMessage } from '../../services/antiLinkService.js';
+import { handleAntiImageMessage } from '../../services/antiImageService.js';
 import { logCommand } from '../../services/logService.js';
 import { handleXpMessage } from '../../services/xpService.js';
 
@@ -15,6 +16,10 @@ export default {
     }
 
     if (await handleAntiLinkMessage(message)) {
+      return;
+    }
+
+    if (await handleAntiImageMessage(message)) {
       return;
     }
 
