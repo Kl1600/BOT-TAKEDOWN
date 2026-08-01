@@ -1,3 +1,5 @@
+import { getLanguage } from '../utils/language.js';
+
 function isImageAttachment(attachment) {
   const contentType = attachment.contentType || '';
   if (contentType.startsWith('image/')) return true;
@@ -31,9 +33,14 @@ export async function handleAntiImageMessage(message) {
   if (!message.guild || message.author.bot) return false;
   if (!hasMoreThanTwoImages(message)) return false;
 
+  const lang = await getLanguage(message.member).catch(() => 'fr');
+  const warningMessage = lang === 'en'
+    ? "-# The server blocks sending more than 2 photos in the same message."
+    : "-# Le serveur bloque l'envoi de plus de 2 photo dans un même message.";
+
   await message.delete().catch(() => null);
   await message.channel.send({
-    content: `-# Le serveur bloque l'envoi de plus de 2 photo dans un même message. <@${message.author.id}>`
+    content: `${warningMessage} <@${message.author.id}>`
   }).then(sent => {
     setTimeout(() => sent.delete().catch(() => null), 5000);
   }).catch(() => null);
