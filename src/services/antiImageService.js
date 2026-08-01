@@ -1,3 +1,4 @@
+import config from '../config/config.js';
 import { getLanguage } from '../utils/language.js';
 
 function isImageAttachment(attachment) {
@@ -31,6 +32,7 @@ function hasMoreThanTwoImages(message) {
 
 export async function handleAntiImageMessage(message) {
   if (!message.guild || message.author.bot) return false;
+  if (message.member?.roles?.cache?.has(config.roles.admin)) return false;
   if (!hasMoreThanTwoImages(message)) return false;
 
   const lang = await getLanguage(message.member).catch(() => 'fr');
