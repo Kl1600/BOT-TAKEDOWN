@@ -13,7 +13,8 @@ const ROLE_BUTTONS = [
 ];
 
 const STAFF_ROLE_BUTTONS = [
-  { customId: 'rolepanel_staff_bda', label: 'Notif BDA', roleId: '1532824877516718141' }
+  { customId: 'rolepanel_staff_bda', label: 'Notif BDA', roleId: '1532824877516718141' },
+  { customId: 'rolepanel_staff_ticket', label: 'Notif Ticket', roleId: '1533059907958608023' }
 ];
 
 const ROLE_BUTTON_MAP = new Map([...ROLE_BUTTONS, ...STAFF_ROLE_BUTTONS].map(button => [button.customId, button]));

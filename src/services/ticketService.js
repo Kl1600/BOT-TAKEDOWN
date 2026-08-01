@@ -243,7 +243,8 @@ async function createTicketForUser(interaction, selectedLang, selectedCategoryId
     .addTextDisplayComponents(welcomeText)
     .addActionRowComponents(row);
 
-  const staffPing = config.tickets.supportRoleId ? ` <@&${config.tickets.supportRoleId}>` : '';
+  const staffPingRoleId = config.notifications?.ticket || config.tickets.supportRoleId;
+  const staffPing = staffPingRoleId ? ` <@&${staffPingRoleId}>` : '';
   await channel.send({ content: `<@${user.id}>${staffPing}` }).catch(() => null);
   await sendV2Container(channel, container);
 

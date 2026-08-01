@@ -102,6 +102,12 @@ export default {
     defaultLang: process.env.DEFAULT_LANG || 'fr'
   },
 
+  // Rôles de notification
+  notifications: {
+    patchNotes: process.env.ROLE_PATCHNOTES || '1520116888879890593',
+    ticket: process.env.ROLE_NOTIF_TICKET || '1533059907958608023'
+  },
+
   // SystÃ¨me de tickets
   tickets: {
     categoryId: process.env.TICKET_CATEGORY_ID || '1484977225190215720',
