@@ -1,5 +1,6 @@
-import config from '../config/config.js';
+﻿import config from '../config/config.js';
 import dbService from '../database/dbProxy.js';
+import { getLanguage } from '../utils/language.js';
 
 const DISCORD_LINK_REGEX = /(?:https?:\/\/)?(?:www\.)?(?:canary\.|ptb\.)?(?:discord\.gg|discord(?:app)?\.com\/invite|discord\.com\/invite)\/\S+/i;
 
@@ -67,6 +68,7 @@ export async function handleAntiLinkMessage(message) {
   if (message.content.startsWith(config.prefix)) return false;
   if (!DISCORD_LINK_REGEX.test(message.content)) return false;
 
+  const lang = await getLanguage(message.member).catch(() => 'fr');
   const snapshot = await getGuildAntiLinkSnapshot(message.guild.id).catch(() => null);
   if (!snapshot) return false;
 
@@ -82,9 +84,13 @@ export async function handleAntiLinkMessage(message) {
     return false;
   }
 
-  const warning = isBlacklisted
-    ? '-# Tu ne peux pas envoyer de lien Discord ici.'
-    : '-# Les liens Discord sont désactivés sur ce serveur.';
+  const warning = lang === 'en'
+    ? (isBlacklisted
+      ? '-# You cannot send Discord links here.'
+      : '-# Discord links are disabled on this server.')
+    : (isBlacklisted
+      ? '-# Tu ne peux pas envoyer de lien Discord ici.'
+      : '-# Les liens Discord sont désactivés sur ce serveur.');
 
   await message.delete().catch(() => null);
   await message.channel.send({ content: `${warning} <@${userId}>` }).then(sent => {

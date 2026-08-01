@@ -50,27 +50,27 @@ function buildHelpContainer(prefix) {
     ],
     [
       `### Annonces`,
-      `> \`/annonce\` \`${p}annonce\` — Envoyer une annonce dans le serveur`
+      `> \`/annonce\` — Envoyer une annonce dans le serveur`
     ],
     [
       `### Patch notes`,
-      `> \`/patchnote\` \`${p}patchnote\` — Envoyer un patch note dans le serveur`
+      `> \`/patchnote\` — Envoyer un patch note dans le serveur`
     ],
     [
       `### Guide`,
-      `> \`/guide\` \`${p}guide\` — Afficher le guide du serveur`
+      `> \`/guide\` — Afficher le guide du serveur`
     ],
     [
       `### Connexion`,
-      `> \`/connect\` \`${p}connect\` — Afficher le panneau de connexion au serveur`
+      `> \`/connect\` — Afficher le panneau de connexion au serveur`
     ],
     [
       `### Règlement`,
-      `> \`/reglement\` \`${p}reglement\` — Afficher le règlement du serveur`
+      `> \`/reglement\` — Afficher le règlement du serveur`
     ],
     [
       `### Modes de jeu`,
-      `> \`/modes\` \`${p}modes\` — Afficher la présentation des modes de jeu`
+      `> \`/modes\` — Afficher la présentation des modes de jeu`
     ],
     [
       `### XP`,
@@ -79,16 +79,16 @@ function buildHelpContainer(prefix) {
     ],
     [
       `### FAQ`,
-      `> \`/faq\` \`${p}faq\` — Afficher la FAQ interactive du serveur`
+      `> \`/faq\` — Afficher la FAQ interactive du serveur`
     ],
     [
       `### Stream`,
-      `> \`/panelstreamer\` \`${p}panelstreamer\` — Envoyer le panel de lancement de live`
+      `> \`/panelstreamer\` — Envoyer le panel de lancement de live`
     ],
     [
       `### Rôles`,
-      `> \`/panelrol\` \`${p}panelrol\` — Envoyer le panel de rôles`,
-      `> \`/rolestaff\` \`${p}rolestaff\` — Envoyer le panel des rôles staff`
+      `> \`/panelrol\` — Envoyer le panel de rôles`,
+      `> \`/rolestaff\` — Envoyer le panel des rôles staff`
     ],
     [
       `### Bienvenue`,
