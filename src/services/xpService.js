@@ -21,7 +21,8 @@ const XP_PANEL_ACCENT_COLOR = 0x2B2D31;
 const XP_RANKS = [
   { name: { fr: 'Bronze', en: 'Bronze' }, minXp: 0, color: 0xCD7F32 },
   { name: { fr: 'Argent', en: 'Silver' }, minXp: 6000, color: 0xC0C0C0 },
-  { name: { fr: 'Or', en: 'Gold' }, minXp: 18000, color: 0xFFD700 }
+  { name: { fr: 'Or', en: 'Gold' }, minXp: 18000, color: 0xFFD700 },
+  { name: { fr: 'Platine', en: 'Platinum' }, minXp: 36000, color: 0xE5E4E2 }
 ];
 
 const XP_COPY = {
@@ -30,6 +31,7 @@ const XP_COPY = {
     profileError: 'Impossible de charger le profil XP.',
     progression: 'Progression',
     rankLabel: 'Rang',
+    rankButton: 'Rang',
     memberSince: 'Membre depuis',
     leaderboardTitle: 'Classement XP',
     noData: 'Aucun XP enregistré pour le moment.',
@@ -44,6 +46,7 @@ const XP_COPY = {
     profileError: 'Unable to load the XP profile.',
     progression: 'Progress',
     rankLabel: 'Rank',
+    rankButton: 'Rank',
     memberSince: 'Member since',
     leaderboardTitle: 'XP Leaderboard',
     noData: 'No XP recorded yet.',
@@ -240,13 +243,6 @@ function buildProfileHeader(profile, rankInfo, copy, lang) {
   ].join('\n');
 }
 
-function buildLeaderboardLine(entry, member, index, lang) {
-  const displayName = member?.displayName || member?.user?.username || `<@${entry.user_id}>`;
-  const voice = formatDuration(entry.total_voice_seconds || 0);
-  const locale = lang === 'en' ? 'en-US' : 'fr-FR';
-  return `**#${index + 1}** ${displayName} - ${Number(entry.total_xp || 0).toLocaleString(locale)} XP - ${Number(entry.total_messages || 0)} msg - ${voice}`;
-}
-
 function truncateText(value, maxLength) {
   const text = String(value ?? '');
   if (text.length <= maxLength) return text;
@@ -266,7 +262,9 @@ function buildLeaderboardTable(leaderboardRows, lang) {
     const xp = Number(entry.entry.total_xp || 0).toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR');
     const messages = Number(entry.entry.total_messages || 0).toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR');
     const voice = formatDuration(entry.entry.total_voice_seconds || 0);
-    return `**#${index + 1}** ${displayName} - ${xp} XP - ${messages} msg - ${voice}`;
+    const rankInfo = getRankInfo(Number(entry.entry.total_xp || 0));
+    const rank = rankInfo.current.name[lang] || rankInfo.current.name.fr;
+    return `**#${index + 1}** ${displayName} - ${rank} - ${xp} XP - ${messages} msg - ${voice}`;
   });
   return rows.join('\n');
 }
@@ -381,6 +379,11 @@ export async function buildXpProfileContainer(guild, member, lang = 'fr') {
         .setCustomId(`xp_rank_${guild.id}_${member.id}`)
         .setLabel(`${copy.classement} #${memberRank}`)
         .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true),
+      new ButtonBuilder()
+        .setCustomId(`xp_tier_${guild.id}_${member.id}`)
+        .setLabel(`${copy.rankButton} ${rankInfo.current.name[lang] || rankInfo.current.name.fr}`)
+        .setStyle(ButtonStyle.Secondary)
         .setDisabled(true)
     )
   );
@@ -416,8 +419,8 @@ export async function buildXpLeaderboardContainer(guild, limit = 10, lang = 'fr'
   appendSeparatorComponent(container);
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(lang === 'en'
-      ? '**Name - XP - Messages - Voice time**'
-      : '**Nom - XP - Messages - Temps en voc**')
+      ? '**Name - Rank - XP - Messages - Voice time**'
+      : '**Nom - Rang - XP - Messages - Temps en voc**')
   );
   appendSeparatorComponent(container);
   const rows = [];
