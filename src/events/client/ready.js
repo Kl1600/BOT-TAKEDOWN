@@ -4,6 +4,7 @@ import { ensureBetaAccess } from '../../services/betaService.js';
 import { rehydratePanelRefreshes, startPanelRefreshScheduler } from '../../services/panelRefreshService.js';
 import { initializeXpTracking, startXpMaintenance } from '../../services/xpService.js';
 import { startTempBanScheduler } from '../../services/moderationService.js';
+import { consumeRestartPending } from '../../services/restartService.js';
 import dbService from '../../database/dbProxy.js';
 import config from '../../config/config.js';
 import * as logger from '../../utils/logger.js';
@@ -39,6 +40,14 @@ export default {
       }],
       status: config.status.presence
     });
+
+    const pendingRestart = await consumeRestartPending().catch(() => null);
+    if (pendingRestart?.channelId && pendingRestart.guildId) {
+      const channel = await client.channels.fetch(pendingRestart.channelId).catch(() => null);
+      if (channel?.isTextBased()) {
+        await channel.send({ content: '✅ Bot redémarré avec succès.' }).catch(() => null);
+      }
+    }
 
     const slashCommandsData = client.slashCommandsData || [];
     if (!config.token || slashCommandsData.length === 0) return;

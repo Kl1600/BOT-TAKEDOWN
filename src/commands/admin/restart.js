@@ -1,6 +1,7 @@
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { getLanguage } from '../../utils/language.js';
 import { prefixReply } from '../../services/moderationService.js';
+import { markRestartPending } from '../../services/restartService.js';
 
 const BOT_OWNER_ID = '1481543558715408426';
 
@@ -11,7 +12,9 @@ function getInsufficientPermissionsMessage(lang) {
 }
 
 function getRestartMessage(lang) {
-  return '✅ Bot restart';
+  return lang === 'en'
+    ? '✅ Restarting the bot...'
+    : '✅ Redémarrage en cours...';
 }
 
 async function triggerRestart() {
@@ -40,6 +43,11 @@ export async function executeSlash(interaction) {
     flags: MessageFlags.Ephemeral
   }).catch(() => null);
 
+  await markRestartPending({
+    guildId: interaction.guildId,
+    channelId: interaction.channelId
+  });
+
   await triggerRestart();
 }
 
@@ -51,6 +59,10 @@ export async function executePrefix(message) {
   }
 
   await message.reply(getRestartMessage(lang)).catch(() => null);
+  await markRestartPending({
+    guildId: message.guild.id,
+    channelId: message.channel.id
+  });
   await triggerRestart();
 }
 
