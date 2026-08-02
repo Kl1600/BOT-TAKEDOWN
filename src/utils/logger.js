@@ -19,6 +19,8 @@ function ensureLogDirectory() {
   return true;
 }
 
+ensureLogDirectory();
+
 function writeToFile(level, message) {
   const timestamp = new Date().toISOString();
   try {
