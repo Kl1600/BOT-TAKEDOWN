@@ -11,9 +11,7 @@ function getInsufficientPermissionsMessage(lang) {
 }
 
 function getRestartMessage(lang) {
-  return lang === 'en'
-    ? '✅ Restarting the bot...'
-    : '✅ Redémarrage du bot en cours...';
+  return '✅ Bot restart';
 }
 
 async function triggerRestart() {
