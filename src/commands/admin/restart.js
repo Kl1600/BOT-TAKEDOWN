@@ -1,4 +1,4 @@
-import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+﻿import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { getLanguage } from '../../utils/language.js';
 import { prefixReply } from '../../services/moderationService.js';
 import { markRestartPending } from '../../services/restartService.js';
