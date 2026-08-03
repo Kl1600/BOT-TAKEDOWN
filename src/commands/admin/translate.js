@@ -13,6 +13,13 @@ function trimText(text, maxLength = 3900) {
   return `${value.slice(0, maxLength - 1)}…`;
 }
 
+function formatQuoteBlock(text) {
+  return String(text ?? '')
+    .split(/\r?\n/)
+    .map(line => (line.trim() ? `> ${line}` : '>'))
+    .join('\n');
+}
+
 async function replyPlainError(interaction, content) {
   if (interaction.deferred || interaction.replied) {
     return interaction.editReply({ content }).catch(() => null);
@@ -59,7 +66,7 @@ export async function executeContextMenu(interaction) {
     const translatedText = await translateText(sourceText, 'en', 'fr');
 
     await interaction.editReply({
-      content: `**Traduction**\n> ${trimText(translatedText, 1800)}`
+      content: `**A文 Traduction**\n${formatQuoteBlock(trimText(translatedText, 1800))}`
     }).catch(() => null);
   } catch (error) {
     await replyPlainError(interaction, error?.message || t(lang, 'errors.command_error'));
