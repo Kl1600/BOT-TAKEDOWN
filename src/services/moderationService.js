@@ -44,13 +44,6 @@ export async function resolveMemberFromInput(guild, input, fallbackMember = null
   return guild.members.fetch(userId).catch(() => null);
 }
 
-function buildUsageContainer(message) {
-  const text = new TextDisplayBuilder().setContent(`### Utilisation\n\n${message}`);
-  return new ContainerBuilder()
-    .setAccentColor(0xF0A500)
-    .addTextDisplayComponents(text);
-}
-
 async function autoDeleteUsageResponse(context, response) {
   setTimeout(async () => {
     try {
@@ -117,23 +110,14 @@ export async function replyPermissionDenied(context, msg) {
 }
 
 export async function replyUsage(context, usageMessage) {
-  const container = buildUsageContainer(usageMessage);
-  const isInteraction = typeof context.editReply === 'function' || typeof context.deferReply === 'function';
-  const payload = {
-    components: [container],
-    flags: isInteraction
-      ? MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
-      : MessageFlags.IsComponentsV2
-  };
-
   if (typeof context.editReply === 'function' && (context.deferred || context.replied)) {
-    await context.editReply(payload).catch(() => null);
+    await context.editReply({ content: usageMessage, flags: MessageFlags.Ephemeral }).catch(() => null);
     await autoDeleteUsageResponse(context);
     return null;
   }
 
   if (typeof context.reply === 'function') {
-    const response = await context.reply(payload).catch(() => null);
+    const response = await context.reply({ content: usageMessage }).catch(() => null);
     await autoDeleteUsageResponse(context, response);
     return response;
   }
@@ -165,31 +149,27 @@ export function parseDurationInput(rawValue) {
  * Réponse V2 succès (slash uniquement — après deferReply ou directement)
  */
 export function replyOk(interaction, msg, color = 0x57F287) {
-  const text = new TextDisplayBuilder().setContent(msg);
-  const container = new ContainerBuilder().setAccentColor(color).addTextDisplayComponents(text);
-  const flags = MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral;
+  const flags = typeof interaction?.editReply === 'function' || typeof interaction?.deferReply === 'function'
+    ? MessageFlags.Ephemeral
+    : undefined;
   if (interaction.deferred || interaction.replied) {
-    return interaction.editReply({ components: [container], flags });
+    return interaction.editReply({ content: msg, flags }).catch(() => null);
   }
-  return interaction.reply({ components: [container], flags });
+  return interaction.reply({ content: msg, flags }).catch(() => null);
 }
 
-/**
- * Réponse V2 erreur (slash uniquement)
- */
 export function replyErr(interaction, msg) {
   if (isPermissionDeniedMessage(msg)) {
     return replyPermissionDenied(interaction, msg);
   }
-  const text = new TextDisplayBuilder().setContent(`❌ ${msg}`);
-  const container = new ContainerBuilder().setAccentColor(0xED4245).addTextDisplayComponents(text);
-  const flags = MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral;
+  const flags = typeof interaction?.editReply === 'function' || typeof interaction?.deferReply === 'function'
+    ? MessageFlags.Ephemeral
+    : undefined;
   if (interaction.deferred || interaction.replied) {
-    return interaction.editReply({ components: [container], flags });
+    return interaction.editReply({ content: `❌ ${msg}`, flags }).catch(() => null);
   }
-  return interaction.reply({ components: [container], flags });
+  return interaction.reply({ content: `❌ ${msg}`, flags }).catch(() => null);
 }
-
 /**
  * Réponse simple pour les commandes préfixées
  */
