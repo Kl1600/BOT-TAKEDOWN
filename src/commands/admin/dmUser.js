@@ -1,5 +1,5 @@
 import { ActionRowBuilder, ApplicationCommandType, ContextMenuCommandBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
-import { isStaffOrAdmin, replyErr, replyOk } from '../../services/moderationService.js';
+import { isStaffOrAdmin, replyErr } from '../../services/moderationService.js';
 
 const MODAL_PREFIX = 'userctx_dm_message_';
 
@@ -74,7 +74,7 @@ export async function handleDmUserModalSubmit(interaction) {
 
   try {
     const user = await sendDirectMessage(interaction.client, targetId, content);
-    return replyOk(interaction, `✅ Message envoyé à <@${user.id}>.`, 0x57F287);
+    return interaction.editReply({ content: `-# Message envoyé à <@${user.id}>.` }).catch(() => null);
   } catch (error) {
     return replyErr(interaction, error?.message || 'Impossible d’envoyer le DM.');
   }
