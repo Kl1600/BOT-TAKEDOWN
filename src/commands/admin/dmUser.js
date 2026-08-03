@@ -1,5 +1,5 @@
 import { ActionRowBuilder, ApplicationCommandType, ContextMenuCommandBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
-import { isStaffOrAdmin, replyErr } from '../../services/moderationService.js';
+import { isStaffOrAdmin } from '../../services/moderationService.js';
 
 const MODAL_PREFIX = 'userctx_dm_message_';
 
@@ -10,6 +10,13 @@ function getTargetId(interaction) {
 async function resolveTargetUser(interaction, targetId) {
   if (!targetId) return null;
   return interaction.client.users.fetch(targetId).catch(() => null);
+}
+
+async function replyPlain(interaction, content) {
+  if (interaction.deferred || interaction.replied) {
+    return interaction.editReply({ content }).catch(() => null);
+  }
+  return interaction.reply({ content, ephemeral: true }).catch(() => null);
 }
 
 async function sendDirectMessage(client, userId, content) {
@@ -30,13 +37,13 @@ export const data = new ContextMenuCommandBuilder()
 
 export async function executeUserContextMenu(interaction) {
   if (!isStaffOrAdmin(interaction.member)) {
-    return replyErr(interaction, 'Permissions insuffisantes.');
+    return replyPlain(interaction, 'Permissions insuffisantes.');
   }
 
   const targetId = getTargetId(interaction);
   const targetUser = await resolveTargetUser(interaction, targetId);
   if (!targetId || !targetUser) {
-    return replyErr(interaction, 'Utilisateur introuvable.');
+    return replyPlain(interaction, 'Utilisateur introuvable.');
   }
 
   const modal = new ModalBuilder()
@@ -56,18 +63,18 @@ export async function executeUserContextMenu(interaction) {
 
 export async function handleDmUserModalSubmit(interaction) {
   if (!isStaffOrAdmin(interaction.member)) {
-    return replyErr(interaction, 'Permissions insuffisantes.');
+    return replyPlain(interaction, 'Permissions insuffisantes.');
   }
 
   const match = interaction.customId.match(/^userctx_dm_message_(\d{17,20})$/);
   const targetId = match?.[1] || null;
   if (!targetId) {
-    return replyErr(interaction, 'Utilisateur introuvable.');
+    return replyPlain(interaction, 'Utilisateur introuvable.');
   }
 
   const content = interaction.fields.getTextInputValue('message')?.trim();
   if (!content) {
-    return replyErr(interaction, 'Message vide.');
+    return replyPlain(interaction, 'Message vide.');
   }
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -76,7 +83,7 @@ export async function handleDmUserModalSubmit(interaction) {
     const user = await sendDirectMessage(interaction.client, targetId, content);
     return interaction.editReply({ content: `-# Message envoyé à <@${user.id}>.` }).catch(() => null);
   } catch (error) {
-    return replyErr(interaction, error?.message || 'Impossible d’envoyer le DM.');
+    return replyPlain(interaction, error?.message || 'Impossible d’envoyer le DM.');
   }
 }
 

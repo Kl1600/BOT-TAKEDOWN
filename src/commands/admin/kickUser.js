@@ -1,5 +1,5 @@
 import { ActionRowBuilder, ApplicationCommandType, ContextMenuCommandBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
-import { executeKick, isStaffOrAdmin, replyErr, replyOk } from '../../services/moderationService.js';
+import { executeKick, isStaffOrAdmin } from '../../services/moderationService.js';
 
 const MODAL_PREFIX = 'userctx_kick_reason_';
 
@@ -13,6 +13,13 @@ async function resolveTargetMember(interaction, targetId) {
   return interaction.guild.members.fetch(targetId).catch(() => null);
 }
 
+async function replyPlain(interaction, content) {
+  if (interaction.deferred || interaction.replied) {
+    return interaction.editReply({ content }).catch(() => null);
+  }
+  return interaction.reply({ content, ephemeral: true }).catch(() => null);
+}
+
 export const data = new ContextMenuCommandBuilder()
   .setName('kick_user')
   .setType(ApplicationCommandType.User)
@@ -21,18 +28,18 @@ export const data = new ContextMenuCommandBuilder()
 
 export async function executeUserContextMenu(interaction) {
   if (!isStaffOrAdmin(interaction.member)) {
-    return replyErr(interaction, 'Permissions insuffisantes.');
+    return replyPlain(interaction, 'Permissions insuffisantes.');
   }
 
   const targetId = getTargetId(interaction);
   const targetUser = interaction.targetUser;
 
   if (!targetId || !targetUser) {
-    return replyErr(interaction, 'Membre introuvable.');
+    return replyPlain(interaction, 'Membre introuvable.');
   }
 
   if (targetId === interaction.user.id) {
-    return replyErr(interaction, 'Vous ne pouvez pas vous expulser vous-même.');
+    return replyPlain(interaction, 'Vous ne pouvez pas vous expulser vous-même.');
   }
 
   const modal = new ModalBuilder()
@@ -52,22 +59,22 @@ export async function executeUserContextMenu(interaction) {
 
 export async function handleKickUserModalSubmit(interaction) {
   if (!isStaffOrAdmin(interaction.member)) {
-    return replyErr(interaction, 'Permissions insuffisantes.');
+    return replyPlain(interaction, 'Permissions insuffisantes.');
   }
 
   const match = interaction.customId.match(/^userctx_kick_reason_(\d{17,20})$/);
   const targetId = match?.[1] || null;
   if (!targetId) {
-    return replyErr(interaction, 'Membre introuvable.');
+    return replyPlain(interaction, 'Membre introuvable.');
   }
 
   const target = await resolveTargetMember(interaction, targetId);
   if (!target) {
-    return replyErr(interaction, 'Membre introuvable.');
+    return replyPlain(interaction, 'Membre introuvable.');
   }
 
   if (target.id === interaction.user.id) {
-    return replyErr(interaction, 'Vous ne pouvez pas vous expulser vous-même.');
+    return replyPlain(interaction, 'Vous ne pouvez pas vous expulser vous-même.');
   }
 
   const raison = interaction.fields.getTextInputValue('raison')?.trim() || 'Aucune raison fournie';
@@ -76,9 +83,9 @@ export async function handleKickUserModalSubmit(interaction) {
 
   try {
     await executeKick({ guild: interaction.guild, mod: interaction.user, target, raison, client: interaction.client });
-    return replyOk(interaction, `✅ \`${target.user.username}\` a été expulsé.\n-# Raison : ${raison}`, 0xF0A500);
+    return interaction.editReply({ content: `✅ \`${target.user.username}\` a été expulsé.\n-# Raison : ${raison}` }).catch(() => null);
   } catch (error) {
-    return replyErr(interaction, error?.message || 'Impossible d’expulser ce membre.');
+    return replyPlain(interaction, error?.message || 'Impossible d’expulser ce membre.');
   }
 }
 

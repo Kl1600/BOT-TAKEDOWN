@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from 'discord.js';
-import { executeMute, hasTicketManagementAccess, replyOk, replyErr, prefixReply, replyUsage, MUTE_DURATIONS, resolveMemberFromInput } from '../../services/moderationService.js';
+import { executeMute, hasTicketManagementAccess, replyErr, prefixReply, replyUsage, MUTE_DURATIONS, resolveMemberFromInput } from '../../services/moderationService.js';
 
 export const data = new SlashCommandBuilder()
   .setName('mute')
@@ -39,9 +39,9 @@ export async function executeSlash(interaction) {
 
   try {
     const until = await executeMute({ guild: interaction.guild, mod: interaction.user, target, seconds, dureeLabel: dureeKey, raison, client: interaction.client });
-    return replyOk(interaction, `? \`${target.user.username}\` est en sourdine pendant **${dureeKey}**.
--# Expire : <t:${Math.floor(until.getTime()/1000)}:R>
--# Raison : ${raison}`, 0xF0A500);
+    return interaction.editReply({
+      content: `✅ \`${target.user.username}\` est en sourdine pendant **${dureeKey}**.\n-# Expire : <t:${Math.floor(until.getTime()/1000)}:R>\n-# Raison : ${raison}`
+    }).catch(() => null);
   } catch (e) {
     return replyErr(interaction, e.message);
   }
@@ -69,7 +69,7 @@ Dur?es : 5m, 10m, 30m, 1h, 6h, 12h, 24h, 7j, 28j`);
 
   try {
     const until = await executeMute({ guild: message.guild, mod: message.author, target: mention, seconds, dureeLabel: dureeRaw, raison, client: message.client });
-    await message.reply(`? \`${mention.user.username}\` est en sourdine pendant **${dureeRaw}**. Raison : ${raison}`);
+    await message.reply({ content: `✅ \`${mention.user.username}\` est en sourdine pendant **${dureeRaw}**.\n-# Raison : ${raison}` }).catch(() => null);
   } catch (e) {
     await prefixReply(message, `? ${e.message}`);
   }

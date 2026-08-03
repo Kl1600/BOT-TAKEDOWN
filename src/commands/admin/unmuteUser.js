@@ -1,5 +1,5 @@
 import { ApplicationCommandType, ContextMenuCommandBuilder, MessageFlags } from 'discord.js';
-import { executeUnmute, hasTicketManagementAccess, replyErr, replyOk } from '../../services/moderationService.js';
+import { executeUnmute, hasTicketManagementAccess } from '../../services/moderationService.js';
 
 function getTargetId(interaction) {
   return interaction.targetUser?.id || interaction.targetMember?.id || null;
@@ -11,6 +11,13 @@ async function resolveTargetMember(interaction, targetId) {
   return interaction.guild.members.fetch(targetId).catch(() => null);
 }
 
+async function replyPlain(interaction, content) {
+  if (interaction.deferred || interaction.replied) {
+    return interaction.editReply({ content }).catch(() => null);
+  }
+  return interaction.reply({ content, ephemeral: true }).catch(() => null);
+}
+
 export const data = new ContextMenuCommandBuilder()
   .setName('unmute_user')
   .setType(ApplicationCommandType.User)
@@ -19,26 +26,26 @@ export const data = new ContextMenuCommandBuilder()
 
 export async function executeUserContextMenu(interaction) {
   if (!hasTicketManagementAccess(interaction.member)) {
-    return replyErr(interaction, 'Permissions insuffisantes.');
+    return replyPlain(interaction, 'Permissions insuffisantes.');
   }
 
   const targetId = getTargetId(interaction);
   const target = await resolveTargetMember(interaction, targetId);
   if (!target) {
-    return replyErr(interaction, 'Membre introuvable.');
+    return replyPlain(interaction, 'Membre introuvable.');
   }
 
   if (target.id === interaction.user.id) {
-    return replyErr(interaction, 'Vous ne pouvez pas vous retirer votre propre mute.');
+    return replyPlain(interaction, 'Vous ne pouvez pas vous retirer votre propre mute.');
   }
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     await executeUnmute({ mod: interaction.user, target, raison: 'Unmute via menu contextuel', client: interaction.client });
-    return replyOk(interaction, `✅ Le mute de \`${target.user.username}\` a été retiré.`, 0x57F287);
+    return interaction.editReply({ content: `✅ Le mute de \`${target.user.username}\` a été retiré.` }).catch(() => null);
   } catch (error) {
-    return replyErr(interaction, error?.message || 'Impossible de retirer le mute.');
+    return replyPlain(interaction, error?.message || 'Impossible de retirer le mute.');
   }
 }
 
