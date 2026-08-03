@@ -1,6 +1,5 @@
-import { EmbedBuilder, MessageFlags, SlashCommandBuilder } from 'discord.js';
+import { EmbedBuilder, MessageContextMenuCommandBuilder } from 'discord.js';
 import { detectTextLanguage, getLanguage, translateText, t } from '../../utils/language.js';
-import { replyErr } from '../../services/moderationService.js';
 
 const TRANSLATION_ROLE_ID = '1509613216463065243';
 
@@ -14,49 +13,45 @@ function trimText(text, maxLength = 3900) {
   return `${value.slice(0, maxLength - 1)}…`;
 }
 
-async function resolveReplyTarget(interaction) {
-  const referenceMessageId =
-    interaction.message?.reference?.messageId ||
-    interaction.reference?.messageId ||
-    interaction.targetMessage?.id ||
-    null;
+async function replyPlainError(interaction, content) {
+  if (interaction.deferred || interaction.replied) {
+    return interaction.editReply({ content }).catch(() => null);
+  }
 
-  if (!referenceMessageId) return null;
-
-  return interaction.channel?.messages.fetch(referenceMessageId).catch(() => null);
+  return interaction.reply({
+    content,
+    ephemeral: true
+  }).catch(() => null);
 }
 
-export const data = new SlashCommandBuilder()
-  .setName('translate')
-  .setDescription('Traduire une réponse en anglais vers le français')
+export const data = new MessageContextMenuCommandBuilder()
+  .setName('Traduire')
   .setDefaultMemberPermissions(null)
   .setDMPermission(false);
 
-export async function executeSlash(interaction) {
+export async function executeContextMenu(interaction) {
   if (!hasTranslationAccess(interaction.member)) {
-    return replyErr(interaction, 'Permissions insuffisantes.');
+    return replyPlainError(interaction, 'Permissions insuffisantes.');
   }
 
   const lang = await getLanguage(interaction.member);
-  const repliedMessage = await resolveReplyTarget(interaction);
+  const sourceMessage = interaction.targetMessage || null;
 
-  if (!repliedMessage) {
-    return replyErr(interaction, t(lang, 'errors.translate_reply_only'));
+  if (!sourceMessage) {
+    return replyPlainError(interaction, t(lang, 'errors.translate_reply_only'));
   }
 
-  const sourceText = repliedMessage.content?.trim();
+  const sourceText = sourceMessage.content?.trim();
   if (!sourceText) {
-    return replyErr(interaction, t(lang, 'errors.translate_reply_only'));
+    return replyPlainError(interaction, t(lang, 'errors.translate_reply_only'));
   }
 
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  await interaction.deferReply({ ephemeral: true }).catch(() => null);
 
   try {
     const detectedLang = await detectTextLanguage(sourceText);
-    if (detectedLang !== 'en') {
-      await interaction.editReply({
-        content: t(lang, 'errors.translate_not_english')
-      }).catch(() => null);
+    if (!detectedLang || !detectedLang.startsWith('en')) {
+      await replyPlainError(interaction, t(lang, 'errors.translate_not_english'));
       return;
     }
 
@@ -65,8 +60,8 @@ export async function executeSlash(interaction) {
       .setColor(0x57F287)
       .setDescription(trimText(translatedText))
       .setAuthor({
-        name: `Traduction de ${repliedMessage.author.username}`,
-        iconURL: repliedMessage.author.displayAvatarURL()
+        name: `Traduction de ${sourceMessage.author.username}`,
+        iconURL: sourceMessage.author.displayAvatarURL()
       })
       .setFooter({
         text: `Demandé par ${interaction.user.username}`,
@@ -75,15 +70,13 @@ export async function executeSlash(interaction) {
 
     await interaction.editReply({
       embeds: [embed]
-    });
-  } catch (error) {
-    await interaction.editReply({
-      content: error?.message || t(lang, 'errors.command_error')
     }).catch(() => null);
+  } catch (error) {
+    await replyPlainError(interaction, error?.message || t(lang, 'errors.command_error'));
   }
 }
 
 export default {
   data,
-  executeSlash
+  executeContextMenu
 };

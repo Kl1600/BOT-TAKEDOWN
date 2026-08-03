@@ -1,4 +1,4 @@
-import { getLanguage, t } from '../../utils/language.js';
+﻿import { getLanguage, t } from '../../utils/language.js';
 import { handleComponentInteraction } from '../../handlers/componentHandler.js';
 import { handleTicketCategorySelect, handleTicketModalSubmit } from '../../services/ticketService.js';
 import { handleStaffApplySelectMenu, handleStaffApplyModalSubmit } from '../../services/recruitmentService.js';
@@ -45,6 +45,42 @@ export default {
           { name: 'Utilisateur', value: `<@${interaction.user.id}> (\`${interaction.user.tag}\`)`, inline: true },
           { name: 'Salon', value: `<#${interaction.channelId}>`, inline: true },
           { name: 'Options', value: optionsText.slice(0, 1024), inline: false }
+        ]
+      }).catch(() => null);
+      return;
+    }
+
+    // 1b. Route Message Context Menu Commands
+    if (interaction.isMessageContextMenuCommand()) {
+      const command = client.commands.get(interaction.commandName);
+      if (!command) return;
+
+      const lang = 'fr';
+      logger.debug(`Context menu message: ${interaction.commandName} par ${interaction.user.tag} (${interaction.user.id})`);
+
+      try {
+        if (typeof command.executeContextMenu === 'function') {
+          await command.executeContextMenu(interaction, lang);
+        } else if (typeof command.executeSlash === 'function') {
+          await command.executeSlash(interaction, lang);
+        }
+      } catch (err) {
+        logger.error(`Erreur menu message ${interaction.commandName}:`, err);
+        const errMsg = t(lang, 'errors.command_error');
+        if (interaction.replied || interaction.deferred) {
+          await interaction.followUp({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => null);
+        } else {
+          await interaction.reply({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => null);
+        }
+      }
+
+      await logCommand(client, {
+        title: 'Commande contextuelle message',
+        description: `\`${interaction.commandName}\` utilisée dans <#${interaction.channelId}>`,
+        fields: [
+          { name: 'Utilisateur', value: `<@${interaction.user.id}> (\`${interaction.user.tag}\`)`, inline: true },
+          { name: 'Salon', value: `<#${interaction.channelId}>`, inline: true },
+          { name: 'Message cible', value: interaction.targetMessage?.id ? `\`${interaction.targetMessage.id}\`` : 'inconnu', inline: false }
         ]
       }).catch(() => null);
       return;
