@@ -10,6 +10,11 @@ import { MessageFlags } from 'discord.js';
 import * as logger from '../../utils/logger.js';
 import { handleInviteProfileModalSubmit } from '../../services/inviteService.js';
 import { handleBanListSearchModal } from '../../commands/admin/banlist.js';
+import { handleEnModalSubmit } from '../../commands/admin/en.js';
+import { handleBanUserModalSubmit } from '../../commands/admin/banUser.js';
+import { handleKickUserModalSubmit } from '../../commands/admin/kickUser.js';
+import { handleMuteUserModalSubmit } from '../../commands/admin/muteUser.js';
+import { handleDmUserModalSubmit } from '../../commands/admin/dmUser.js';
 
 export default {
   name: 'interactionCreate',
@@ -81,6 +86,40 @@ export default {
           { name: 'Utilisateur', value: `<@${interaction.user.id}> (\`${interaction.user.tag}\`)`, inline: true },
           { name: 'Salon', value: `<#${interaction.channelId}>`, inline: true },
           { name: 'Message cible', value: interaction.targetMessage?.id ? `\`${interaction.targetMessage.id}\`` : 'inconnu', inline: false }
+        ]
+      }).catch(() => null);
+      return;
+    }
+
+    // 1c. Route User Context Menu Commands
+    if (interaction.isUserContextMenuCommand()) {
+      const command = client.commands.get(interaction.commandName);
+      if (!command) return;
+
+      const lang = 'fr';
+      logger.debug(`Context menu user: ${interaction.commandName} par ${interaction.user.tag} (${interaction.user.id})`);
+
+      try {
+        if (typeof command.executeUserContextMenu === 'function') {
+          await command.executeUserContextMenu(interaction, lang);
+        }
+      } catch (err) {
+        logger.error(`Erreur menu utilisateur ${interaction.commandName}:`, err);
+        const errMsg = t(lang, 'errors.command_error');
+        if (interaction.replied || interaction.deferred) {
+          await interaction.followUp({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => null);
+        } else {
+          await interaction.reply({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => null);
+        }
+      }
+
+      await logCommand(client, {
+        title: 'Commande contextuelle utilisateur',
+        description: `\`${interaction.commandName}\` utilisée sur <@${interaction.targetUser?.id || 'inconnu'}>`,
+        fields: [
+          { name: 'Utilisateur', value: `<@${interaction.user.id}> (\`${interaction.user.tag}\`)`, inline: true },
+          { name: 'Cible', value: interaction.targetUser?.id ? `<@${interaction.targetUser.id}> (\`${interaction.targetUser.username}\`)` : 'inconnue', inline: true },
+          { name: 'Salon', value: `<#${interaction.channelId}>`, inline: true }
         ]
       }).catch(() => null);
       return;
@@ -167,6 +206,36 @@ export default {
           await handleStreamerLiveModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal streamer live:', err);
+        }
+      } else if (interaction.customId === 'translate_en_modal') {
+        try {
+          await handleEnModalSubmit(interaction);
+        } catch (err) {
+          logger.error('Erreur modal traduction en:', err);
+        }
+      } else if (interaction.customId.startsWith('userctx_ban_reason_')) {
+        try {
+          await handleBanUserModalSubmit(interaction);
+        } catch (err) {
+          logger.error('Erreur modal ban user:', err);
+        }
+      } else if (interaction.customId.startsWith('userctx_kick_reason_')) {
+        try {
+          await handleKickUserModalSubmit(interaction);
+        } catch (err) {
+          logger.error('Erreur modal kick user:', err);
+        }
+      } else if (interaction.customId.startsWith('userctx_mute_reason_')) {
+        try {
+          await handleMuteUserModalSubmit(interaction);
+        } catch (err) {
+          logger.error('Erreur modal mute user:', err);
+        }
+      } else if (interaction.customId.startsWith('userctx_dm_message_')) {
+        try {
+          await handleDmUserModalSubmit(interaction);
+        } catch (err) {
+          logger.error('Erreur modal dm user:', err);
         }
       } else if (interaction.customId.startsWith('poll_modal_create_')) {
         try {

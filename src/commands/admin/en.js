@@ -1,4 +1,4 @@
-import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+import { ActionRowBuilder, MessageFlags, ModalBuilder, SlashCommandBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { getLanguage, translateText } from '../../utils/language.js';
 import { replyErr } from '../../services/moderationService.js';
 
@@ -11,7 +11,7 @@ function hasTranslationAccess(member) {
 function trimText(text, maxLength = 3900) {
   const value = String(text ?? '');
   if (value.length <= maxLength) return value;
-  return `${value.slice(0, maxLength - 1)}…`;
+  return `${value.slice(0, maxLength - 1)}â€¦`;
 }
 
 function formatQuoteBlock(text) {
@@ -23,24 +23,38 @@ function formatQuoteBlock(text) {
 
 export const data = new SlashCommandBuilder()
   .setName('en')
-  .setDescription('Traduire un texte français en anglais')
+  .setDescription('Traduire un texte franÃ§ais en anglais')
   .setDefaultMemberPermissions(null)
-  .setDMPermission(false)
-  .addStringOption(option =>
-    option
-      .setName('texte')
-      .setDescription('Texte français à traduire')
-      .setRequired(true)
-      .setMaxLength(4000)
-  );
+  .setDMPermission(false);
 
 export async function executeSlash(interaction) {
   if (!hasTranslationAccess(interaction.member)) {
     return replyErr(interaction, 'Permissions insuffisantes.');
   }
 
+  const modal = new ModalBuilder()
+    .setCustomId('translate_en_modal')
+    .setTitle('A文 Translation');
+
+  const textInput = new TextInputBuilder()
+    .setCustomId('texte')
+    .setLabel('Texte français à traduire')
+    .setStyle(TextInputStyle.Paragraph)
+    .setRequired(true)
+    .setMaxLength(4000)
+    .setPlaceholder('Colle ici ton texte avec les sauts de ligne conservés.');
+
+  modal.addComponents(new ActionRowBuilder().addComponents(textInput));
+  await interaction.showModal(modal);
+}
+
+export async function handleEnModalSubmit(interaction) {
+  if (!hasTranslationAccess(interaction.member)) {
+    return replyErr(interaction, 'Permissions insuffisantes.');
+  }
+
   const lang = await getLanguage(interaction.member);
-  const sourceText = interaction.options.getString('texte', true).trim();
+  const sourceText = interaction.fields.getTextInputValue('texte')?.trim();
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
@@ -48,7 +62,7 @@ export async function executeSlash(interaction) {
     const translatedText = await translateText(sourceText, 'fr', 'en');
 
     await interaction.channel.send({
-    content: `**A文 Translation**\nSent by <@${interaction.user.id}>\n${formatQuoteBlock(trimText(translatedText, 1800))}`,
+      content: `**A文 Translation**\nSent by <@${interaction.user.id}>\n${formatQuoteBlock(trimText(translatedText, 1800))}`,
       allowedMentions: { parse: [] }
     });
 
@@ -63,5 +77,6 @@ export async function executeSlash(interaction) {
 
 export default {
   data,
-  executeSlash
+  executeSlash,
+  handleEnModalSubmit
 };
