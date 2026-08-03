@@ -1,4 +1,4 @@
-import { ApplicationCommandType, ContextMenuCommandBuilder, EmbedBuilder } from 'discord.js';
+import { ApplicationCommandType, ContextMenuCommandBuilder } from 'discord.js';
 import { detectTextLanguage, getLanguage, translateText, t } from '../../utils/language.js';
 
 const TRANSLATION_ROLE_ID = '1509613216463065243';
@@ -57,20 +57,9 @@ export async function executeContextMenu(interaction) {
     }
 
     const translatedText = await translateText(sourceText, 'en', 'fr');
-    const embed = new EmbedBuilder()
-      .setColor(0x57F287)
-      .setDescription(trimText(translatedText))
-      .setAuthor({
-        name: `Traduction de ${sourceMessage.author.username}`,
-        iconURL: sourceMessage.author.displayAvatarURL()
-      })
-      .setFooter({
-        text: `Demandé par ${interaction.user.username}`,
-        iconURL: interaction.user.displayAvatarURL()
-      });
 
     await interaction.editReply({
-      embeds: [embed]
+      content: `**Traduction**\n> ${trimText(translatedText, 1800)}`
     }).catch(() => null);
   } catch (error) {
     await replyPlainError(interaction, error?.message || t(lang, 'errors.command_error'));

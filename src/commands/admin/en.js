@@ -41,9 +41,9 @@ export async function executeSlash(interaction) {
     const translatedText = await translateText(sourceText, 'fr', 'en');
     const embed = new EmbedBuilder()
       .setColor(0x57F287)
-      .setDescription(trimText(translatedText))
+      .setDescription(`> ${trimText(translatedText, 1800)}`)
       .setAuthor({
-        name: `Traduit par ${interaction.user.username}`,
+        name: `Sent by ${interaction.user.username}`,
         iconURL: interaction.user.displayAvatarURL()
       });
 
