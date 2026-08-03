@@ -48,7 +48,7 @@ export async function executeSlash(interaction) {
     const translatedText = await translateText(sourceText, 'fr', 'en');
 
     await interaction.channel.send({
-      content: `**A文 Traduire**\nSent by <@${interaction.user.id}>\n${formatQuoteBlock(trimText(translatedText, 1800))}`,
+    content: `**A文 Translation**\nSent by <@${interaction.user.id}>\n${formatQuoteBlock(trimText(translatedText, 1800))}`,
       allowedMentions: { parse: [] }
     });
 

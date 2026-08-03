@@ -32,7 +32,7 @@ async function replyPlainError(interaction, content) {
 }
 
 export const data = new ContextMenuCommandBuilder()
-  .setName('traduire')
+  .setName('Translate')
   .setType(ApplicationCommandType.Message)
   .setDefaultMemberPermissions(null)
   .setDMPermission(false);
