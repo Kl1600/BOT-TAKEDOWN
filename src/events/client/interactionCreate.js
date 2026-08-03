@@ -207,7 +207,7 @@ export default {
         } catch (err) {
           logger.error('Erreur modal streamer live:', err);
         }
-      } else if (interaction.customId === 'translate_en_modal') {
+      } else if (interaction.customId.startsWith('translate_en_modal:')) {
         try {
           await handleEnModalSubmit(interaction);
         } catch (err) {

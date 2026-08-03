@@ -3,6 +3,8 @@ import { getLanguage, translateText } from '../../utils/language.js';
 import { replyErr } from '../../services/moderationService.js';
 
 const TRANSLATION_ROLE_ID = '1509613216463065243';
+const pendingTranslationTargets = new Map();
+const pendingTranslationTimers = new Map();
 
 function hasTranslationAccess(member) {
   return Boolean(member?.roles?.cache?.has(TRANSLATION_ROLE_ID));
@@ -11,7 +13,7 @@ function hasTranslationAccess(member) {
 function trimText(text, maxLength = 3900) {
   const value = String(text ?? '');
   if (value.length <= maxLength) return value;
-  return `${value.slice(0, maxLength - 1)}…`;
+  return `${value.slice(0, maxLength - 1)}?`;
 }
 
 function formatQuoteBlock(text) {
@@ -21,53 +23,112 @@ function formatQuoteBlock(text) {
     .join('\n');
 }
 
-function extractUserId(input) {
+function extractDiscordId(input) {
   if (!input) return null;
   const cleaned = String(input).replace(/[^0-9]/g, '');
   return cleaned.length >= 17 ? cleaned : null;
 }
 
-async function resolveMentionTarget(interaction, rawValue) {
-  const userId = extractUserId(rawValue);
+function parseMessageLink(input) {
+  if (!input) return null;
+  const match = String(input).match(/discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)/i);
+  if (!match) return null;
+  return {
+    guildId: match[1],
+    channelId: match[2],
+    messageId: match[3]
+  };
+}
+
+function storePendingTranslationTarget(interactionId, target) {
+  pendingTranslationTargets.set(interactionId, target);
+
+  const timer = pendingTranslationTimers.get(interactionId);
+  if (timer) clearTimeout(timer);
+
+  pendingTranslationTimers.set(interactionId, setTimeout(() => {
+    pendingTranslationTargets.delete(interactionId);
+    pendingTranslationTimers.delete(interactionId);
+  }, 15 * 60 * 1000));
+}
+
+async function resolveTranslationTarget(interaction, rawValue) {
+  const value = String(rawValue ?? '').trim();
+  if (!value) return null;
+
+  const messageLink = parseMessageLink(value);
+  if (messageLink) {
+    const channel = await interaction.guild.channels.fetch(messageLink.channelId).catch(() => null);
+    if (!channel || !channel.isTextBased()) {
+      return null;
+    }
+
+    const message = await channel.messages.fetch(messageLink.messageId).catch(() => null);
+    if (!message) return null;
+
+    return {
+      type: 'message',
+      guildId: messageLink.guildId,
+      channelId: messageLink.channelId,
+      messageId: messageLink.messageId,
+      userId: message.author?.id || null,
+      username: message.author?.username || null
+    };
+  }
+
+  const userId = extractDiscordId(value);
   if (!userId) return null;
-  return interaction.client.users.fetch(userId).catch(() => null);
+
+  const user = await interaction.client.users.fetch(userId).catch(() => null);
+  if (!user) return null;
+
+  return {
+    type: 'user',
+    userId: user.id,
+    username: user.username
+  };
 }
 
 export const data = new SlashCommandBuilder()
   .setName('en')
-  .setDescription('Traduire un texte français en anglais')
+  .setDescription('Traduire un texte fran?ais en anglais')
   .setDefaultMemberPermissions(null)
-  .setDMPermission(false);
+  .setDMPermission(false)
+  .addStringOption(option =>
+    option
+      .setName('cible')
+      .setDescription('Mention du membre ou lien du message ? traduire (optionnel)')
+      .setRequired(false)
+      .setMaxLength(200)
+  );
 
 export async function executeSlash(interaction) {
   if (!hasTranslationAccess(interaction.member)) {
     return replyErr(interaction, 'Permissions insuffisantes.');
   }
 
-  const modal = new ModalBuilder()
-    .setCustomId('translate_en_modal')
-    .setTitle('A文 Translation');
+  const rawTarget = interaction.options.getString('cible')?.trim();
+  const target = await resolveTranslationTarget(interaction, rawTarget);
 
-  const targetInput = new TextInputBuilder()
-    .setCustomId('destinataire')
-    .setLabel('Membre destinataire (optionnel)')
-    .setStyle(TextInputStyle.Short)
-    .setRequired(false)
-    .setMaxLength(100)
-    .setPlaceholder('@membre ou ID Discord');
+  if (rawTarget && !target) {
+    return replyErr(interaction, 'Cible invalide. Utilisez une mention, un ID ou un lien de message Discord.');
+  }
+
+  storePendingTranslationTarget(interaction.id, target);
+
+  const modal = new ModalBuilder()
+    .setCustomId(`translate_en_modal:${interaction.id}`)
+    .setTitle('A? Translation');
 
   const textInput = new TextInputBuilder()
     .setCustomId('texte')
-    .setLabel('Texte français à traduire')
+    .setLabel('Texte fran?ais ? traduire')
     .setStyle(TextInputStyle.Paragraph)
     .setRequired(true)
     .setMaxLength(4000)
-    .setPlaceholder('Colle ici ton texte avec les sauts de ligne conservés.');
+    .setPlaceholder('Colle ici ton texte avec les sauts de ligne conserv?s.');
 
-  modal.addComponents(
-    new ActionRowBuilder().addComponents(targetInput),
-    new ActionRowBuilder().addComponents(textInput)
-  );
+  modal.addComponents(new ActionRowBuilder().addComponents(textInput));
   await interaction.showModal(modal);
 }
 
@@ -77,24 +138,31 @@ export async function handleEnModalSubmit(interaction) {
   }
 
   const lang = await getLanguage(interaction.member);
-  const rawTarget = interaction.fields.getTextInputValue('destinataire')?.trim();
   const sourceText = interaction.fields.getTextInputValue('texte')?.trim();
-  const targetUser = await resolveMentionTarget(interaction, rawTarget);
+  const [_, parentInteractionId] = String(interaction.customId || '').split(':');
+  const target = pendingTranslationTargets.get(parentInteractionId) || null;
+  pendingTranslationTargets.delete(parentInteractionId);
+  const pendingTimer = pendingTranslationTimers.get(parentInteractionId);
+  if (pendingTimer) {
+    clearTimeout(pendingTimer);
+    pendingTranslationTimers.delete(parentInteractionId);
+  }
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const translatedText = await translateText(sourceText, 'fr', 'en');
-    const mentionLine = targetUser ? `To <@${targetUser.id}>\n` : '';
-    const allowedMentions = targetUser
-      ? { parse: [], users: [targetUser.id] }
+    const mentionLine = target?.userId ? `To <@${target.userId}>\n` : '';
+    const allowedMentions = target?.userId
+      ? { parse: [], users: [target.userId] }
       : { parse: [] };
 
-    await interaction.channel.send({
-      content: `**A文 Translation**\nSent by <@${interaction.user.id}>\n${mentionLine}${formatQuoteBlock(trimText(translatedText, 1800))}`,
+    const payload = {
+      content: `**A? Translation**\nSent by <@${interaction.user.id}>\n${mentionLine}${formatQuoteBlock(trimText(translatedText, 1800))}`,
       allowedMentions
-    });
+    };
 
+    await interaction.channel.send(payload);
     await interaction.deleteReply().catch(() => null);
   } catch (error) {
     const errorMessage = error?.message || (lang === 'en'
