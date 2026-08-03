@@ -1,4 +1,4 @@
-import { EmbedBuilder, MessageContextMenuCommandBuilder } from 'discord.js';
+import { ApplicationCommandType, ContextMenuCommandBuilder, EmbedBuilder } from 'discord.js';
 import { detectTextLanguage, getLanguage, translateText, t } from '../../utils/language.js';
 
 const TRANSLATION_ROLE_ID = '1509613216463065243';
@@ -24,8 +24,9 @@ async function replyPlainError(interaction, content) {
   }).catch(() => null);
 }
 
-export const data = new MessageContextMenuCommandBuilder()
+export const data = new ContextMenuCommandBuilder()
   .setName('traduire')
+  .setType(ApplicationCommandType.Message)
   .setDefaultMemberPermissions(null)
   .setDMPermission(false);
 
