@@ -25,6 +25,7 @@ const TICKET_CATEGORY_OPTIONS = {
     { label: 'Support/Autres', value: '1527610387703271484' },
     { label: 'Partenariats', value: '1527610362164281414' },
     { label: 'Tournois/Events', value: '1527610448315154522' },
+    { label: 'Crew', value: '1533877304520871976' },
     { label: 'Sanction', value: '1527611704077455440' },
     { label: 'Streamer', value: '1527612393205661716' }
   ],
@@ -32,6 +33,7 @@ const TICKET_CATEGORY_OPTIONS = {
     { label: 'Support/Other', value: '1527610402509164716' },
     { label: 'Partner', value: '1527610421891305502' },
     { label: 'Tournament/Event', value: '1527610434964820109' },
+    { label: 'Crew', value: '1533877082277281792' },
     { label: 'Sanction', value: '1527611683760242789' },
     { label: 'Streamer', value: '1527612438441230337' }
   ]
