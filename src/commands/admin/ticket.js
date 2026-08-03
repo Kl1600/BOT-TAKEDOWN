@@ -25,6 +25,7 @@ export default {
       channelId: interaction.channelId,
       messageIds: message?.id,
       memberId: interaction.user.id,
+      refreshOnMemberUpdate: true,
       panelType: 'ticket',
       buildComponents: async member => {
         const refreshedLang = await getLanguage(member);
@@ -44,6 +45,7 @@ export default {
       channelId: message.channelId,
       messageIds: sentMessage?.id,
       memberId: message.author.id,
+      refreshOnMemberUpdate: true,
       panelType: 'ticket',
       buildComponents: async member => {
         const refreshedLang = await getLanguage(member);

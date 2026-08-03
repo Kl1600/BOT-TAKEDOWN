@@ -150,9 +150,14 @@ async function refreshEntry(client, entry) {
 }
 
 export async function refreshAllPanels(client) {
+  let refreshedCount = 0;
   for (const entry of refreshEntries.values()) {
-    await refreshEntry(client, entry);
+    const refreshed = await refreshEntry(client, entry);
+    if (refreshed) {
+      refreshedCount += 1;
+    }
   }
+  return refreshedCount;
 }
 
 export async function refreshPanelsForMember(client, guildId, memberId) {

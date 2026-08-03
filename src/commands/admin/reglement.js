@@ -180,6 +180,7 @@ export default {
         channelId: interaction.channelId,
         messageIds: replyMessage.id,
         memberId: interaction.user.id,
+        refreshOnMemberUpdate: true,
         panelType: 'reglement',
         buildComponents: async member => buildReglementContainers(!(await isEnglishOnly(member)))
       });
@@ -198,6 +199,7 @@ export default {
       channelId: message.channelId,
       messageIds: sentMessage?.id,
       memberId: message.author.id,
+      refreshOnMemberUpdate: true,
       panelType: 'reglement',
       buildComponents: async member => buildReglementContainers(!(await isEnglishOnly(member)))
     });

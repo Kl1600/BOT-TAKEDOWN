@@ -31,6 +31,7 @@ export async function executeSlash(interaction) {
     channelId: interaction.channelId,
     messageIds: sentMessage?.id,
     memberId: interaction.user.id,
+    refreshOnMemberUpdate: true,
     panelType: 'beta',
     buildComponents: async member => [
       buildBetaAccessPanelContainer(
@@ -57,6 +58,7 @@ export async function executePrefix(message) {
     channelId: message.channelId,
     messageIds: sentMessage?.id,
     memberId: message.author.id,
+    refreshOnMemberUpdate: true,
     panelType: 'beta',
     buildComponents: async member => [
       buildBetaAccessPanelContainer(

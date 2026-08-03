@@ -298,6 +298,7 @@ export default {
         channelId: interaction.channelId,
         messageIds: sentMessageIds,
         memberId: interaction.user.id,
+        refreshOnMemberUpdate: true,
         panelType: 'faq',
         buildComponents: async member => {
           const refreshedLang = await getLanguage(member);
@@ -319,6 +320,7 @@ export default {
         channelId: message.channelId,
         messageIds: sentMessageIds,
         memberId: message.author.id,
+        refreshOnMemberUpdate: true,
         panelType: 'faq',
         buildComponents: async member => {
           const refreshedLang = await getLanguage(member);
