@@ -25,7 +25,7 @@ async function replyPlainError(interaction, content) {
 }
 
 export const data = new MessageContextMenuCommandBuilder()
-  .setName('Traduire')
+  .setName('traduire')
   .setDefaultMemberPermissions(null)
   .setDMPermission(false);
 
