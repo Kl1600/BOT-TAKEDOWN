@@ -163,11 +163,23 @@ export async function refreshAllPanels(client) {
 export async function refreshPanelsForMember(client, guildId, memberId) {
   const normalizedGuildId = String(guildId);
   const normalizedMemberId = String(memberId);
+  const languageSensitivePanels = new Set([
+    'ticket',
+    'faq',
+    'reglement',
+    'staffapply',
+    'beta',
+    'modes',
+    'guide',
+    'connect',
+    'annonce',
+    'patchnote'
+  ]);
 
   for (const entry of refreshEntries.values()) {
     if (entry.guildId !== normalizedGuildId) continue;
     if (entry.memberId !== normalizedMemberId) continue;
-    if (!entry.refreshOnMemberUpdate) continue;
+    if (!entry.refreshOnMemberUpdate && !languageSensitivePanels.has(entry.panelType)) continue;
     await refreshEntry(client, entry);
   }
 }
