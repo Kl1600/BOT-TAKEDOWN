@@ -3,13 +3,14 @@ import { executeUnban, isStaffOrAdmin, replyOk, replyErr, prefixReply, replyUsag
 
 export const data = new SlashCommandBuilder()
   .setName('unban')
-  .setDescription('Debannir un utilisateur')
+  .setDescription('Débannir un utilisateur')
   .addStringOption(o => o.setName('userid').setDescription("ID Discord de l'utilisateur banni").setRequired(true))
   .addStringOption(o => o.setName('raison').setDescription('Raison du unban').setRequired(false).setMaxLength(500));
 
 export async function executeSlash(interaction) {
-  if (!isStaffOrAdmin(interaction.member))
+  if (!isStaffOrAdmin(interaction.member)) {
     return replyErr(interaction, 'Permissions insuffisantes.');
+  }
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const userId = interaction.options.getString('userid').trim();
@@ -19,15 +20,14 @@ export async function executeSlash(interaction) {
 
   try {
     const user = await executeUnban({ guild: interaction.guild, mod: interaction.user, userId, raison, client: interaction.client });
-    return replyOk(interaction, `? \`${user.username}\` a ete debanni.
--# Raison : ${raison}`, 0x57F287);
+    return replyOk(interaction, `✅ \`${user.username}\` a été débanni.\n-# Raison : ${raison}`, 0x57F287);
   } catch (e) {
     return replyErr(interaction, e.message);
   }
 }
 
 export async function executePrefix(message, args) {
-  if (!isStaffOrAdmin(message.member)) return prefixReply(message, '? Permissions insuffisantes.');
+  if (!isStaffOrAdmin(message.member)) return prefixReply(message, '❌ Permissions insuffisantes.');
 
   const userId = args[0];
   if (!userId) return replyUsage(message, `\`${message.client.prefix || '+'}unban <userId> [raison]\``);
@@ -36,9 +36,9 @@ export async function executePrefix(message, args) {
 
   try {
     const user = await executeUnban({ guild: message.guild, mod: message.author, userId, raison, client: message.client });
-    await message.reply(`? \`${user.username}\` a ete debanni. Raison : ${raison}`);
+    await message.reply(`✅ \`${user.username}\` a été débanni. Raison : ${raison}`);
   } catch (e) {
-    await prefixReply(message, `? ${e.message}`);
+    await prefixReply(message, `❌ ${e.message}`);
   }
 }
 

@@ -8,7 +8,7 @@ const BOT_OWNER_ID = '1481543558715408426';
 function getInsufficientPermissionsMessage(lang) {
   return lang === 'en'
     ? 'Permissions insufficient.'
-    : 'Permissions insuffisante.';
+    : 'Permissions insuffisantes.';
 }
 
 function getRestartMessage(lang) {

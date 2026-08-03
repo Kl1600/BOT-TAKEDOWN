@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from 'discord.js';
+﻿import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from 'discord.js';
 import { executeKick, isStaffOrAdmin, replyOk, replyErr, prefixReply, replyUsage, resolveMemberFromInput } from '../../services/moderationService.js';
 
 export const data = new SlashCommandBuilder()
@@ -28,7 +28,7 @@ export async function executeSlash(interaction) {
 }
 
 export async function executePrefix(message, args) {
-  if (!isStaffOrAdmin(message.member)) return prefixReply(message, '? Permissions insuffisantes.');
+  if (!isStaffOrAdmin(message.member)) return prefixReply(message, '❌ Permissions insuffisantes.');
 
   const mention = await resolveMemberFromInput(message.guild, args[0], message.mentions.members?.first());
   if (!mention) return replyUsage(message, `\`${message.client.prefix || '+'}kick <id|@membre> [raison]\``);
@@ -44,3 +44,4 @@ export async function executePrefix(message, args) {
 }
 
 export default { data, executeSlash, executePrefix };
+

@@ -16,9 +16,9 @@ export default {
     .setName('add')
     .setDescription('Ajouter un membre au ticket')
     .addStringOption(option =>
-      option
+    option
         .setName('id')
-        .setDescription('ID Discord du membre ? ajouter')
+        .setDescription('ID Discord du membre à ajouter')
         .setRequired(true)
     ),
 
@@ -29,7 +29,7 @@ export default {
 
     const ticket = await dbService.getTicket(interaction.channel.id);
     if (!ticket) {
-      return replyErr(interaction, 'Cette commande doit ?tre utilis?e dans un ticket.');
+      return replyErr(interaction, 'Cette commande doit être utilisée dans un ticket.');
     }
 
     const targetMember = await resolveMemberFromInput(interaction.guild, interaction.options.getString('id', true));
@@ -44,11 +44,11 @@ export default {
   },
 
   async executePrefix(message, args) {
-    if (!hasTicketManagementAccess(message.member)) return prefixReply(message, '? Permissions insuffisantes.');
+    if (!hasTicketManagementAccess(message.member)) return prefixReply(message, '❌ Permissions insuffisantes.');
 
     const ticket = await dbService.getTicket(message.channel.id);
     if (!ticket) {
-      return prefixReply(message, '? Cette commande doit ?tre utilis?e dans un ticket.');
+      return prefixReply(message, '❌ Cette commande doit être utilisée dans un ticket.');
     }
 
     const targetMember = await resolveMemberFromInput(message.guild, args[0], message.mentions.members?.first());

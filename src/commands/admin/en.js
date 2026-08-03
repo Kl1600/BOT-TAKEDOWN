@@ -91,13 +91,13 @@ async function resolveTranslationTarget(interaction, rawValue) {
 
 export const data = new SlashCommandBuilder()
   .setName('en')
-  .setDescription('Traduire un texte fran?ais en anglais')
+  .setDescription('Traduire un texte français en anglais')
   .setDefaultMemberPermissions(null)
   .setDMPermission(false)
   .addStringOption(option =>
     option
       .setName('cible')
-      .setDescription('Mention du membre ou lien du message ? traduire (optionnel)')
+      .setDescription('Mention du membre ou lien du message à traduire (optionnel)')
       .setRequired(false)
       .setMaxLength(200)
   );
@@ -118,15 +118,15 @@ export async function executeSlash(interaction) {
 
   const modal = new ModalBuilder()
     .setCustomId(`translate_en_modal:${interaction.id}`)
-    .setTitle('A? Translation');
+    .setTitle('A文 Translation');
 
   const textInput = new TextInputBuilder()
     .setCustomId('texte')
-    .setLabel('Texte fran?ais ? traduire')
+    .setLabel('Texte français à traduire')
     .setStyle(TextInputStyle.Paragraph)
     .setRequired(true)
     .setMaxLength(4000)
-    .setPlaceholder('Colle ici ton texte avec les sauts de ligne conserv?s.');
+    .setPlaceholder('Colle ici ton texte avec les sauts de ligne conservés.');
 
   modal.addComponents(new ActionRowBuilder().addComponents(textInput));
   await interaction.showModal(modal);
@@ -158,7 +158,7 @@ export async function handleEnModalSubmit(interaction) {
       : { parse: [] };
 
     const payload = {
-      content: `**A? Translation**\nSent by <@${interaction.user.id}>\n${mentionLine}${formatQuoteBlock(trimText(translatedText, 1800))}`,
+      content: `**A文 Translation**\nSent by <@${interaction.user.id}>\n${mentionLine}${formatQuoteBlock(trimText(translatedText, 1800))}`,
       allowedMentions
     };
 

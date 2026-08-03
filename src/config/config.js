@@ -40,10 +40,10 @@ export default {
   // Optional guild ID for development slash command registration
   guildId: process.env.DEV_GUILD_ID || process.env.GUILD_ID || process.env.DISCORD_GUILD_ID || null,
 
-  // PrÃ©fixe pour les commandes classiques
+  // Préfixe pour les commandes classiques
   prefix: process.env.BOT_PREFIX || '*',
 
-  // Mode dÃ©bug
+  // Mode débug
   debug: process.argv.includes('--debug') || process.env.DEBUG === 'true',
 
   // Couleurs des Embeds
@@ -54,7 +54,7 @@ export default {
     success: parseColor(process.env.COLOR_SUCCESS, 0x990000)
   },
 
-  // Identifiants de rÃ´les
+  // Identifiants de rôles
   roles: {
     admin: process.env.ROLE_ADMIN || '1519759444479836342',
     fr: process.env.ROLE_FR || '1519750090498244670',
@@ -84,11 +84,11 @@ export default {
     roleId: '1520470175403737138'
   },
 
-  // Salons de logs avancÃ©s
+  // Salons de logs avancés
   logs: {
     general: process.env.LOG_GENERAL || '',       // Suppression/modif de salon
     message: process.env.LOG_MESSAGE || '',       // Modif/suppression de message
-    voice: process.env.LOG_VOICE || '',           // ActivitÃ© vocale
+    voice: process.env.LOG_VOICE || '',           // Activité vocale
     ticket: process.env.LOG_TICKET || '',         // Tickets
     announcement: process.env.LOG_ANNOUNCEMENT || '1519997992487358545', // /annonces
     command: process.env.LOG_COMMAND || '1519998276655513680',       // Commandes slash
@@ -108,7 +108,7 @@ export default {
     ticket: process.env.ROLE_NOTIF_TICKET || '1533059907958608023'
   },
 
-  // SystÃ¨me de tickets
+  // Système de tickets
   tickets: {
     categoryId: process.env.TICKET_CATEGORY_ID || '1484977225190215720',
     categoryFrId: process.env.TICKET_CATEGORY_FR_ID || process.env.TICKET_CATEGORY_ID_FR || null,
@@ -132,14 +132,14 @@ export default {
     }
   },
 
-  // SystÃ¨me streamer
+  // Système streamer
   streamer: {
     role:            process.env.ROLE_STREAMER          || '1520492474639057089',
     announceChannel: process.env.CHANNEL_STREAM_ANNOUNCE || '1520494677915078887',
     pingRole:        process.env.ROLE_STREAM_NOTIFY      || '1520500366926413895'
   },
 
-  // RÃƒÂ´les de notification
+  // Rôles de notification
   notifications: {
     patchNotes: process.env.ROLE_PATCHNOTES || '1520116888879890593'
   },

@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+﻿import { SlashCommandBuilder } from 'discord.js';
 import { isStaffOrAdmin, prefixReply, replyErr, replyOk, replyUsage } from '../../services/moderationService.js';
 import config from '../../config/config.js';
 
@@ -59,7 +59,7 @@ export async function executeSlash(interaction) {
 
 export async function executePrefix(message, args) {
   if (!isStaffOrAdmin(message.member)) {
-    return prefixReply(message, '? Permissions insuffisantes.');
+    return prefixReply(message, '❌ Permissions insuffisantes.');
   }
 
   const userId = extractUserId(args[0]);
@@ -78,3 +78,4 @@ export async function executePrefix(message, args) {
 }
 
 export default { data, executeSlash, executePrefix };
+

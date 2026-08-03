@@ -13,7 +13,7 @@ function canRefreshPanels(member) {
 
 export const data = new SlashCommandBuilder()
   .setName('actpanel')
-  .setDescription('Forcer le rafra?chissement de tous les panels');
+  .setDescription('Forcer le rafraîchissement de tous les panels');
 
 export async function executeSlash(interaction) {
   if (!canRefreshPanels(interaction.member)) {
@@ -26,20 +26,20 @@ export async function executeSlash(interaction) {
     const refreshedCount = await refreshAllPanels(interaction.client);
     return interaction.editReply({
       content: refreshedCount > 0
-        ? `? ${refreshedCount} panel(s) rafra?chi(s).`
-        : '?? Aucun panel ? rafra?chir.'
+        ? `✅ ${refreshedCount} panel(s) rafraîchi(s).`
+        : 'ℹ️ Aucun panel à rafraîchir.'
     });
   } catch (err) {
     logger.error('Erreur actpanel:', err);
     return interaction.editReply({
-      content: `? ${err.message || 'Impossible de rafra?chir les panels.'}`
+      content: `❌ ${err.message || 'Impossible de rafraîchir les panels.'}`
     }).catch(() => null);
   }
 }
 
 export async function executePrefix(message) {
   if (!canRefreshPanels(message.member)) {
-    return prefixReply(message, '? Permissions insuffisantes.');
+    return prefixReply(message, '❌ Permissions insuffisantes.');
   }
 
   await message.delete().catch(() => null);
@@ -48,8 +48,8 @@ export async function executePrefix(message) {
     const refreshedCount = await refreshAllPanels(message.client);
     const confirmation = await message.channel.send(
       refreshedCount > 0
-        ? `? ${refreshedCount} panel(s) rafra?chi(s).`
-        : '?? Aucun panel ? rafra?chir.'
+        ? `✅ ${refreshedCount} panel(s) rafraîchi(s).`
+        : 'ℹ️ Aucun panel à rafraîchir.'
     ).catch(() => null);
 
     if (confirmation) {
@@ -59,7 +59,7 @@ export async function executePrefix(message) {
     }
   } catch (err) {
     logger.error('Erreur actpanel prefix:', err);
-    await prefixReply(message, `? ${err.message || 'Impossible de rafra?chir les panels.'}`);
+    await prefixReply(message, `❌ ${err.message || 'Impossible de rafraîchir les panels.'}`);
   }
 }
 
