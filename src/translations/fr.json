@@ -12,7 +12,9 @@
     "french_cannot_translate": "-# Traduction indisponible pour le rôle français.",
     "already_claimed": "-# Ce ticket est déjà pris en charge.",
     "english_only_translate": "-# La traduction est réservée aux membres ayant uniquement le rôle anglais.",
-    "translation_not_allowed": "-# Ce panneau ne peut pas être traduit."
+    "translation_not_allowed": "-# Ce panneau ne peut pas être traduit.",
+    "translate_reply_only": "-# Utilisez cette commande en réponse à un message.",
+    "translate_not_english": "-# Le message cité doit être en anglais pour être traduit."
   },
   "commands": {
     "annonce": {

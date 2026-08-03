@@ -12,7 +12,9 @@
     "french_cannot_translate": "-# Translation unavailable for French role holders.",
     "already_claimed": "-# This ticket is already claimed.",
     "english_only_translate": "-# Translation is reserved for members who only have the English role.",
-    "translation_not_allowed": "-# This panel cannot be translated."
+    "translation_not_allowed": "-# This panel cannot be translated.",
+    "translate_reply_only": "-# Use this command by replying to a message.",
+    "translate_not_english": "-# The replied message must be in English to be translated."
   },
   "commands": {
     "annonce": {
