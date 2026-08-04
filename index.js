@@ -12,6 +12,36 @@ function installDependencies() {
   execSync('npm install', { stdio: 'inherit' });
 }
 
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isTransientGatewayError(err) {
+  const message = String(err?.message || err || '');
+  return /Unexpected server response:\s*503/i.test(message)
+    || /ECONNRESET|ETIMEDOUT|EAI_AGAIN|socket hang up/i.test(message);
+}
+
+async function loginWithRetry(client, token, maxAttempts = 5) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      await client.login(token);
+      return;
+    } catch (err) {
+      const transient = isTransientGatewayError(err);
+      const lastAttempt = attempt >= maxAttempts;
+
+      if (!transient || lastAttempt) {
+        throw err;
+      }
+
+      const delayMs = Math.min(30000, attempt * 5000);
+      console.warn(`[BOOT] Connexion Discord temporairement indisponible (tentative ${attempt}/${maxAttempts}). Nouvelle tentative dans ${Math.round(delayMs / 1000)}s.`);
+      await wait(delayMs);
+    }
+  }
+}
+
 async function bootstrap() {
   if (!dependenciesReady()) {
     installDependencies();
@@ -60,9 +90,12 @@ async function bootstrap() {
   await loadEvents(client);
 
   try {
-    await client.login(config.token);
+    await loginWithRetry(client, config.token);
   } catch (err) {
-    logger.error('Échec de la connexion à Discord. Vérifiez votre token.', err);
+    const errorMessage = isTransientGatewayError(err)
+      ? 'Échec de la connexion au gateway Discord après plusieurs tentatives.'
+      : 'Échec de la connexion à Discord. Vérifiez votre token.';
+    logger.error(errorMessage, err);
     process.exit(1);
   }
 }
