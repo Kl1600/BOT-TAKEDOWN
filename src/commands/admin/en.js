@@ -172,26 +172,12 @@ export async function handleEnModalSubmit(interaction) {
     payload.content += `\n${formatQuoteBlock(trimText(translatedText, 1800))}`;
 
     if (target?.type === 'message' && target.message) {
-      const replyPayload = {
+      await target.message.reply({
         content: payload.content,
         allowedMentions: {
           ...(payload.allowedMentions || {}),
           repliedUser: false
-        },
-        reply: {
-          messageReference: target.message.id,
-          failIfNotExists: false
         }
-      };
-
-      await target.message.channel.send(replyPayload).catch(async () => {
-        await target.message.reply({
-          content: payload.content,
-          allowedMentions: {
-            ...(payload.allowedMentions || {}),
-            repliedUser: false
-          }
-        });
       });
     } else {
       await interaction.channel.send(payload);
