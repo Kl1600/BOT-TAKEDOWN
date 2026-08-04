@@ -111,32 +111,29 @@ export async function handleTicketOpenClick(interaction) {
 export async function handleTicketCategorySelect(interaction) {
   if (!interaction.customId.startsWith('ticket_category_')) return false;
 
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral }).catch(() => null);
+  const sendError = async content => {
+    return interaction.editReply({ content, flags: MessageFlags.Ephemeral }).catch(() => null);
+  };
+
   const selectedLang = interaction.customId.endsWith('_en') ? 'en' : 'fr';
   const selectedCategoryId = interaction.values?.[0];
-  const canUseEnglish = await isEnglishOnly(interaction.member);
-  const canUseFrench = await hasFrenchRole(interaction.member);
+  const freshMember = await interaction.guild.members.fetch(interaction.user.id, { force: true }).catch(() => interaction.member);
+  const canUseEnglish = freshMember?.roles?.cache?.has(config.roles.en) && !freshMember?.roles?.cache?.has(config.roles.fr);
+  const canUseFrench = freshMember?.roles?.cache?.has(config.roles.fr);
 
   if (selectedLang === 'en' && !canUseEnglish) {
-    await interaction.reply({
-      content: 'Permissions insuffisantes.',
-      flags: MessageFlags.Ephemeral
-    }).catch(() => null);
+    await sendError('Permissions insuffisantes.');
     return true;
   }
 
   if (selectedLang === 'fr' && !canUseFrench) {
-    await interaction.reply({
-      content: 'Permissions insuffisantes.',
-      flags: MessageFlags.Ephemeral
-    }).catch(() => null);
+    await sendError('Permissions insuffisantes.');
     return true;
   }
 
   if (!selectedCategoryId) {
-    await interaction.reply({
-      content: 'Catégorie invalide.',
-      flags: MessageFlags.Ephemeral
-    }).catch(() => null);
+    await sendError('Catégorie invalide.');
     return true;
   }
 
@@ -144,10 +141,7 @@ export async function handleTicketCategorySelect(interaction) {
   if (existingTicket) {
     const channel = interaction.guild.channels.cache.get(existingTicket.channel_id);
     if (channel) {
-      await interaction.reply({
-        content: `${t(selectedLang, 'errors.ticket_already_exists')} (<#${channel.id}>)`,
-        flags: MessageFlags.Ephemeral
-      }).catch(() => null);
+      await sendError(`${t(selectedLang, 'errors.ticket_already_exists')} (<#${channel.id}>)`);
       return true;
     }
     await dbService.deleteTicket(existingTicket.channel_id);
@@ -193,7 +187,9 @@ async function createTicketForUser(interaction, selectedLang, selectedCategoryId
     ? (config.tickets.categoryEnId || config.tickets.categoryId)
     : (config.tickets.categoryFrId || config.tickets.categoryId));
 
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral }).catch(() => null);
+  if (!interaction.deferred && !interaction.replied) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral }).catch(() => null);
+  }
   await dbService.setUserLanguage(user.id, selectedLang);
 
   const permissionOverwrites = [
