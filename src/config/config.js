@@ -89,7 +89,7 @@ export default {
     general: process.env.LOG_GENERAL || '',       // Suppression/modif de salon
     message: process.env.LOG_MESSAGE || '',       // Modif/suppression de message
     voice: process.env.LOG_VOICE || '',           // Activité vocale
-    dm: process.env.LOG_DM || '153414611314855533', // Messages privés envoyés/reçus
+    dm: process.env.LOG_DM || '1534146113148555334', // Messages privés envoyés/reçus
     ticket: process.env.LOG_TICKET || '',         // Tickets
     announcement: process.env.LOG_ANNOUNCEMENT || '1519997992487358545', // /annonces
     command: process.env.LOG_COMMAND || '1519998276655513680',       // Commandes slash

@@ -66,7 +66,7 @@ export async function executeContextMenu(interaction) {
     const translatedText = await translateText(sourceText, 'en', 'fr');
 
     await interaction.editReply({
-      content: `**A文 Translate**\n${formatQuoteBlock(trimText(translatedText, 1800))}`
+      content: `**A文 Translation**\n${formatQuoteBlock(trimText(translatedText, 1800))}`
     }).catch(() => null);
   } catch (error) {
     await replyPlainError(interaction, error?.message || t(lang, 'errors.command_error'));

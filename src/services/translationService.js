@@ -1,4 +1,4 @@
-import { ContainerBuilder, TextDisplayBuilder, MessageFlags, Routes } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ContainerBuilder, TextDisplayBuilder, MessageFlags, Routes } from 'discord.js';
 import { getLanguage, t, translateText } from '../utils/language.js';
 import { createErrorContainer, editV2InteractionReply } from '../utils/v2Helper.js';
 import { getModesTranslationGroup } from './modesService.js';
@@ -50,6 +50,68 @@ function extractComponentText(component) {
   }
 
   return text.trim();
+}
+
+function stripReglementTranslateHint(text) {
+  return String(text ?? '')
+    .replace(/^\s*-\#\s*🇬🇧\s*Click below to translate to English\.\s*$/gmi, '')
+    .replace(/^\s*-\#\s*Click below to translate to English\.\s*$/gmi, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function cloneActionRows(component) {
+  const rows = [];
+
+  if (!Array.isArray(component?.components)) {
+    return rows;
+  }
+
+  for (const row of component.components) {
+    if (!Array.isArray(row?.components) || row.components.length === 0) {
+      continue;
+    }
+
+    const actionRow = new ActionRowBuilder();
+    let hasButton = false;
+
+    for (const item of row.components) {
+      if (typeof item !== 'object' || item === null) {
+        continue;
+      }
+
+      if (item.style === undefined) {
+        continue;
+      }
+
+      const button = new ButtonBuilder();
+      const customId = item.custom_id ?? item.customId;
+      if (customId) {
+        button.setCustomId(customId);
+      }
+      if (item.label !== undefined) {
+        button.setLabel(item.label);
+      }
+      if (item.style !== undefined) {
+        button.setStyle(item.style);
+      }
+      if (item.disabled !== undefined) {
+        button.setDisabled(item.disabled);
+      }
+      if (item.emoji !== undefined) {
+        button.setEmoji(item.emoji);
+      }
+
+      actionRow.addComponents(button);
+      hasButton = true;
+    }
+
+    if (hasButton) {
+      rows.push(actionRow);
+    }
+  }
+
+  return rows;
 }
 
 function normalizeEmbedData(embed) {
@@ -110,13 +172,17 @@ async function translateReglementStack(interaction) {
 
   for (let index = 0; index < originalComponents.length; index += 1) {
     const component = originalComponents[index];
-    const rawText = extractComponentText(component);
+    const rawText = stripReglementTranslateHint(extractComponentText(component));
     const translatedText = await translateText(rawText, 'fr', 'en');
 
     const text = new TextDisplayBuilder().setContent(translatedText);
     const container = new ContainerBuilder()
       .setAccentColor(config.colors.primary)
       .addTextDisplayComponents(text);
+
+    for (const actionRow of cloneActionRows(component)) {
+      container.addActionRowComponents(actionRow);
+    }
 
     translatedContainers.push(container);
   }

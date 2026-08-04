@@ -1,4 +1,4 @@
-import { ActionRowBuilder, MessageFlags, ModalBuilder, SlashCommandBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+﻿import { ActionRowBuilder, MessageFlags, ModalBuilder, SlashCommandBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { getLanguage, translateText } from '../../utils/language.js';
 import { replyErr } from '../../services/moderationService.js';
 
@@ -13,12 +13,12 @@ function hasTranslationAccess(member) {
 function trimText(text, maxLength = 3900) {
   const value = String(text ?? '');
   if (value.length <= maxLength) return value;
-  return `${value.slice(0, maxLength - 1)}?? `;
+  return `${value.slice(0, maxLength - 1)}…`;
 }
 
 function formatQuoteBlock(text) {
   return String(text ?? '')
-    .split(/\r?? \n/)
+    .split(/\r?\n/)
     .map(line => (line.trim() ? `> ${line}` : ''))
     .join('\n');
 }
@@ -68,6 +68,7 @@ async function resolveTranslationTarget(interaction, rawValue) {
 
     return {
       type: 'message',
+      message,
       guildId: messageLink.guildId,
       channelId: messageLink.channelId,
       messageId: messageLink.messageId,
@@ -91,13 +92,13 @@ async function resolveTranslationTarget(interaction, rawValue) {
 
 export const data = new SlashCommandBuilder()
   .setName('en')
-  .setDescription('Traduire un texte fran�ais en anglais, avec une cible optionnelle')
+  .setDescription('Traduire un texte français en anglais, avec une cible optionnelle')
   .setDefaultMemberPermissions(null)
   .setDMPermission(false)
   .addStringOption(option =>
     option
       .setName('cible')
-      .setDescription('Mentionne un membre ou colle le lien du message � traduire')
+      .setDescription('Mentionne un membre ou colle le lien du message auquel répondre')
       .setRequired(false)
       .setMaxLength(200)
   );
@@ -139,7 +140,7 @@ export async function handleEnModalSubmit(interaction) {
 
   const lang = await getLanguage(interaction.member);
   const sourceText = interaction.fields.getTextInputValue('texte')?.trim();
-  const [_, parentInteractionId] = String(interaction.customId || '').split(':');
+  const [, parentInteractionId] = String(interaction.customId || '').split(':');
   const target = pendingTranslationTargets.get(parentInteractionId) || null;
   pendingTranslationTargets.delete(parentInteractionId);
   const pendingTimer = pendingTranslationTimers.get(parentInteractionId);
@@ -152,17 +153,30 @@ export async function handleEnModalSubmit(interaction) {
 
   try {
     const translatedText = await translateText(sourceText, 'fr', 'en');
-    const mentionLine = target?.userId ? `Replying to <@${target.userId}>\n` : '';
-    const allowedMentions = target?.userId
-      ? { parse: [], users: [target.userId] }
-      : { parse: [] };
+    const contentLines = [
+      '**A文 Translation**',
+      `Sent by <@${interaction.user.id}>`
+    ];
 
     const payload = {
-      content: `**A文 Translation**\nSent by <@${interaction.user.id}>\n${mentionLine}${formatQuoteBlock(trimText(translatedText, 1800))}`,
-      allowedMentions
+      content: contentLines.join('\n')
     };
 
-    await interaction.channel.send(payload);
+    if (target?.type === 'user' && target.userId) {
+      payload.content += `\n-# **Recipient : <@${target.userId}>**`;
+      payload.allowedMentions = { parse: [], users: [target.userId, interaction.user.id] };
+    } else {
+      payload.allowedMentions = { parse: [], users: [interaction.user.id] };
+    }
+
+    payload.content += `\n${formatQuoteBlock(trimText(translatedText, 1800))}`;
+
+    if (target?.type === 'message' && target.message) {
+      await target.message.reply(payload);
+    } else {
+      await interaction.channel.send(payload);
+    }
+
     await interaction.deleteReply().catch(() => null);
   } catch (error) {
     const errorMessage = error?.message || (lang === 'en'
@@ -177,5 +191,3 @@ export default {
   executeSlash,
   handleEnModalSubmit
 };
-
-

@@ -30,7 +30,8 @@ function createRuleContainer(title, lines, withTranslateButton = false, translat
     const translateButton = new ButtonBuilder()
       .setCustomId('msg_translate_reglement')
       .setLabel('🇬🇧 Translate')
-      .setStyle(ButtonStyle.Secondary);
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(Boolean(translateDisabled));
 
     container.addActionRowComponents(new ActionRowBuilder().addComponents(translateButton));
   }
@@ -204,4 +205,3 @@ export default {
     });
   }
 };
-
