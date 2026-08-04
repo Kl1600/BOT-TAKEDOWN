@@ -100,7 +100,9 @@ export async function handleEnUserModalSubmit(interaction) {
       }
     };
 
-    await interaction.channel.send(payload).catch(() => null);
+    await interaction.channel.send(payload).catch(async error => {
+      throw new Error(error?.message || 'Impossible d’envoyer la traduction dans ce salon.');
+    });
     await interaction.deleteReply().catch(() => null);
   } catch (error) {
     const errorMessage = error?.message || (lang === 'en'
