@@ -12,7 +12,7 @@ function canRefreshPanels(member) {
 }
 
 export const data = new SlashCommandBuilder()
-  .setName('actpanel')
+  .setName('refreshpanel')
   .setDescription('Forcer le rafraîchissement de tous les panels');
 
 export async function executeSlash(interaction) {
@@ -24,14 +24,14 @@ export async function executeSlash(interaction) {
 
   try {
     await new Promise(resolve => setTimeout(resolve, 750));
-    const refreshedCount = await refreshAllPanels(interaction.client);
+    const refreshedCount = await refreshAllPanels(interaction.client, { forceFrenchLanguage: true });
     return interaction.editReply({
       content: refreshedCount > 0
         ? `✅ ${refreshedCount} panel(s) rafraîchi(s).`
         : 'ℹ️ Aucun panel à rafraîchir.'
     });
   } catch (err) {
-    logger.error('Erreur actpanel:', err);
+    logger.error('Erreur refreshpanel:', err);
     return interaction.editReply({
       content: `❌ ${err.message || 'Impossible de rafraîchir les panels.'}`
     }).catch(() => null);
@@ -47,7 +47,7 @@ export async function executePrefix(message) {
 
   try {
     await new Promise(resolve => setTimeout(resolve, 750));
-    const refreshedCount = await refreshAllPanels(message.client);
+    const refreshedCount = await refreshAllPanels(message.client, { forceFrenchLanguage: true });
     const confirmation = await message.channel.send(
       refreshedCount > 0
         ? `✅ ${refreshedCount} panel(s) rafraîchi(s).`
@@ -60,7 +60,7 @@ export async function executePrefix(message) {
       }, 4000);
     }
   } catch (err) {
-    logger.error('Erreur actpanel prefix:', err);
+    logger.error('Erreur refreshpanel prefix:', err);
     await prefixReply(message, `❌ ${err.message || 'Impossible de rafraîchir les panels.'}`);
   }
 }

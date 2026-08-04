@@ -1,4 +1,4 @@
-import { MessageFlags } from 'discord.js';
+﻿import { MessageFlags } from 'discord.js';
 import dbService from '../database/dbProxy.js';
 import * as logger from '../utils/logger.js';
 import { hasActiveStaffApplySession } from './recruitmentService.js';
@@ -86,7 +86,7 @@ export function unregisterPanelRefresh(key) {
   dbService.deletePanelRefreshRecord(String(key)).catch(() => null);
 }
 
-async function refreshEntry(client, entry, memberOverride = null) {
+async function refreshEntry(client, entry, memberOverride = null, options = {}) {
   if (entry.panelType === 'staffapply' && entry.memberId && hasActiveStaffApplySession(entry.memberId)) {
     return false;
   }
@@ -101,6 +101,11 @@ async function refreshEntry(client, entry, memberOverride = null) {
     : entry.memberId
       ? await fetchFreshGuildMember(guild, entry.memberId)
       : null;
+
+  const shouldForceFrench = Boolean(options.forceFrenchLanguage) && member;
+  if (shouldForceFrench) {
+    member.forceLanguage = 'fr';
+  }
 
   let components = null;
   try {
@@ -137,17 +142,17 @@ async function refreshEntry(client, entry, memberOverride = null) {
       components: componentSet,
       flags: MessageFlags.IsComponentsV2
     }).catch(err => {
-      logger.warn(`Impossible de rafraîchir le panel ${messageId}: ${err?.message || err}`);
+      logger.warn(`Impossible de rafraÃ®chir le panel ${messageId}: ${err?.message || err}`);
     });
   }
 
   return true;
 }
 
-export async function refreshAllPanels(client) {
+export async function refreshAllPanels(client, options = {}) {
   let refreshedCount = 0;
   for (const entry of refreshEntries.values()) {
-    const refreshed = await refreshEntry(client, entry);
+    const refreshed = await refreshEntry(client, entry, null, options);
     if (refreshed) {
       refreshedCount += 1;
     }
@@ -225,7 +230,7 @@ export function startPanelRefreshScheduler(client) {
 
   refreshTimer = setInterval(() => {
     refreshAllPanels(client).catch(err => {
-      logger.warn(`Erreur rafraîchissement panels: ${err?.message || err}`);
+      logger.warn(`Erreur rafraÃ®chissement panels: ${err?.message || err}`);
     });
   }, PANEL_REFRESH_INTERVAL_MS);
 }
@@ -239,3 +244,4 @@ export default {
   rehydratePanelRefreshes,
   startPanelRefreshScheduler
 };
+

@@ -102,7 +102,7 @@ function buildHelpContainer(prefix) {
       `> \`/help\` \`${p}help\` — Afficher cette liste`,
       `> \`/statut\` \`${p}statut\` — Changer le statut du bot`,
       `> \`/sync\` \`${p}sync\` — Synchroniser les commandes slash sur ce serveur`,
-      `> \`/actpanel\` \`${p}actpanel\` — Forcer le rafraîchissement de tous les panels`
+      `> \`/refreshpanel\` \`${p}refreshpanel\` — Forcer le rafraîchissement de tous les panels`
     ],
     [
       `-# Seuls les membres avec le rôle **Staff** ou **Admin** peuvent utiliser ces commandes.`
