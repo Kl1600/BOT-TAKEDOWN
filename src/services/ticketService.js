@@ -44,9 +44,10 @@ export function buildTicketPanelContainer(lang, member = null) {
   const hasEnglishRole = Boolean(member?.roles?.cache?.has(config.roles.en));
   const disableFrenchSelect = hasEnglishRole && !hasFrenchRole;
   const disableEnglishSelect = hasFrenchRole;
+  const panelLang = 'fr';
   const text = new TextDisplayBuilder().setContent(
-    `### ${t(lang, 'commands.ticket.panel.title').toUpperCase()}\n\n` +
-    `${t(lang, 'commands.ticket.panel.description')}`
+    `### ${t(panelLang, 'commands.ticket.panel.title').toUpperCase()}\n\n` +
+    `${t(panelLang, 'commands.ticket.panel.description')}`
   );
 
   const frenchSelect = new StringSelectMenuBuilder()

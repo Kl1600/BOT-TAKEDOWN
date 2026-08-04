@@ -96,11 +96,10 @@ async function refreshEntry(client, entry, memberOverride = null) {
     : null;
   if (!guild) return false;
 
-  const member = memberOverride && memberOverride.guild?.id === guild.id
-    ? memberOverride
-    : entry.memberId
-      ? await fetchFreshGuildMember(guild, entry.memberId)
-      : null;
+  const targetMemberId = memberOverride?.id || entry.memberId;
+  const member = targetMemberId
+    ? await fetchFreshGuildMember(guild, targetMemberId) || memberOverride || null
+    : null;
 
 
   let components = null;

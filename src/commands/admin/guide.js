@@ -10,7 +10,7 @@
   TextInputBuilder,
   TextInputStyle
 } from 'discord.js';
-import { t, isEnglishOnly, getLanguage } from '../../utils/language.js';
+import { t, isEnglishOnly } from '../../utils/language.js';
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
 import { appendSeparatorComponent, splitContentBySeparator, sendV2Container } from '../../utils/v2Helper.js';
 import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
@@ -19,9 +19,8 @@ import config from '../../config/config.js';
 const translateHint = '-# 🇬🇧 Click below to translate to English.';
 
 registerPanelRefreshBuilder('guide', async ({ member }) => {
-  const refreshedLang = await getLanguage(member);
   const translateDisabled = !(await isEnglishOnly(member));
-  const content = t(refreshedLang, 'commands.guide.content', getGuideReplacements());
+  const content = t('fr', 'commands.guide.content', getGuideReplacements());
   return [buildGuidePanel(content, translateDisabled)];
 });
 
@@ -74,7 +73,7 @@ export default {
   async executeSlash(interaction, lang) {
     if (!await checkPermissions(interaction, interaction.member)) return;
 
-    const content = t(lang, 'commands.guide.content', getGuideReplacements());
+    const content = t('fr', 'commands.guide.content', getGuideReplacements());
     const translateDisabled = !(await isEnglishOnly(interaction.member));
 
     await interaction.reply({ components: [buildGuidePanel(content, translateDisabled)], flags: MessageFlags.IsComponentsV2 });
@@ -88,9 +87,8 @@ export default {
         memberId: interaction.user.id,
         panelType: 'guide',
         payload: {},
-        buildComponents: async member => {
-          const refreshedLang = await getLanguage(member);
-          const refreshedContent = t(refreshedLang, 'commands.guide.content', getGuideReplacements());
+      buildComponents: async member => {
+          const refreshedContent = t('fr', 'commands.guide.content', getGuideReplacements());
           return [buildGuidePanel(refreshedContent, !(await isEnglishOnly(member)))];
         }
       });
@@ -102,7 +100,7 @@ export default {
 
     await message.delete().catch(() => null);
 
-    const content = t(lang, 'commands.guide.content', getGuideReplacements());
+    const content = t('fr', 'commands.guide.content', getGuideReplacements());
     const translateDisabled = !(await isEnglishOnly(message.member));
 
     const sentMessage = await sendV2Container(message.channel, buildGuidePanel(content, translateDisabled));
@@ -115,8 +113,7 @@ export default {
       panelType: 'guide',
       payload: {},
       buildComponents: async member => {
-        const refreshedLang = await getLanguage(member);
-        const refreshedContent = t(refreshedLang, 'commands.guide.content', getGuideReplacements());
+        const refreshedContent = t('fr', 'commands.guide.content', getGuideReplacements());
         return [buildGuidePanel(refreshedContent, !(await isEnglishOnly(member)))];
       }
     });
