@@ -18,6 +18,19 @@ import { handleKickUserModalSubmit } from '../../commands/admin/kickUser.js';
 import { handleMuteUserModalSubmit } from '../../commands/admin/muteUser.js';
 import { handleDmUserModalSubmit } from '../../commands/admin/dmUser.js';
 
+const SLASH_MODAL_COMMANDS = new Set(['en', 'annonce', 'patchnote']);
+const SLASH_EPHEMERAL_COMMANDS = new Set(['help', 'restart', 'sync', 'clear', 'categorie']);
+const BUTTON_MODAL_PREFIXES = [
+  'ticket_open',
+  'ticket_lang_fr',
+  'ticket_lang_en',
+  'staffapply_open',
+  'staffapply_start',
+  'staffapply_continue_',
+  'poll_open_modal_'
+];
+const AUTO_ACK_DELAY_MS = 2400;
+
 function getInteractionCommand(client, interaction) {
   const typeKey = interaction.isUserContextMenuCommand()
     ? 'user'
@@ -40,10 +53,108 @@ async function replyInteractionFailure(interaction, lang, error) {
   await interaction.reply({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => null);
 }
 
+function patchReplyCompat(interaction) {
+  if (interaction.__takedownReplyCompatPatched) {
+    return;
+  }
+
+  const originalReply = typeof interaction.reply === 'function' ? interaction.reply.bind(interaction) : null;
+  if (!originalReply) return;
+
+  Object.defineProperty(interaction, '__takedownReplyCompatPatched', {
+    value: true,
+    enumerable: false,
+    configurable: true
+  });
+
+  interaction.reply = async (options = {}) => {
+    if (interaction.deferred || interaction.replied) {
+      const wantsEphemeral = Boolean(
+        options?.ephemeral ||
+        (typeof options?.flags === 'number' && (options.flags & MessageFlags.Ephemeral))
+      );
+
+      if ((interaction.__takedownAckMode === 'update' || wantsEphemeral) && typeof interaction.followUp === 'function') {
+        return interaction.followUp(options);
+      }
+
+      return interaction.editReply(options);
+    }
+
+    return originalReply(options);
+  };
+
+  if (typeof interaction.deferReply === 'function') {
+    const originalDeferReply = interaction.deferReply.bind(interaction);
+    interaction.deferReply = async (options = {}) => {
+      interaction.__takedownAckMode = 'reply';
+      return originalDeferReply(options);
+    };
+  }
+
+  if (typeof interaction.deferUpdate === 'function') {
+    const originalDeferUpdate = interaction.deferUpdate.bind(interaction);
+    interaction.deferUpdate = async (...args) => {
+      interaction.__takedownAckMode = 'update';
+      return originalDeferUpdate(...args);
+    };
+  }
+
+  if (typeof interaction.showModal === 'function') {
+    const originalShowModal = interaction.showModal.bind(interaction);
+    interaction.showModal = async (...args) => {
+      interaction.__takedownAckMode = 'modal';
+      return originalShowModal(...args);
+    };
+  }
+}
+
+function scheduleAutoAck(interaction) {
+  const isSlash = interaction.isChatInputCommand();
+  const isButton = interaction.isButton();
+  const isSelect = interaction.isAnySelectMenu();
+
+  if (!isSlash && !isButton && !isSelect) {
+    return () => {};
+  }
+
+  if (isSlash && SLASH_MODAL_COMMANDS.has(interaction.commandName)) {
+    return () => {};
+  }
+
+  if (isButton && BUTTON_MODAL_PREFIXES.some(prefix => interaction.customId.startsWith(prefix))) {
+    return () => {};
+  }
+
+  const timeout = setTimeout(async () => {
+    if (interaction.deferred || interaction.replied) return;
+
+    try {
+      if (isSlash) {
+        const deferOptions = SLASH_EPHEMERAL_COMMANDS.has(interaction.commandName)
+          ? { flags: MessageFlags.Ephemeral }
+          : {};
+        interaction.__takedownAckMode = 'reply';
+        await interaction.deferReply(deferOptions);
+      } else if (isButton || isSelect) {
+        interaction.__takedownAckMode = 'update';
+        await interaction.deferUpdate();
+      }
+    } catch (err) {
+      logger.debug?.(`Auto-ack impossible pour ${interaction.customId || interaction.commandName}: ${err?.message || err}`);
+    }
+  }, AUTO_ACK_DELAY_MS);
+
+  return () => clearTimeout(timeout);
+}
+
 export default {
   name: 'interactionCreate',
   once: false,
   async execute(interaction, client) {
+    patchReplyCompat(interaction);
+    const cancelAutoAck = scheduleAutoAck(interaction);
+
     // 1. Route Slash Commands
     if (interaction.isChatInputCommand()) {
       const lang = 'fr';
@@ -71,6 +182,7 @@ export default {
         logger.error(`Erreur commande slash ${interaction.commandName}:`, err);
         await replyInteractionFailure(interaction, lang, err);
       }
+      cancelAutoAck();
       return;
     }
 
@@ -102,6 +214,7 @@ export default {
           { name: 'Message cible', value: interaction.targetMessage?.id ? `\`${interaction.targetMessage.id}\`` : 'inconnu', inline: false }
         ]
       }).catch(() => null);
+      cancelAutoAck();
       return;
     }
 
@@ -137,6 +250,7 @@ export default {
           { name: 'Salon', value: `<#${interaction.channelId}>`, inline: true }
         ]
       }).catch(() => null);
+      cancelAutoAck();
       return;
     }
 
@@ -149,6 +263,7 @@ export default {
         logger.error(`Erreur bouton ${interaction.customId}:`, err);
         await replyInteractionFailure(interaction, 'fr', err);
       }
+      cancelAutoAck();
       return;
     }
 
@@ -171,6 +286,7 @@ export default {
         logger.error(`Erreur select menu ${interaction.customId}:`, err);
         await replyInteractionFailure(interaction, 'fr', err);
       }
+      cancelAutoAck();
       return;
     }
 
@@ -289,6 +405,7 @@ export default {
           await replyInteractionFailure(interaction, 'fr', err);
         }
       }
+      cancelAutoAck();
     }
   }
 };
