@@ -87,6 +87,8 @@ export async function handleEnUserModalSubmit(interaction) {
 
   try {
     const translatedText = await translateText(sourceText, 'fr', 'en');
+    const allowedUsers = [...new Set([interaction.user.id, targetUserId].filter(Boolean))];
+
     const payload = {
       content: [
         '**A文 Translation**',
@@ -96,13 +98,14 @@ export async function handleEnUserModalSubmit(interaction) {
       ].join('\n'),
       allowedMentions: {
         parse: [],
-        users: [interaction.user.id, targetUserId]
+        users: allowedUsers
       }
     };
 
     await interaction.channel.send(payload).catch(async error => {
       throw new Error(error?.message || 'Impossible d’envoyer la traduction dans ce salon.');
     });
+
     await interaction.deleteReply().catch(() => null);
   } catch (error) {
     const errorMessage = error?.message || (lang === 'en'
