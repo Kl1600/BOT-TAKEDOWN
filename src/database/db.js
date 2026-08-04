@@ -2,11 +2,10 @@ import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import * as logger from '../utils/logger.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const dbPath = join(__dirname, '../../database.sqlite');
-const walPath = `${dbPath}-wal`;
-const shmPath = `${dbPath}-shm`;
 
 // Create db directory if not exists
 const dbDir = dirname(dbPath);
@@ -17,18 +16,6 @@ if (!fs.existsSync(dbDir)) {
 function ensureDatabaseFile() {
   if (!fs.existsSync(dbPath)) {
     fs.closeSync(fs.openSync(dbPath, 'a'));
-  }
-}
-
-function removeDatabaseArtifacts() {
-  for (const path of [dbPath, walPath, shmPath]) {
-    try {
-      if (fs.existsSync(path)) {
-        fs.unlinkSync(path);
-      }
-    } catch {
-      // Ignore cleanup failures
-    }
   }
 }
 
@@ -44,8 +31,8 @@ let db;
 try {
   db = openDatabase();
 } catch (err) {
-  removeDatabaseArtifacts();
-  db = openDatabase();
+  logger.error(`Impossible d'ouvrir la base SQLite: ${err?.message || err}`);
+  throw err;
 }
 
 /**

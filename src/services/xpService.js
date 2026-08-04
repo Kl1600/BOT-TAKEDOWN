@@ -238,8 +238,8 @@ function buildProfileHeader(profile, rankInfo, copy, lang) {
   const progressThreshold = rankInfo.next?.minXp || null;
   const progressBar = buildProgressBar(currentXp, progressThreshold);
   const nextLine = rankInfo.next
-    ? `${currentXp} XP ? ${rankInfo.next.minXp} XP vers ${rankInfo.next.name[lang] || rankInfo.next.name.fr}`
-    : `${currentXp} XP ? ${copy.maxRank}`;
+    ? `${currentXp} XP → ${rankInfo.next.minXp} XP vers ${rankInfo.next.name[lang] || rankInfo.next.name.fr}`
+    : `${currentXp} XP → ${copy.maxRank}`;
 
   return [
     `**${copy.progression}**`,
