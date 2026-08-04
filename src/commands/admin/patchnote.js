@@ -1,4 +1,4 @@
-﻿import {
+import {
   SlashCommandBuilder,
   ContainerBuilder,
   TextDisplayBuilder,
@@ -17,7 +17,7 @@ import { appendSeparatorComponent, splitContentBySeparator, sendV2Container } fr
 import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
 import config from '../../config/config.js';
 
-const translateHint = '-# 🇬🇧 Click below to translate to English.';
+const translateHint = '-# ???? Click below to translate to English.';
 
 registerPanelRefreshBuilder('patchnote', async ({ member, payload }) => {
   const translateDisabled = !(await isEnglishOnly(member));
@@ -46,7 +46,6 @@ function buildPatchnoteContainer(content, translateDisabled = false) {
         .setCustomId('msg_translate_patchnote')
         .setLabel('Translate')
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(translateDisabled)
     )
   );
 
@@ -93,7 +92,7 @@ export default {
     .setDescription('Publier un patch note sur le serveur')
     .addBooleanOption(option =>
       option.setName('ping_patchnotes')
-        .setDescription('Pinger le rôle de notif patch notes ?? ')
+        .setDescription('Pinger le r�le de notif patch notes ?? ')
         .setRequired(false)
     ),
 
@@ -109,7 +108,7 @@ export default {
     const input = new TextInputBuilder()
       .setCustomId('patchnote_content_input')
       .setLabel('Contenu du patch note')
-      .setPlaceholder('Entrez votre patch note ici. Utilisez separator sur une ligne pour insérer une séparation.')
+      .setPlaceholder('Entrez votre patch note ici. Utilisez separator sur une ligne pour ins�rer une s�paration.')
       .setStyle(TextInputStyle.Paragraph)
       .setRequired(true)
       .setMaxLength(4000);
@@ -156,3 +155,4 @@ export default {
     });
   }
 };
+

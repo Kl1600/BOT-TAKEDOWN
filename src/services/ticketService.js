@@ -1,7 +1,7 @@
 ﻿import { ChannelType, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, ContainerBuilder, StringSelectMenuBuilder, TextDisplayBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { sendV2Container } from '../utils/v2Helper.js';
 import config from '../config/config.js';
-import { getLanguage, isEnglishOnly, t } from '../utils/language.js';
+import { getLanguage, hasFrenchRole, isEnglishOnly, t } from '../utils/language.js';
 import dbService from '../database/dbProxy.js';
 import { logTicket } from './logService.js';
 import { generateTranscript } from '../utils/transcriptor.js';
@@ -40,9 +40,6 @@ const TICKET_CATEGORY_OPTIONS = {
 };
 
 export async function buildTicketPanelContainer(lang, member = null) {
-  const englishOnly = await isEnglishOnly(member);
-  const disableFrenchSelect = englishOnly;
-  const disableEnglishSelect = !englishOnly;
   const panelLang = 'fr';
   const text = new TextDisplayBuilder().setContent(
     `### ${t(panelLang, 'commands.ticket.panel.title').toUpperCase()}\n\n` +
@@ -53,8 +50,7 @@ export async function buildTicketPanelContainer(lang, member = null) {
     .setCustomId('ticket_category_fr')
     .setPlaceholder('🇫🇷 Choisir :')
     .setMinValues(1)
-    .setMaxValues(1)
-    .setDisabled(disableFrenchSelect);
+    .setMaxValues(1);
   for (const option of TICKET_CATEGORY_OPTIONS.fr) {
     frenchSelect.addOptions(option);
   }
@@ -63,8 +59,7 @@ export async function buildTicketPanelContainer(lang, member = null) {
     .setCustomId('ticket_category_en')
     .setPlaceholder('🇬🇧 Choose :')
     .setMinValues(1)
-    .setMaxValues(1)
-    .setDisabled(disableEnglishSelect);
+    .setMaxValues(1);
   for (const option of TICKET_CATEGORY_OPTIONS.en) {
     englishSelect.addOptions(option);
   }
@@ -118,6 +113,25 @@ export async function handleTicketCategorySelect(interaction) {
 
   const selectedLang = interaction.customId.endsWith('_en') ? 'en' : 'fr';
   const selectedCategoryId = interaction.values?.[0];
+  const canUseEnglish = await isEnglishOnly(interaction.member);
+  const canUseFrench = await hasFrenchRole(interaction.member);
+
+  if (selectedLang === 'en' && !canUseEnglish) {
+    await interaction.reply({
+      content: 'Permissions insuffisantes.',
+      flags: MessageFlags.Ephemeral
+    }).catch(() => null);
+    return true;
+  }
+
+  if (selectedLang === 'fr' && !canUseFrench) {
+    await interaction.reply({
+      content: 'Permissions insuffisantes.',
+      flags: MessageFlags.Ephemeral
+    }).catch(() => null);
+    return true;
+  }
+
   if (!selectedCategoryId) {
     await interaction.reply({
       content: 'Catégorie invalide.',

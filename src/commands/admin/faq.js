@@ -7,7 +7,7 @@
   ActionRowBuilder,
   MessageFlags
 } from 'discord.js';
-import { getLanguage, isEnglishOnly, t } from '../../utils/language.js';
+import { getLanguage, hasFrenchRole, isEnglishOnly, t } from '../../utils/language.js';
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
 import { appendSeparatorComponent, sendV2Container } from '../../utils/v2Helper.js';
 import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
@@ -163,24 +163,15 @@ function buildFaqQuestionBlock(item) {
 }
 
 async function buildFaqItemButtons(item, member) {
-  const freshMember = member?.guild?.members?.cache?.get(member.id) || member;
-  const roles = freshMember?.roles?.cache;
-  const hasFrenchRole = Boolean(roles?.has(config.roles.fr));
-  const hasEnglishRole = Boolean(roles?.has(config.roles.en));
-  const disableFrenchReply = hasEnglishRole && !hasFrenchRole;
-  const disableEnglishReply = hasFrenchRole;
-
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`faq_answer_${item.id}_fr`)
       .setLabel('Réponse')
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(disableFrenchReply),
+      .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`faq_answer_${item.id}_en`)
       .setLabel('Answer')
       .setStyle(ButtonStyle.Secondary)
-      .setDisabled(disableEnglishReply)
   );
 }
 
@@ -267,6 +258,22 @@ function buildAnswerMessage(lang, item) {
 export async function handleFaqButton(interaction) {
   const lang = interaction.customId.endsWith('_en') ? 'en' : 'fr';
   const item = getFaqItem(interaction.customId);
+  const canUseEnglish = await isEnglishOnly(interaction.member);
+  const canUseFrench = await hasFrenchRole(interaction.member);
+
+  if (lang === 'en' && !canUseEnglish) {
+    return interaction.reply({
+      content: 'Permissions insuffisantes.',
+      flags: MessageFlags.Ephemeral
+    }).catch(() => null);
+  }
+
+  if (lang === 'fr' && !canUseFrench) {
+    return interaction.reply({
+      content: 'Permissions insuffisantes.',
+      flags: MessageFlags.Ephemeral
+    }).catch(() => null);
+  }
 
   if (!item) {
     const fallbackLang = await getLanguage(interaction.member);

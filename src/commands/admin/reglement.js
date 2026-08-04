@@ -1,4 +1,4 @@
-ï»¿import {
+import {
   SlashCommandBuilder,
   ContainerBuilder,
   TextDisplayBuilder,
@@ -13,7 +13,7 @@ import { isEnglishOnly } from '../../utils/language.js';
 import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
 import config from '../../config/config.js';
 
-const translateHint = '-# ðŸ‡¬ðŸ‡§ Click below to translate to English.';
+const translateHint = '-# ???? Click below to translate to English.';
 
 registerPanelRefreshBuilder('reglement', async ({ member }) => buildReglementContainers(!(await isEnglishOnly(member))));
 
@@ -29,9 +29,8 @@ function createRuleContainer(title, lines, withTranslateButton = false, translat
   if (withTranslateButton) {
     const translateButton = new ButtonBuilder()
       .setCustomId('msg_translate_reglement')
-      .setLabel('ðŸ‡¬ðŸ‡§ Translate')
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(translateDisabled);
+      .setLabel('???? Translate')
+      .setStyle(ButtonStyle.Secondary);
 
     container.addActionRowComponents(new ActionRowBuilder().addComponents(translateButton));
   }
@@ -41,110 +40,110 @@ function createRuleContainer(title, lines, withTranslateButton = false, translat
 
 function buildReglementContainers(translateDisabled = false) {
   return [
-    createRuleContainer('RÃˆGLEMENT DISCORD â€” TAKEDOWN', [
+    createRuleContainer('RÈGLEMENT DISCORD — TAKEDOWN', [
       'Bienvenue sur le serveur Discord officiel de TAKEDOWN !',
       '',
-      'Ce serveur est un espace communautaire dÃ©diÃ© au projet. Afin de garantir une ambiance conviviale, respectueuse et agrÃ©able pour tous, chaque membre est tenu de respecter le rÃ¨glement ci-dessous.'
+      'Ce serveur est un espace communautaire dédié au projet. Afin de garantir une ambiance conviviale, respectueuse et agréable pour tous, chaque membre est tenu de respecter le règlement ci-dessous.'
     ]),
     createRuleContainer('Respect obligatoire', [
-      'Le respect est exigÃ© envers **tous les membres**, les joueurs ainsi que les membres du staff.',
+      'Le respect est exigé envers **tous les membres**, les joueurs ainsi que les membres du staff.',
       '',
       '**Sont strictement interdits :**',
       '',
-      'â€¢ Les insultes',
-      'â€¢ Les provocations abusives',
-      'â€¢ Les menaces',
-      'â€¢ Les humiliations',
-      'â€¢ Les discriminations',
-      'â€¢ Les comportements toxiques'
+      '• Les insultes',
+      '• Les provocations abusives',
+      '• Les menaces',
+      '• Les humiliations',
+      '• Les discriminations',
+      '• Les comportements toxiques'
     ]),
     createRuleContainer('Savoir-vivre', [
       'Chaque membre doit faire preuve de :',
       '',
-      'â€¢ Respect',
-      'â€¢ Politesse',
-      'â€¢ MaturitÃ©',
-      'â€¢ Bon sens',
+      '• Respect',
+      '• Politesse',
+      '• Maturité',
+      '• Bon sens',
       '',
-      'Les dÃ©bats et dÃ©saccords sont autorisÃ©s, **Ã  condition quâ€™ils restent courtois et constructifs**.'
+      'Les débats et désaccords sont autorisés, **à condition qu’ils restent courtois et constructifs**.'
     ]),
-    createRuleContainer('Aucun harcÃ¨lement', [
-      'Le harcÃ¨lement, lâ€™acharnement, les moqueries ciblÃ©es ainsi que les attaques rÃ©pÃ©tÃ©es envers un membre sont **strictement interdits**, que ce soit :',
+    createRuleContainer('Aucun harcèlement', [
+      'Le harcèlement, l’acharnement, les moqueries ciblées ainsi que les attaques répétées envers un membre sont **strictement interdits**, que ce soit :',
       '',
-      'â€¢ En salon public',
-      'â€¢ En message privÃ©'
+      '• En salon public',
+      '• En message privé'
     ]),
     createRuleContainer('Spam & Flood', [
       'Afin de conserver un serveur propre et lisible, il est interdit de :',
       '',
-      'â€¢ Spammer',
-      'â€¢ Flooder',
-      'â€¢ RÃ©pÃ©ter plusieurs fois le mÃªme message',
-      'â€¢ Abuser des mentions (`@`)',
-      'â€¢ Ã‰crire de maniÃ¨re excessive en **MAJUSCULES**'
+      '• Spammer',
+      '• Flooder',
+      '• Répéter plusieurs fois le même message',
+      '• Abuser des mentions (`@`)',
+      '• Écrire de manière excessive en **MAJUSCULES**'
     ]),
     createRuleContainer('Respect des salons', [
-      'Chaque salon possÃ¨de une utilitÃ© prÃ©cise.',
+      'Chaque salon possède une utilité précise.',
       '',
       'Merci de :',
       '',
-      'â€¢ Utiliser le bon salon',
-      'â€¢ Ã‰viter les hors-sujets',
-      'â€¢ Garder le serveur organisÃ©'
+      '• Utiliser le bon salon',
+      '• Éviter les hors-sujets',
+      '• Garder le serveur organisé'
     ]),
     createRuleContainer('Contenus interdits', [
       'Les contenus suivants sont interdits :',
       '',
-      'â€¢ IllÃ©gaux',
-      'â€¢ Choquants',
-      'â€¢ Pornographiques',
-      'â€¢ Violents',
-      'â€¢ Discriminatoires',
-      'â€¢ Haineux',
-      'â€¢ InappropriÃ©s'
+      '• Illégaux',
+      '• Choquants',
+      '• Pornographiques',
+      '• Violents',
+      '• Discriminatoires',
+      '• Haineux',
+      '• Inappropriés'
     ]),
-    createRuleContainer('PublicitÃ©', [
-      'Toute publicitÃ© est interdite sans lâ€™autorisation dâ€™un membre du staff.',
+    createRuleContainer('Publicité', [
+      'Toute publicité est interdite sans l’autorisation d’un membre du staff.',
       '',
       'Cela concerne notamment :',
       '',
-      'â€¢ Autres serveurs Discord',
-      'â€¢ RÃ©seaux sociaux',
-      'â€¢ Autres communautÃ©s',
-      'â€¢ Services',
-      'â€¢ Projets personnels'
+      '• Autres serveurs Discord',
+      '• Réseaux sociaux',
+      '• Autres communautés',
+      '• Services',
+      '• Projets personnels'
     ]),
     createRuleContainer('Respect du Staff', [
-      'Les dÃ©cisions du staff doivent Ãªtre respectÃ©es.',
+      'Les décisions du staff doivent être respectées.',
       '',
-      'En cas de dÃ©saccord :',
+      'En cas de désaccord :',
       '',
-      '> Ouvrez un ticket ou utilisez les moyens prÃ©vus afin dâ€™Ã©changer calmement avec lâ€™Ã©quipe.',
+      '> Ouvrez un ticket ou utilisez les moyens prévus afin d’échanger calmement avec l’équipe.',
       '',
-      'Les comportements suivants ne seront pas tolÃ©rÃ©s :',
+      'Les comportements suivants ne seront pas tolérés :',
       '',
-      'â€¢ Provocations',
-      'â€¢ Contestations abusives',
-      'â€¢ Manque de respect',
-      'â€¢ HarcÃ¨lement envers le staff',
+      '• Provocations',
+      '• Contestations abusives',
+      '• Manque de respect',
+      '• Harcèlement envers le staff',
       '',
       '**Sanctions**',
       '',
-      'Le non-respect du rÃ¨glement pourra entraÃ®ner une ou plusieurs sanctions selon la gravitÃ© des faits.',
+      'Le non-respect du règlement pourra entraîner une ou plusieurs sanctions selon la gravité des faits.',
       '',
-      'â€¢ Avertissement',
-      'â€¢ Mute / Timeout',
-      'â€¢ Expulsion temporaire',
-      'â€¢ Bannissement dÃ©finitif'
+      '• Avertissement',
+      '• Mute / Timeout',
+      '• Expulsion temporaire',
+      '• Bannissement définitif'
     ]),
-    createRuleContainer('Acceptation du rÃ¨glement', [
-      'En rejoignant le serveur **TAKEDOWN**, vous reconnaissez avoir pris connaissance de ce rÃ¨glement et vous vous engagez Ã  le respecter.',
+    createRuleContainer('Acceptation du règlement', [
+      'En rejoignant le serveur **TAKEDOWN**, vous reconnaissez avoir pris connaissance de ce règlement et vous vous engagez à le respecter.',
       '',
-      '> **Lâ€™acceptation du rÃ¨glement Discord implique Ã©galement lâ€™acceptation du rÃ¨glement in-game de TAKEDOWN.**',
+      '> **L’acceptation du règlement Discord implique également l’acceptation du règlement in-game de TAKEDOWN.**',
       '>',
-      '> En jouant sur le serveur, vous vous engagez Ã  respecter lâ€™ensemble des rÃ¨gles en jeu.',
+      '> En jouant sur le serveur, vous vous engagez à respecter l’ensemble des règles en jeu.',
       '',
-      'Merci de contribuer Ã  faire de **TAKEDOWN** une communautÃ© agrÃ©able pour tous.'
+      'Merci de contribuer à faire de **TAKEDOWN** une communauté agréable pour tous.'
     ], true, translateDisabled)
   ];
 }
@@ -162,7 +161,7 @@ async function sendReglement(channel, translateDisabled = false) {
 export default {
   data: new SlashCommandBuilder()
     .setName('reglement')
-    .setDescription('Envoyer le rÃ¨glement du serveur'),
+    .setDescription('Envoyer le règlement du serveur'),
 
   async executeSlash(interaction) {
     if (!await checkPermissions(interaction, interaction.member)) return;
@@ -205,4 +204,5 @@ export default {
     });
   }
 };
+
 

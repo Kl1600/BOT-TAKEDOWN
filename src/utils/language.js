@@ -120,6 +120,16 @@ export async function isEnglishOnly(member) {
   return roles.has(config.roles.en) && !roles.has(config.roles.fr);
 }
 
+export async function hasFrenchRole(member) {
+  if (!member) return false;
+
+  const freshMember = await fetchFreshMember(member);
+  const roles = freshMember?.roles?.cache;
+  if (!roles) return false;
+
+  return roles.has(config.roles.fr);
+}
+
 export async function getFaqAnswerLanguage(member) {
   if (!member) return config.welcome.defaultLang || 'fr';
 

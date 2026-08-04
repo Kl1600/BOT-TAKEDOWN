@@ -1,4 +1,4 @@
-﻿import {
+import {
   SlashCommandBuilder,
   ContainerBuilder,
   TextDisplayBuilder,
@@ -17,7 +17,7 @@ import { appendSeparatorComponent, splitContentBySeparator, sendV2Container } fr
 import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
 import config from '../../config/config.js';
 
-const translateHint = '-# 🇬🇧 Click below to translate to English.';
+const translateHint = '-# ???? Click below to translate to English.';
 
 registerPanelRefreshBuilder('annonce', async ({ member, payload }) => {
   const translateDisabled = !(await isEnglishOnly(member));
@@ -28,8 +28,7 @@ function buildAnnouncementContainer(content, translateDisabled = false) {
   const button = new ButtonBuilder()
     .setCustomId('msg_translate_annonce')
     .setLabel('Translate')
-    .setStyle(ButtonStyle.Secondary)
-    .setDisabled(translateDisabled);
+    .setStyle(ButtonStyle.Secondary);
 
   const container = new ContainerBuilder().setAccentColor(config.colors.primary);
   const blocks = splitContentBySeparator(content);
@@ -92,7 +91,7 @@ export default {
     .setDescription('Publier une annonce sur le serveur')
     .addBooleanOption(option =>
       option.setName('ping_everyone')
-        .setDescription('Faire un ping @everyone ? (Par défaut : non)')
+        .setDescription('Faire un ping @everyone ? (Par d�faut : non)')
         .setRequired(false)
     ),
 
@@ -108,7 +107,7 @@ export default {
     const input = new TextInputBuilder()
       .setCustomId('annonce_content_input')
       .setLabel('Contenu de l\'annonce')
-      .setPlaceholder('Entrez votre annonce ici. Utilisez separator sur une ligne pour insérer une séparation.')
+      .setPlaceholder('Entrez votre annonce ici. Utilisez separator sur une ligne pour ins�rer une s�paration.')
       .setStyle(TextInputStyle.Paragraph)
       .setRequired(true)
       .setMaxLength(4000);
@@ -148,3 +147,4 @@ export default {
     });
   }
 };
+

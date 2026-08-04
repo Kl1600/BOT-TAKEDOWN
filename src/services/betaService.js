@@ -55,8 +55,7 @@ export function buildBetaAccessPanelContainer(lang = 'fr', translateDisabled = f
   const translateButton = new ButtonBuilder()
     .setCustomId('msg_translate_beta')
     .setLabel('🇬🇧 Translate')
-    .setStyle(ButtonStyle.Secondary)
-    .setDisabled(translateDisabled);
+    .setStyle(ButtonStyle.Secondary);
 
   const betaButton = new ButtonBuilder()
     .setCustomId('beta_access')
@@ -172,5 +171,6 @@ export default {
   handleBetaAccessButton,
   ensureBetaAccess
 };
+
 
 

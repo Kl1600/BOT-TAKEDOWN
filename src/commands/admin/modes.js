@@ -200,8 +200,7 @@ async function addTranslateButtonToLastContainer(batch, member) {
   const translateButton = new ButtonBuilder()
     .setCustomId('msg_translate_modes')
     .setLabel('🇬🇧 Translate')
-    .setStyle(ButtonStyle.Secondary)
-    .setDisabled(!(await isEnglishOnly(member)));
+    .setStyle(ButtonStyle.Secondary);
 
   const lastContainer = batch[batch.length - 1];
   lastContainer.addTextDisplayComponents(
@@ -295,4 +294,5 @@ export default {
     await sendModes(message.channel, message.member, false);
   }
 };
+
 

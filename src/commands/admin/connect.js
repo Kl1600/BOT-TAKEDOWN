@@ -73,7 +73,6 @@ function buildConnectPanel(lang, translateDisabled = false) {
         .setCustomId('msg_translate_connect')
         .setLabel('🇬🇧 Translate')
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(translateDisabled)
     )
   );
 
@@ -145,3 +144,4 @@ export default {
     });
   }
 };
+
