@@ -20,7 +20,8 @@ function buildHelpContainer(prefix) {
       `> \`/close\` \`${p}close\` — Fermer le ticket actuel`,
       `> \`/add\` \`${p}add <id|@membre>\` — Ajouter un membre au ticket`,
       `> \`/remove\` \`${p}remove <id|@membre>\` — Retirer un membre du ticket`,
-      `> \`/rename\` \`${p}rename <nom>\` — Renommer le ticket actuel`
+      `> \`/rename\` \`${p}rename <nom>\` — Renommer le ticket actuel`,
+      `> \`/categorie\` — Déplacer le ticket actuel vers une catégorie`
     ],
     [
       `### Recrutement Staff`,
