@@ -31,7 +31,7 @@ function extractDiscordId(input) {
 
 function parseMessageLink(input) {
   if (!input) return null;
-  const match = String(input).match(/discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)/i);
+  const match = String(input).match(/(?:ptb\.|canary\.)?discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)(?:\?.*)?/i);
   if (!match) return null;
   return {
     guildId: match[1],
@@ -172,7 +172,27 @@ export async function handleEnModalSubmit(interaction) {
     payload.content += `\n${formatQuoteBlock(trimText(translatedText, 1800))}`;
 
     if (target?.type === 'message' && target.message) {
-      await target.message.reply(payload);
+      const replyPayload = {
+        content: payload.content,
+        allowedMentions: {
+          ...(payload.allowedMentions || {}),
+          repliedUser: false
+        },
+        reply: {
+          messageReference: target.message.id,
+          failIfNotExists: false
+        }
+      };
+
+      await target.message.channel.send(replyPayload).catch(async () => {
+        await target.message.reply({
+          content: payload.content,
+          allowedMentions: {
+            ...(payload.allowedMentions || {}),
+            repliedUser: false
+          }
+        });
+      });
     } else {
       await interaction.channel.send(payload);
     }
