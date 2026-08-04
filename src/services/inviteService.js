@@ -346,7 +346,7 @@ export async function handleInviteProfileButton(interaction) {
 
 function parseInviteProfileId(value) {
   const raw = String(value || '').trim();
-  const mention = raw.match(/^<@!?? (\d{17,20})>$/);
+  const mention = raw.match(/^<@!?(\d{17,20})>$/);
   if (mention) {
     return mention[1];
   }

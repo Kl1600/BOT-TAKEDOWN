@@ -268,7 +268,7 @@ export async function createTicket(channelId, creatorId, ticketNumber = 0, reaso
 }
 
 export async function reserveNextTicketNumber(userId) {
-  const current = await db.get('SELECT last_number FROM ticket_counters WHERE user_id = ?? ', [userId]);
+  const current = await db.get('SELECT last_number FROM ticket_counters WHERE user_id = ? ', [userId]);
   const nextNumber = (current?.last_number || 0) + 1;
 
   await db.run(
@@ -281,7 +281,7 @@ export async function reserveNextTicketNumber(userId) {
 
 export async function assignTicketNumber(channelId, ticketNumber) {
   return db.run(
-    'UPDATE tickets SET ticket_number = ?? WHERE channel_id = ?',
+    'UPDATE tickets SET ticket_number = ? WHERE channel_id = ?',
     [ticketNumber, channelId]
   );
 }
@@ -289,7 +289,7 @@ export async function assignTicketNumber(channelId, ticketNumber) {
 export async function closeTicket(channelId, closedBy) {
   const now = Math.floor(Date.now() / 1000);
   return db.run(
-    'UPDATE tickets SET status = ?, closed_at = ?, closed_by = ?? WHERE channel_id = ?',
+    'UPDATE tickets SET status = ?, closed_at = ?, closed_by = ? WHERE channel_id = ?',
     ['closed', now, closedBy, channelId]
   );
 }
@@ -297,36 +297,36 @@ export async function closeTicket(channelId, closedBy) {
 export async function claimTicket(channelId, claimedBy) {
   const now = Math.floor(Date.now() / 1000);
   return db.run(
-    'UPDATE tickets SET status = ?, claimed_by = ?, claimed_at = ?? WHERE channel_id = ?',
+    'UPDATE tickets SET status = ?, claimed_by = ?, claimed_at = ? WHERE channel_id = ?',
     ['claimed', claimedBy, now, channelId]
   );
 }
 
 export async function reopenTicket(channelId) {
   return db.run(
-    'UPDATE tickets SET status = ?, closed_at = NULL, closed_by = NULL, claimed_by = NULL, claimed_at = NULL WHERE channel_id = ?? ',
+    'UPDATE tickets SET status = ?, closed_at = NULL, closed_by = NULL, claimed_by = NULL, claimed_at = NULL WHERE channel_id = ? ',
     ['open', channelId]
   );
 }
 
 export async function deleteTicket(channelId) {
-  return db.run('DELETE FROM tickets WHERE channel_id = ?? ', [channelId]);
+  return db.run('DELETE FROM tickets WHERE channel_id = ? ', [channelId]);
 }
 
 export async function getExpiredClosedTickets(olderThanUnix) {
   return db.query(
-    'SELECT * FROM tickets WHERE status = ?? AND closed_at < ?',
+    'SELECT * FROM tickets WHERE status = ? AND closed_at < ?',
     ['closed', olderThanUnix]
   );
 }
 
 export async function getTicket(channelId) {
-  return db.get('SELECT * FROM tickets WHERE channel_id = ?? ', [channelId]);
+  return db.get('SELECT * FROM tickets WHERE channel_id = ? ', [channelId]);
 }
 
 export async function getUserActiveTicket(creatorId) {
   return db.get(
-    'SELECT * FROM tickets WHERE creator_id = ?? AND status IN (?, ?)',
+    'SELECT * FROM tickets WHERE creator_id = ? AND status IN (?, ?)',
     [creatorId, 'open', 'claimed']
   );
 }
@@ -355,7 +355,7 @@ export async function setUserLanguage(userId, lang) {
 }
 
 export async function getUserLanguage(userId) {
-  const row = await db.get('SELECT lang FROM languages WHERE user_id = ?? ', [userId]);
+  const row = await db.get('SELECT lang FROM languages WHERE user_id = ? ', [userId]);
   return row ? row.lang : null;
 }
 
@@ -371,7 +371,7 @@ export async function setConfigValue(key, value) {
 }
 
 export async function getConfigValue(key) {
-  const row = await db.get('SELECT value FROM config WHERE key = ?? ', [key]);
+  const row = await db.get('SELECT value FROM config WHERE key = ? ', [key]);
   if (!row) return null;
   try {
     return JSON.parse(row.value);
@@ -388,7 +388,7 @@ export async function setServerParam(key, value) {
 }
 
 export async function getServerParam(key) {
-  const row = await db.get('SELECT value FROM server_parameters WHERE key = ?? ', [key]);
+  const row = await db.get('SELECT value FROM server_parameters WHERE key = ? ', [key]);
   return row ? row.value : null;
 }
 
@@ -402,7 +402,7 @@ export async function createApplication(userId, username, applicationData = null
 
 export async function getPendingApplication(userId) {
   return db.get(
-    'SELECT * FROM staff_applications WHERE user_id = ?? AND status IN (?, ?, ?)',
+    'SELECT * FROM staff_applications WHERE user_id = ? AND status IN (?, ?, ?)',
     [userId, 'pending', 'in_review', 'contacted']
   );
 }
@@ -417,26 +417,26 @@ export async function getPendingApplications() {
 export async function updateApplicationStatus(id, status, messageId = null) {
   if (messageId) {
     return db.run(
-      'UPDATE staff_applications SET status = ?, message_id = ?? WHERE id = ?',
+      'UPDATE staff_applications SET status = ?, message_id = ? WHERE id = ?',
       [status, messageId, id]
     );
   }
   return db.run(
-    'UPDATE staff_applications SET status = ?? WHERE id = ?',
+    'UPDATE staff_applications SET status = ? WHERE id = ?',
     [status, id]
   );
 }
 
 export async function updateApplicationData(id, applicationData) {
   return db.run(
-    'UPDATE staff_applications SET application_data = ?? WHERE id = ?',
+    'UPDATE staff_applications SET application_data = ? WHERE id = ?',
     [applicationData, id]
   );
 }
 
 export async function getApplication(id) {
   return db.get(
-    'SELECT * FROM staff_applications WHERE id = ?? ',
+    'SELECT * FROM staff_applications WHERE id = ? ',
     [id]
   );
 }
@@ -454,14 +454,14 @@ export async function setStaffApplyCooldown(userId, rejectedAt, expiresAt) {
 
 export async function getStaffApplyCooldown(userId) {
   return db.get(
-    'SELECT * FROM staff_apply_cooldowns WHERE user_id = ?? ',
+    'SELECT * FROM staff_apply_cooldowns WHERE user_id = ? ',
     [userId]
   );
 }
 
 export async function clearStaffApplyCooldown(userId) {
   return db.run(
-    'DELETE FROM staff_apply_cooldowns WHERE user_id = ?? ',
+    'DELETE FROM staff_apply_cooldowns WHERE user_id = ? ',
     [userId]
   );
 }
@@ -476,7 +476,7 @@ export async function createStreamerApplication(userId, username, applicationDat
 
 export async function getPendingStreamerApplication(userId) {
   return db.get(
-    'SELECT * FROM streamer_applications WHERE user_id = ?? AND status IN (?, ?, ?)',
+    'SELECT * FROM streamer_applications WHERE user_id = ? AND status IN (?, ?, ?)',
     [userId, 'pending', 'in_review', 'contacted']
   );
 }
@@ -491,26 +491,26 @@ export async function getPendingStreamerApplications() {
 export async function updateStreamerApplicationStatus(id, status, messageId = null) {
   if (messageId) {
     return db.run(
-      'UPDATE streamer_applications SET status = ?, message_id = ?? WHERE id = ?',
+      'UPDATE streamer_applications SET status = ?, message_id = ? WHERE id = ?',
       [status, messageId, id]
     );
   }
   return db.run(
-    'UPDATE streamer_applications SET status = ?? WHERE id = ?',
+    'UPDATE streamer_applications SET status = ? WHERE id = ?',
     [status, id]
   );
 }
 
 export async function updateStreamerApplicationData(id, applicationData) {
   return db.run(
-    'UPDATE streamer_applications SET application_data = ?? WHERE id = ?',
+    'UPDATE streamer_applications SET application_data = ? WHERE id = ?',
     [applicationData, id]
   );
 }
 
 export async function getStreamerApplication(id) {
   return db.get(
-    'SELECT * FROM streamer_applications WHERE id = ?? ',
+    'SELECT * FROM streamer_applications WHERE id = ? ',
     [id]
   );
 }
@@ -528,14 +528,14 @@ export async function setStreamerApplyCooldown(userId, rejectedAt, expiresAt) {
 
 export async function getStreamerApplyCooldown(userId) {
   return db.get(
-    'SELECT * FROM streamer_apply_cooldowns WHERE user_id = ?? ',
+    'SELECT * FROM streamer_apply_cooldowns WHERE user_id = ? ',
     [userId]
   );
 }
 
 export async function clearStreamerApplyCooldown(userId) {
   return db.run(
-    'DELETE FROM streamer_apply_cooldowns WHERE user_id = ?? ',
+    'DELETE FROM streamer_apply_cooldowns WHERE user_id = ? ',
     [userId]
   );
 }
@@ -557,7 +557,7 @@ export async function queueBetaWelcome(guildId, userId) {
 
 export async function getBetaWelcomeQueue(guildId, userId) {
   return db.get(
-    'SELECT * FROM beta_welcome_queue WHERE guild_id = ?? AND user_id = ?',
+    'SELECT * FROM beta_welcome_queue WHERE guild_id = ? AND user_id = ?',
     [guildId, userId]
   );
 }
@@ -576,7 +576,7 @@ export async function markBetaWelcomeSent(guildId, userId, lang = null) {
 
 export async function getPendingBetaWelcomes(guildId) {
   return db.query(
-    'SELECT * FROM beta_welcome_queue WHERE guild_id = ?? AND sent_at IS NULL',
+    'SELECT * FROM beta_welcome_queue WHERE guild_id = ? AND sent_at IS NULL',
     [guildId]
   );
 }
@@ -679,7 +679,7 @@ export async function setGuildAntiLinkState(guildId, enabled) {
 
 export async function getGuildAntiLinkState(guildId) {
   return db.get(
-    'SELECT * FROM guild_antilink_settings WHERE guild_id = ?? ',
+    'SELECT * FROM guild_antilink_settings WHERE guild_id = ? ',
     [guildId]
   );
 }
@@ -698,21 +698,21 @@ export async function addGuildAntiLinkWhitelist(guildId, userId, addedBy = null)
 
 export async function removeGuildAntiLinkWhitelist(guildId, userId) {
   return db.run(
-    'DELETE FROM guild_antilink_whitelist WHERE guild_id = ?? AND user_id = ?',
+    'DELETE FROM guild_antilink_whitelist WHERE guild_id = ? AND user_id = ?',
     [guildId, userId]
   );
 }
 
 export async function getGuildAntiLinkWhitelist(guildId) {
   return db.query(
-    'SELECT * FROM guild_antilink_whitelist WHERE guild_id = ?? ORDER BY added_at ASC',
+    'SELECT * FROM guild_antilink_whitelist WHERE guild_id = ? ORDER BY added_at ASC',
     [guildId]
   );
 }
 
 export async function isGuildAntiLinkWhitelisted(guildId, userId) {
   return db.get(
-    'SELECT 1 FROM guild_antilink_whitelist WHERE guild_id = ?? AND user_id = ?',
+    'SELECT 1 FROM guild_antilink_whitelist WHERE guild_id = ? AND user_id = ?',
     [guildId, userId]
   );
 }
@@ -731,21 +731,21 @@ export async function addGuildAntiLinkBlacklist(guildId, userId, addedBy = null)
 
 export async function removeGuildAntiLinkBlacklist(guildId, userId) {
   return db.run(
-    'DELETE FROM guild_antilink_blacklist WHERE guild_id = ?? AND user_id = ?',
+    'DELETE FROM guild_antilink_blacklist WHERE guild_id = ? AND user_id = ?',
     [guildId, userId]
   );
 }
 
 export async function getGuildAntiLinkBlacklist(guildId) {
   return db.query(
-    'SELECT * FROM guild_antilink_blacklist WHERE guild_id = ?? ORDER BY added_at ASC',
+    'SELECT * FROM guild_antilink_blacklist WHERE guild_id = ? ORDER BY added_at ASC',
     [guildId]
   );
 }
 
 export async function isGuildAntiLinkBlacklisted(guildId, userId) {
   return db.get(
-    'SELECT 1 FROM guild_antilink_blacklist WHERE guild_id = ?? AND user_id = ?',
+    'SELECT 1 FROM guild_antilink_blacklist WHERE guild_id = ? AND user_id = ?',
     [guildId, userId]
   );
 }
@@ -770,14 +770,14 @@ export async function upsertTempBan({ guildId, userId, moderatorId, reason, unba
 
 export async function deleteTempBan(guildId, userId) {
   return db.run(
-    'DELETE FROM guild_temp_bans WHERE guild_id = ?? AND user_id = ?',
+    'DELETE FROM guild_temp_bans WHERE guild_id = ? AND user_id = ?',
     [guildId, userId]
   );
 }
 
 export async function getDueTempBans(nowUnix = Math.floor(Date.now() / 1000)) {
   return db.query(
-    'SELECT * FROM guild_temp_bans WHERE unban_at <= ?? ORDER BY unban_at ASC',
+    'SELECT * FROM guild_temp_bans WHERE unban_at <= ? ORDER BY unban_at ASC',
     [nowUnix]
   );
 }
@@ -927,7 +927,7 @@ export async function addStaffAction({ executorId, targetId, actionType, reason 
 
 export async function getStaffActions(targetId) {
   return db.query(
-    'SELECT * FROM staff_actions WHERE target_id = ?? ORDER BY created_at DESC',
+    'SELECT * FROM staff_actions WHERE target_id = ? ORDER BY created_at DESC',
     [targetId]
   );
 }
@@ -942,7 +942,7 @@ export async function getAllStaffActions() {
  */
 export async function deleteStaffAction(id) {
   return db.run(
-    'DELETE FROM staff_actions WHERE id = ?? AND action_type IN ("WARN", "NOTE")',
+    'DELETE FROM staff_actions WHERE id = ? AND action_type IN ("WARN", "NOTE")',
     [id]
   );
 }
@@ -967,11 +967,11 @@ export async function upsertStreamerStatus(userId, status = 'test', startedAt = 
 }
 
 export async function clearStreamerStatus(userId) {
-  return db.run('DELETE FROM streamer_statuses WHERE user_id = ?? ', [userId]);
+  return db.run('DELETE FROM streamer_statuses WHERE user_id = ? ', [userId]);
 }
 
 export async function getStreamerStatus(userId) {
-  return db.get('SELECT * FROM streamer_statuses WHERE user_id = ?? ', [userId]);
+  return db.get('SELECT * FROM streamer_statuses WHERE user_id = ? ', [userId]);
 }
 
 export async function getAllStreamerStatuses() {
@@ -981,7 +981,7 @@ export async function getAllStreamerStatuses() {
 export async function promoteExpiredStreamerTests(nowUnix = Math.floor(Date.now() / 1000)) {
   return db.run(
     `UPDATE streamer_statuses
-     SET status = 'active', test_until = NULL, updated_at = ?? WHERE status = 'test' AND test_until IS NOT NULL AND test_until <= ?`,
+     SET status = 'active', test_until = NULL, updated_at = ? WHERE status = 'test' AND test_until IS NOT NULL AND test_until <= ?`,
     [nowUnix, nowUnix]
   );
 }

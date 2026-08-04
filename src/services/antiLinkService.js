@@ -2,7 +2,7 @@
 import dbService from '../database/dbProxy.js';
 import { getLanguage } from '../utils/language.js';
 
-const DISCORD_LINK_REGEX = /(?:https?:\/\/)?(?:www\.)?(?:canary\.|ptb\.)?(?:discord\.gg|discord(?:app)?? \.com\/invite|discord\.com\/invite)\/\S+/i;
+const DISCORD_LINK_REGEX = /(?:https?:\/\/)?(?:www\.)?(?:canary\.|ptb\.)?(?:discord\.gg|discord(?:app)?\.com\/invite|discord\.com\/invite)\/\S+/i;
 
 const guildAntiLinkCache = new Map();
 

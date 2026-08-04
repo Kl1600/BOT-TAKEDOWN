@@ -9,6 +9,7 @@
 } from 'discord.js';
 import config from '../config/config.js';
 import dbService from '../database/dbProxy.js';
+import * as logger from '../utils/logger.js';
 import { appendSeparatorComponent } from '../utils/v2Helper.js';
 
 const MESSAGE_XP_TRIGGER_COUNT = 30;
@@ -108,9 +109,14 @@ function getRankInfo(totalXp) {
 }
 
 async function ensureXpProfile(guildId, userId) {
-  const existing = await dbService.getXpProfile(guildId, userId).catch(() => null);
-  if (existing) {
-    return existing;
+  try {
+    const existing = await dbService.getXpProfile(guildId, userId);
+    if (existing) {
+      return existing;
+    }
+  } catch (err) {
+    logger.warn(`Impossible de lire le profil XP ${guildId}/${userId}: ${err?.message || err}`);
+    return null;
   }
 
   await dbService.saveXpProfile(guildId, userId, {
