@@ -39,6 +39,11 @@ const TICKET_CATEGORY_OPTIONS = {
   ]
 };
 
+export const TICKET_CATEGORY_IDS = new Set([
+  ...TICKET_CATEGORY_OPTIONS.fr.map(option => option.value),
+  ...TICKET_CATEGORY_OPTIONS.en.map(option => option.value)
+]);
+
 export async function buildTicketPanelContainer(lang, member = null) {
   const panelLang = 'fr';
   const text = new TextDisplayBuilder().setContent(
@@ -74,24 +79,9 @@ export async function buildTicketPanelContainer(lang, member = null) {
  * Clic sur "Ouvrir un ticket" â†’ ouvre directement le modal de raison (FR uniquement)
  */
 export async function handleTicketOpenClick(interaction) {
-  const user = interaction.user;
   const lang = await getLanguage(interaction.member);
 
-  // Vérifie si le membre a déjà un ticket ouvert
-  const existingTicket = await dbService.getUserActiveTicket(user.id);
-  if (existingTicket) {
-    const channel = interaction.guild.channels.cache.get(existingTicket.channel_id);
-    if (channel) {
-      return interaction.reply({
-        content: `${t(lang, 'errors.ticket_already_exists')} (<#${channel.id}>)`,
-        flags: MessageFlags.Ephemeral
-      });
-    } else {
-      await dbService.deleteTicket(existingTicket.channel_id);
-    }
-  }
-
-  // Ouvre directement le modal de raison
+  // Ouvre directement le modal de raison sans blocage préalable
   const modal = new ModalBuilder()
     .setCustomId('ticket_modal_fr')
     .setTitle(t(lang, 'tickets.modal.title'));
@@ -190,6 +180,19 @@ async function createTicketForUser(interaction, selectedLang, selectedCategoryId
   if (!interaction.deferred && !interaction.replied) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral }).catch(() => null);
   }
+
+  const existingTicket = await dbService.getUserActiveTicket(user.id);
+  if (existingTicket) {
+    const channel = guild.channels.cache.get(existingTicket.channel_id);
+    if (channel) {
+      return interaction.editReply({
+        content: `${t(selectedLang, 'errors.ticket_already_exists')} (<#${channel.id}>)`
+      }).catch(() => null);
+    }
+
+    await dbService.deleteTicket(existingTicket.channel_id);
+  }
+
   await dbService.setUserLanguage(user.id, selectedLang);
 
   const permissionOverwrites = [

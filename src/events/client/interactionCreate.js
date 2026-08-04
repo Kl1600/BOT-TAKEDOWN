@@ -29,7 +29,7 @@ const BUTTON_MODAL_PREFIXES = [
   'staffapply_continue_',
   'poll_open_modal_'
 ];
-const AUTO_ACK_DELAY_MS = 2400;
+const AUTO_ACK_DELAY_MS = 1200;
 
 function getInteractionCommand(client, interaction) {
   const typeKey = interaction.isUserContextMenuCommand()

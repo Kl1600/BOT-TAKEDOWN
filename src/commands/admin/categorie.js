@@ -3,6 +3,7 @@ import { hasTicketManagementAccess, replyErr, replyUsage, prefixReply } from '..
 import dbService from '../../database/dbProxy.js';
 import { logTicket } from '../../services/logService.js';
 import config from '../../config/config.js';
+import { TICKET_CATEGORY_OPTIONS, TICKET_CATEGORY_IDS } from '../../services/ticketService.js';
 
 async function moveTicketCategory(interactionOrMessage, channel, targetCategory, actor, client, lang = 'fr') {
   const ticket = await dbService.getTicket(channel.id);
@@ -48,11 +49,14 @@ async function moveTicketCategory(interactionOrMessage, channel, targetCategory,
 export const data = new SlashCommandBuilder()
   .setName('categorie')
   .setDescription('Déplacer le ticket actuel vers une catégorie')
-  .addChannelOption(option =>
+  .addStringOption(option =>
     option
       .setName('categorie')
-      .setDescription('Catégorie cible')
-      .addChannelTypes(ChannelType.GuildCategory)
+      .setDescription('Catégorie cible du ticket')
+      .addChoices(
+        ...TICKET_CATEGORY_OPTIONS.fr.map(option => ({ name: `FR - ${option.label}`, value: option.value })),
+        ...TICKET_CATEGORY_OPTIONS.en.map(option => ({ name: `EN - ${option.label}`, value: option.value }))
+      )
       .setRequired(true)
   );
 
@@ -66,7 +70,15 @@ export async function executeSlash(interaction) {
     return replyErr(interaction, 'Cette commande doit être utilisée dans un ticket.');
   }
 
-  const targetCategory = interaction.options.getChannel('categorie', true);
+  const targetCategoryId = interaction.options.getString('categorie', true);
+  if (!TICKET_CATEGORY_IDS.has(targetCategoryId)) {
+    return replyErr(interaction, 'Catégorie invalide.');
+  }
+
+  const targetCategory = await interaction.guild.channels.fetch(targetCategoryId).catch(() => null);
+  if (!targetCategory || targetCategory.type !== ChannelType.GuildCategory) {
+    return replyErr(interaction, 'Catégorie introuvable.');
+  }
   await interaction.deferReply({ flags: MessageFlags.Ephemeral }).catch(() => null);
 
   try {
