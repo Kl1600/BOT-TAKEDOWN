@@ -39,7 +39,7 @@ export default {
       status: config.status.presence
     });
 
-    await refreshAllPanels(client).catch(err => {
+    await refreshAllPanels(client, { source: 'startup' }).catch(err => {
       logger.warn(`Impossible de rafraîchir les panels au démarrage: ${err?.message || err}`);
     });
     startPanelRefreshScheduler(client);

@@ -1,5 +1,6 @@
 import { MessageFlags } from 'discord.js';
 import dbService from '../database/dbProxy.js';
+import { logGeneral } from './logService.js';
 import * as logger from '../utils/logger.js';
 
 const PANEL_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
@@ -159,7 +160,7 @@ export async function unregisterPanelRefresh(key) {
   });
 }
 
-export async function refreshAllPanels(client = refreshClient) {
+export async function refreshAllPanels(client = refreshClient, { source = 'auto' } = {}) {
   if (!client || refreshPromise) {
     return refreshPromise || 0;
   }
@@ -180,7 +181,17 @@ export async function refreshAllPanels(client = refreshClient) {
   })();
 
   try {
-    return await refreshPromise;
+    const refreshedCount = await refreshPromise;
+
+    await logGeneral(client, {
+      title: 'Rafraîchissement des panels',
+      description: `Source : **${source}**`,
+      fields: [
+        { name: 'Panels mis à jour', value: String(refreshedCount), inline: true }
+      ]
+    }).catch(() => null);
+
+    return refreshedCount;
   } finally {
     refreshPromise = null;
   }
@@ -211,7 +222,7 @@ export async function refreshPanelsForMember(client = refreshClient, memberOrId 
 
 export async function rehydratePanelRefreshes(client = refreshClient) {
   if (!client) return 0;
-  return refreshAllPanels(client);
+  return refreshAllPanels(client, { source: 'startup' });
 }
 
 export function startPanelRefreshScheduler(client = refreshClient) {
@@ -221,7 +232,7 @@ export function startPanelRefreshScheduler(client = refreshClient) {
   if (refreshInterval) return;
 
   refreshInterval = setInterval(() => {
-    void refreshAllPanels(client).catch(err => {
+    void refreshAllPanels(client, { source: 'auto' }).catch(err => {
       logger.error('[PanelRefresh] Erreur lors du rafraîchissement automatique:', err);
     });
   }, PANEL_REFRESH_INTERVAL_MS);
