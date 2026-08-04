@@ -16,7 +16,7 @@ import { appendSeparatorComponent, splitContentBySeparator, sendV2Container } fr
 import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
 import config from '../../config/config.js';
 
-const translateHint = '-# ???? Click below to translate to English.';
+const translateHint = '-# 🇬🇧 Click below to translate to English.';
 
 registerPanelRefreshBuilder('guide', async ({ member }) => {
   const translateDisabled = !(await isEnglishOnly(member));
@@ -54,7 +54,7 @@ function buildGuideContainer(content, translateDisabled = false) {
 function buildGuidePanel(content, translateDisabled = false) {
   const translateBtn = new ButtonBuilder()
     .setCustomId('msg_translate_guide')
-    .setLabel('Translate')
+    .setLabel('🇬🇧 Translate')
     .setStyle(ButtonStyle.Secondary);
 
   const container = buildGuideContainer(content, translateDisabled);
@@ -118,4 +118,3 @@ export default {
     });
   }
 };
-

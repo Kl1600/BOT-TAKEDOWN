@@ -5,7 +5,7 @@ import { sendV2Container } from '../../utils/v2Helper.js';
 import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
 import config from '../../config/config.js';
 
-const translateHint = '-# ???? Click below to translate to English.';
+const translateHint = '-# 🇬🇧 Click below to translate to English.';
 
 registerPanelRefreshBuilder('staffapply', async ({ member }) => {
   const translateDisabled = !(await isEnglishOnly(member));
@@ -15,7 +15,7 @@ registerPanelRefreshBuilder('staffapply', async ({ member }) => {
   const desc = t(panelLang, 'commands.staffapply.panel.description');
 
   const text = new TextDisplayBuilder().setContent(
-    `### ${title}\n\n${desc}\n\n-# R�pondez aux s�lecteurs, puis lancez l'�valuation en plusieurs �tapes.\n\n${translateHint}`
+    `### ${title}\n\n${desc}\n\n-# RÃ©pondez aux sÃ©lecteurs, puis lancez l'Ã©valuation en plusieurs Ã©tapes.\n\n${translateHint}`
   );
 
   const applyBtn = new ButtonBuilder()
@@ -25,7 +25,7 @@ registerPanelRefreshBuilder('staffapply', async ({ member }) => {
 
   const translateBtn = new ButtonBuilder()
     .setCustomId('msg_translate_staffapply')
-    .setLabel('???? Translate')
+    .setLabel('🇬🇧 Translate')
     .setStyle(ButtonStyle.Secondary);
 
   return [
@@ -55,7 +55,7 @@ export default {
     const desc = t(panelLang, 'commands.staffapply.panel.description');
 
     const text = new TextDisplayBuilder().setContent(
-      `### ${title}\n\n${desc}\n\n-# R�pondez aux s�lecteurs, puis lancez l'�valuation en plusieurs �tapes.\n\n${translateHint}`
+      `### ${title}\n\n${desc}\n\n-# RÃ©pondez aux sÃ©lecteurs, puis lancez l'Ã©valuation en plusieurs Ã©tapes.\n\n${translateHint}`
     );
 
     const applyBtn = new ButtonBuilder()
@@ -65,7 +65,7 @@ export default {
 
     const translateBtn = new ButtonBuilder()
       .setCustomId('msg_translate_staffapply')
-      .setLabel('???? Translate')
+      .setLabel('🇬🇧 Translate')
       .setStyle(ButtonStyle.Secondary);
 
     const row = new ActionRowBuilder().addComponents(applyBtn, translateBtn);
@@ -78,7 +78,7 @@ export default {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const sentMessage = await sendV2Container(interaction.channel, container);
     if (!sentMessage?.id) {
-      await interaction.editReply({ content: '-# Impossible d�envoyer le panneau de candidature staff dans ce salon.' }).catch(() => null);
+      await interaction.editReply({ content: '-# Impossible dâenvoyer le panneau de candidature staff dans ce salon.' }).catch(() => null);
       return;
     }
 
@@ -94,7 +94,7 @@ export default {
         const refreshedTranslateDisabled = !(await isEnglishOnly(member));
         const refreshedTranslateBtn = new ButtonBuilder()
           .setCustomId('msg_translate_staffapply')
-          .setLabel('???? Translate')
+          .setLabel('🇬🇧 Translate')
           .setStyle(ButtonStyle.Secondary);
 
         return [
@@ -102,7 +102,7 @@ export default {
             .setAccentColor(config.colors.primary)
             .addTextDisplayComponents(
               new TextDisplayBuilder().setContent(
-                `### ${t('fr', 'commands.staffapply.panel.title')}\n\n${t('fr', 'commands.staffapply.panel.description')}\n\n-# R�pondez aux s�lecteurs, puis lancez l'�valuation en plusieurs �tapes.\n\n${translateHint}`
+                `### ${t('fr', 'commands.staffapply.panel.title')}\n\n${t('fr', 'commands.staffapply.panel.description')}\n\n-# RÃ©pondez aux sÃ©lecteurs, puis lancez l'Ã©valuation en plusieurs Ã©tapes.\n\n${translateHint}`
               )
             )
             .addActionRowComponents(
@@ -131,7 +131,7 @@ export default {
     const desc = t(panelLang, 'commands.staffapply.panel.description');
 
     const text = new TextDisplayBuilder().setContent(
-      `### ${title}\n\n${desc}\n\n-# R�pondez aux s�lecteurs, puis lancez l'�valuation en plusieurs �tapes.\n\n${translateHint}`
+      `### ${title}\n\n${desc}\n\n-# RÃ©pondez aux sÃ©lecteurs, puis lancez l'Ã©valuation en plusieurs Ã©tapes.\n\n${translateHint}`
     );
 
     const applyBtn = new ButtonBuilder()
@@ -141,7 +141,7 @@ export default {
 
     const translateBtn = new ButtonBuilder()
       .setCustomId('msg_translate_staffapply')
-      .setLabel('???? Translate')
+      .setLabel('🇬🇧 Translate')
       .setStyle(ButtonStyle.Secondary);
 
     const row = new ActionRowBuilder().addComponents(applyBtn, translateBtn);
@@ -153,7 +153,7 @@ export default {
 
     const sentMessage = await sendV2Container(message.channel, container);
     if (!sentMessage?.id) {
-      await message.channel.send({ content: '-# Impossible d�envoyer le panneau de candidature staff dans ce salon.' }).catch(() => null);
+      await message.channel.send({ content: '-# Impossible dâenvoyer le panneau de candidature staff dans ce salon.' }).catch(() => null);
       return;
     }
 
@@ -169,7 +169,7 @@ export default {
         const refreshedTranslateDisabled = !(await isEnglishOnly(member));
         const refreshedTranslateBtn = new ButtonBuilder()
           .setCustomId('msg_translate_staffapply')
-          .setLabel('???? Translate')
+          .setLabel('🇬🇧 Translate')
           .setStyle(ButtonStyle.Secondary);
 
         return [
@@ -177,7 +177,7 @@ export default {
             .setAccentColor(config.colors.primary)
             .addTextDisplayComponents(
               new TextDisplayBuilder().setContent(
-                `### ${t('fr', 'commands.staffapply.panel.title')}\n\n${t('fr', 'commands.staffapply.panel.description')}\n\n-# R�pondez aux s�lecteurs, puis lancez l'�valuation en plusieurs �tapes.\n\n${translateHint}`
+                `### ${t('fr', 'commands.staffapply.panel.title')}\n\n${t('fr', 'commands.staffapply.panel.description')}\n\n-# RÃ©pondez aux sÃ©lecteurs, puis lancez l'Ã©valuation en plusieurs Ã©tapes.\n\n${translateHint}`
               )
             )
             .addActionRowComponents(
@@ -194,7 +194,6 @@ export default {
     });
   }
 };
-
 
 
 

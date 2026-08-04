@@ -91,13 +91,13 @@ async function resolveTranslationTarget(interaction, rawValue) {
 
 export const data = new SlashCommandBuilder()
   .setName('en')
-  .setDescription('Traduire un texte franÃ§ais en anglais')
+  .setDescription('Traduire un texte français en anglais, avec une cible optionnelle')
   .setDefaultMemberPermissions(null)
   .setDMPermission(false)
   .addStringOption(option =>
     option
       .setName('cible')
-      .setDescription('Mention du membre ou lien du message Ã  traduire (optionnel)')
+      .setDescription('Mentionne un membre ou colle le lien du message à traduire')
       .setRequired(false)
       .setMaxLength(200)
   );
@@ -152,7 +152,7 @@ export async function handleEnModalSubmit(interaction) {
 
   try {
     const translatedText = await translateText(sourceText, 'fr', 'en');
-    const mentionLine = target?.userId ? `To <@${target.userId}>\n` : '';
+    const mentionLine = target?.userId ? `Replying to <@${target.userId}>\n` : '';
     const allowedMentions = target?.userId
       ? { parse: [], users: [target.userId] }
       : { parse: [] };
@@ -177,3 +177,5 @@ export default {
   executeSlash,
   handleEnModalSubmit
 };
+
+

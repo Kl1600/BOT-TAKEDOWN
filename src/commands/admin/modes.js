@@ -26,137 +26,137 @@ function createModeContainer(title, lines) {
 
 function buildModesContainers() {
   return [
-    createModeContainer('TAKEDOWN — Modes de jeu', [
-      'Bienvenue sur la présentation des différents modes de jeu de Takedown.',
+    createModeContainer('TAKEDOWN Ã¢â¬â Modes de jeu', [
+      'Bienvenue sur la prÃÂ©sentation des diffÃÂ©rents modes de jeu de Takedown.',
       '',
-      'Chaque mode a ses propres règles, objectifs et gains.'
+      'Chaque mode a ses propres rÃÂ¨gles, objectifs et gains.'
     ]),
-    createModeContainer('Course-Poursuite — Casual', [
-      'Une course-poursuite en **1 contre 1** opposant un **Fuyard** à un **Chasseur**.',
+    createModeContainer('Course-Poursuite Ã¢â¬â Casual', [
+      'Une course-poursuite en **1 contre 1** opposant un **Fuyard** ÃÂ  un **Chasseur**.',
       '',
-      "Les deux joueurs utilisent un **véhicule identique**, choisi parmi l'ensemble des véhicules disponibles sur le serveur (visibles dans le garage).",
+      "Les deux joueurs utilisent un **vÃÂ©hicule identique**, choisi parmi l'ensemble des vÃÂ©hicules disponibles sur le serveur (visibles dans le garage).",
       '',
-      '**Déroulement**',
+      '**DÃÂ©roulement**',
       '* Une seule manche par partie.',
-      '* Revanche possible à la fin de la partie.',
-      '* Le Fuyard dispose de **3 minutes** pour s’échapper.',
+      '* Revanche possible ÃÂ  la fin de la partie.',
+      '* Le Fuyard dispose de **3 minutes** pour sÃ¢â¬â¢ÃÂ©chapper.',
       '',
       '**Conditions de victoire**',
       '',
       '**Victoire du Fuyard**',
-      '* Créer un écart de **500 mètres** avec le Chasseur.',
-      '* Sortir de son champ de vision et réussir à se cacher.',
+      '* CrÃÂ©er un ÃÂ©cart de **500 mÃÂ¨tres** avec le Chasseur.',
+      '* Sortir de son champ de vision et rÃÂ©ussir ÃÂ  se cacher.',
       '',
       '**Victoire du Chasseur**',
-      '* Empêcher le Fuyard de remplir une condition de victoire pendant les **3 minutes** de la manche.',
-      '* Immobiliser le Fuyard : les deux véhicules doivent rester à l’arrêt, proches l’un de l’autre, pendant quelques secondes.',
+      '* EmpÃÂªcher le Fuyard de remplir une condition de victoire pendant les **3 minutes** de la manche.',
+      '* Immobiliser le Fuyard : les deux vÃÂ©hicules doivent rester ÃÂ  lÃ¢â¬â¢arrÃÂªt, proches lÃ¢â¬â¢un de lÃ¢â¬â¢autre, pendant quelques secondes.',
       '',
-      '**Défaite immédiate**',
-      'La manche est immédiatement perdue si un joueur :',
+      '**DÃÂ©faite immÃÂ©diate**',
+      'La manche est immÃÂ©diatement perdue si un joueur :',
       '* Effectue un saut.',
-      '* Réalise **3 PIT volontaires**.',
-      '* Tombe dans l’eau.',
-      '* Détruit son véhicule.',
-      '* Laisse son véhicule retourné trop longtemps.',
+      '* RÃÂ©alise **3 PIT volontaires**.',
+      '* Tombe dans lÃ¢â¬â¢eau.',
+      '* DÃÂ©truit son vÃÂ©hicule.',
+      '* Laisse son vÃÂ©hicule retournÃÂ© trop longtemps.',
       '',
-      '**Récompenses**',
+      '**RÃÂ©compenses**',
       '* Battle Pass (BP)',
-      '* Expérience (XP)'
+      '* ExpÃÂ©rience (XP)'
     ]),
-    createModeContainer('Course-Poursuite — Ranked', [
-      'La version compétitive du mode Course-Poursuite.',
+    createModeContainer('Course-Poursuite Ã¢â¬â Ranked', [
+      'La version compÃÂ©titive du mode Course-Poursuite.',
       '',
-      "Les joueurs utilisent un **pool de véhicules limité**, renouvelé régulièrement afin de garantir un meilleur équilibrage.",
+      "Les joueurs utilisent un **pool de vÃÂ©hicules limitÃÂ©**, renouvelÃÂ© rÃÂ©guliÃÂ¨rement afin de garantir un meilleur ÃÂ©quilibrage.",
       '',
-      '**Déroulement**',
+      '**DÃÂ©roulement**',
       '* Une seule manche.',
       '* Aucune revanche.',
-      '* Le Fuyard dispose de **3 minutes** pour s’échapper.',
-      '* Les **10 premières parties** servent de matchs de placement. Elles sont obligatoires avant d’obtenir un classement et de gagner du MMR.',
+      '* Le Fuyard dispose de **3 minutes** pour sÃ¢â¬â¢ÃÂ©chapper.',
+      '* Les **10 premiÃÂ¨res parties** servent de matchs de placement. Elles sont obligatoires avant dÃ¢â¬â¢obtenir un classement et de gagner du MMR.',
       '',
       '**Conditions de victoire**',
       '',
       '**Victoire du Fuyard**',
-      '* Créer un écart de **500 mètres** avec le Chasseur.',
-      '* Sortir de son champ de vision et rester caché.',
+      '* CrÃÂ©er un ÃÂ©cart de **500 mÃÂ¨tres** avec le Chasseur.',
+      '* Sortir de son champ de vision et rester cachÃÂ©.',
       '',
       '**Victoire du Chasseur**',
-      '* Empêcher le Fuyard de remplir une condition de victoire pendant les 3 minutes.',
+      '* EmpÃÂªcher le Fuyard de remplir une condition de victoire pendant les 3 minutes.',
       '* Immobiliser le Fuyard.',
       '',
-      '**Défaite immédiate**',
-      '* Saut effectué.',
+      '**DÃÂ©faite immÃÂ©diate**',
+      '* Saut effectuÃÂ©.',
       '* 3 PIT volontaires.',
-      '* Chute dans l’eau.',
-      '* Véhicule détruit.',
-      '* Véhicule retourné trop longtemps.',
+      '* Chute dans lÃ¢â¬â¢eau.',
+      '* VÃÂ©hicule dÃÂ©truit.',
+      '* VÃÂ©hicule retournÃÂ© trop longtemps.',
       '',
-      '**Récompenses**',
+      '**RÃÂ©compenses**',
       '* Battle Pass (BP)',
-      '* Expérience (XP)',
+      '* ExpÃÂ©rience (XP)',
       '* MMR'
     ]),
-    createModeContainer('Course de Rue — Casual', [
-      'Des courses multijoueurs accessibles avec l’ensemble des véhicules disponibles sur le serveur.',
+    createModeContainer('Course de Rue Ã¢â¬â Casual', [
+      'Des courses multijoueurs accessibles avec lÃ¢â¬â¢ensemble des vÃÂ©hicules disponibles sur le serveur.',
       '',
-      '**Règles**',
-      '* De **4 à 6 joueurs** pour lancer une partie.',
-      '* Véhicule aléatoire.',
-      '* Parcours aléatoire.',
-      '* La sélection est effectuée au lancement de la partie.',
+      '**RÃÂ¨gles**',
+      '* De **4 ÃÂ  6 joueurs** pour lancer une partie.',
+      '* VÃÂ©hicule alÃÂ©atoire.',
+      '* Parcours alÃÂ©atoire.',
+      '* La sÃÂ©lection est effectuÃÂ©e au lancement de la partie.',
       '',
-      '**Récompenses**',
+      '**RÃÂ©compenses**',
       '* Battle Pass (BP)',
-      '* Expérience (XP)'
+      '* ExpÃÂ©rience (XP)'
     ]),
-    createModeContainer('Course de Rue — Ranked', [
-      'La version compétitive des Courses de Rue.',
+    createModeContainer('Course de Rue Ã¢â¬â Ranked', [
+      'La version compÃÂ©titive des Courses de Rue.',
       '',
-      "Les véhicules disponibles proviennent d’une **rotation régulière** afin de renouveler le gameplay et d’assurer un meilleur équilibrage.",
+      "Les vÃÂ©hicules disponibles proviennent dÃ¢â¬â¢une **rotation rÃÂ©guliÃÂ¨re** afin de renouveler le gameplay et dÃ¢â¬â¢assurer un meilleur ÃÂ©quilibrage.",
       '',
-      '**Règles**',
-      '* De **4 à 6 joueurs** pour lancer une partie.',
-      '* Véhicule aléatoire.',
-      '* Parcours aléatoire.',
+      '**RÃÂ¨gles**',
+      '* De **4 ÃÂ  6 joueurs** pour lancer une partie.',
+      '* VÃÂ©hicule alÃÂ©atoire.',
+      '* Parcours alÃÂ©atoire.',
       '',
-      '**Récompenses**',
+      '**RÃÂ©compenses**',
       '* Battle Pass (BP)',
-      '* Expérience (XP)',
+      '* ExpÃÂ©rience (XP)',
       '* MMR'
     ]),
-    createModeContainer('Modes d’entraînement', [
-      'Présentation des modes d’entraînement disponibles sur Takedown.',
+    createModeContainer('Modes dÃ¢â¬â¢entraÃÂ®nement', [
+      'PrÃÂ©sentation des modes dÃ¢â¬â¢entraÃÂ®nement disponibles sur Takedown.',
       '',
-      'Ces modes servent à progresser librement, tester des trajectoires et préparer les modes compétitifs.'
+      'Ces modes servent ÃÂ  progresser librement, tester des trajectoires et prÃÂ©parer les modes compÃÂ©titifs.'
     ]),
     createModeContainer('Open World', [
-      'Un espace libre permettant de s’entraîner sans contrainte.',
+      'Un espace libre permettant de sÃ¢â¬â¢entraÃÂ®ner sans contrainte.',
       '',
-      '**Fonctionnalités**',
+      '**FonctionnalitÃÂ©s**',
       '* 4 instances disponibles :',
       '  * 2 avec PNJ.',
       '  * 2 sans PNJ.',
-      '* Accès à tous les véhicules.',
-      '* Possibilité de rejoindre ses amis.'
+      '* AccÃÂ¨s ÃÂ  tous les vÃÂ©hicules.',
+      '* PossibilitÃÂ© de rejoindre ses amis.'
     ]),
     createModeContainer('Practice', [
-      'Des parcours d’entraînement créés par la communauté pour perfectionner sa conduite et apprendre des techniques spécifiques.',
+      'Des parcours dÃ¢â¬â¢entraÃÂ®nement crÃÂ©ÃÂ©s par la communautÃÂ© pour perfectionner sa conduite et apprendre des techniques spÃÂ©cifiques.',
       '',
-      '**Fonctionnalités**',
-      '* Parcours créés par la communauté.',
-      '* Travail des trajectoires, feintes et techniques avancées.',
-      '* Création de parcours personnalisés prévue prochainement.'
+      '**FonctionnalitÃÂ©s**',
+      '* Parcours crÃÂ©ÃÂ©s par la communautÃÂ©.',
+      '* Travail des trajectoires, feintes et techniques avancÃÂ©es.',
+      '* CrÃÂ©ation de parcours personnalisÃÂ©s prÃÂ©vue prochainement.'
     ]),
-    createModeContainer('Entraînement Course de Rue', [
-      'Un mode dédié à l’entraînement sur circuit avec choix libre du véhicule et du parcours.',
+    createModeContainer('EntraÃÂ®nement Course de Rue', [
+      'Un mode dÃÂ©diÃÂ© ÃÂ  lÃ¢â¬â¢entraÃÂ®nement sur circuit avec choix libre du vÃÂ©hicule et du parcours.',
       '',
       '**Mode Libre**',
       '* Aucun chrono.',
-      '* Aucun nombre de tours imposé.',
-      '* Idéal pour découvrir un circuit ou travailler ses trajectoires.',
+      '* Aucun nombre de tours imposÃÂ©.',
+      '* IdÃÂ©al pour dÃÂ©couvrir un circuit ou travailler ses trajectoires.',
       '',
       '**Mode Officiel**',
-      'Reproduit les conditions d’une véritable course.',
+      'Reproduit les conditions dÃ¢â¬â¢une vÃÂ©ritable course.',
       '',
       'Inclut :',
       '* Nombre de tours officiel.',
@@ -165,19 +165,19 @@ function buildModesContainers() {
       '* Chrono par secteur.',
       '',
       '**Mode Tours Infinis**',
-      '* Nombre de tours illimité.',
+      '* Nombre de tours illimitÃÂ©.',
       '* Chrono par tour.',
       '* Chrono par secteur.'
     ]),
-    createModeContainer('Partie Personnalisée', [
-      'Créez une partie privée entièrement configurable.',
+    createModeContainer('Partie PersonnalisÃÂ©e', [
+      'CrÃÂ©ez une partie privÃÂ©e entiÃÂ¨rement configurable.',
       '',
       '**Options disponibles**',
       '* Choix du mode de jeu.',
       '* Choix de la carte.',
-      '* Choix du véhicule.',
-      '* Invitation d’amis.',
-      '* Rejoindre une partie via un code d’accès.'
+      '* Choix du vÃÂ©hicule.',
+      '* Invitation dÃ¢â¬â¢amis.',
+      '* Rejoindre une partie via un code dÃ¢â¬â¢accÃÂ¨s.'
     ])
   ];
 }
@@ -281,7 +281,7 @@ async function sendModes(target, member, isSlash = false) {
 export default {
   data: new SlashCommandBuilder()
     .setName('modes')
-    .setDescription('Afficher les différents modes de jeu de Takedown'),
+    .setDescription('Afficher les diffÃÂ©rents modes de jeu de Takedown'),
 
   async executeSlash(interaction) {
     if (!await checkPermissions(interaction, interaction.member)) return;
@@ -294,5 +294,4 @@ export default {
     await sendModes(message.channel, message.member, false);
   }
 };
-
 
