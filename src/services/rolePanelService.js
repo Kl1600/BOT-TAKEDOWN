@@ -1,16 +1,13 @@
 ﻿import { ContainerBuilder, TextDisplayBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, MessageFlags } from 'discord.js';
 import config from '../config/config.js';
 import { isStaffOrAdmin } from './moderationService.js';
-import { refreshPanelsForMember } from './panelRefreshService.js';
 import { sendV2Container } from '../utils/v2Helper.js';
 
 const ROLE_BUTTONS = [
   { customId: 'rolepanel_stream', label: 'Notif stream', roleId: '1520500366926413895' },
   { customId: 'rolepanel_events', label: 'Notif événements', roleId: '1520115559663013988' },
   { customId: 'rolepanel_patch', label: 'Notif patch-notes', roleId: '1520116888879890593' },
-  { customId: 'rolepanel_tournois', label: 'Notif Tournois', roleId: '1520115501206868068' },
-  { customId: 'rolepanel_fr', label: '🇫🇷 Role FR', roleId: '1519750090498244670' },
-  { customId: 'rolepanel_en', label: '🇬🇧 Role EN', roleId: '1519750127323975793' }
+  { customId: 'rolepanel_tournois', label: 'Notif Tournois', roleId: '1520115501206868068' }
 ];
 
 const STAFF_ROLE_BUTTONS = [
@@ -27,9 +24,7 @@ export async function sendRolePanel(interaction) {
 
   const text = new TextDisplayBuilder().setContent(
     `### PANEL ROLES\n\n` +
-    `🇫🇷 Clique sur un bouton pour recevoir ou retirer le rôle correspondant.\n` +
-    `🇬🇧 Click a button to receive or remove the corresponding role.\n\n` +
-    `-# Les rôles FR et EN sont exclusifs.`
+    `Clique sur un bouton pour recevoir ou retirer le rôle correspondant.`
   );
 
   const rows = [];
@@ -112,22 +107,10 @@ export async function handleRolePanelButton(interaction) {
   }
 
   const hasRole = member.roles.cache.has(roleId);
-  const isLanguageRole = interaction.customId === 'rolepanel_fr' || interaction.customId === 'rolepanel_en';
 
   try {
     if (hasRole) {
-      if (isLanguageRole) {
-        await interaction.reply({
-          content: '-# Tu ne peux pas retirer ton rôle de langue. Tu dois toujours en avoir un.',
-          flags: MessageFlags.Ephemeral
-        });
-        return true;
-      }
-
       await member.roles.remove(roleId);
-      const refreshedMember = await interaction.guild.members.fetch(member.id).catch(() => member);
-      await new Promise(resolve => setTimeout(resolve, 750));
-      await refreshPanelsForMember(interaction.client, interaction.guild.id, refreshedMember).catch(() => null);
       await interaction.reply({
         content: `-# Le rôle **${button.label}** a été retiré.`,
         flags: MessageFlags.Ephemeral
@@ -136,17 +119,6 @@ export async function handleRolePanelButton(interaction) {
     }
 
     await member.roles.add(roleId);
-
-    if (isLanguageRole) {
-      const otherLanguageRole = interaction.customId === 'rolepanel_fr'
-        ? '1519750127323975793'
-        : '1519750090498244670';
-      await member.roles.remove(otherLanguageRole).catch(() => null);
-    }
-
-    const refreshedMember = await interaction.guild.members.fetch(member.id).catch(() => member);
-    await new Promise(resolve => setTimeout(resolve, 750));
-    await refreshPanelsForMember(interaction.client, interaction.guild.id, refreshedMember).catch(() => null);
 
     await interaction.reply({
       content: `-# Le rôle **${button.label}** a été ajouté.`,

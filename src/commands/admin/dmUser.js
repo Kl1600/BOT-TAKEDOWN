@@ -1,5 +1,6 @@
 import { ActionRowBuilder, ApplicationCommandType, ContextMenuCommandBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { isStaffOrAdmin } from '../../services/moderationService.js';
+import { logDm } from '../../services/logService.js';
 
 const MODAL_PREFIX = 'userctx_dm_message_';
 
@@ -81,6 +82,14 @@ export async function handleDmUserModalSubmit(interaction) {
 
   try {
     const user = await sendDirectMessage(interaction.client, targetId, content);
+    await logDm(interaction.client, {
+      direction: 'envoyé',
+      fields: [
+        { name: 'Auteur', value: `<@${interaction.user.id}> (\`${interaction.user.tag}\`)`, inline: true },
+        { name: 'Destinataire', value: `<@${user.id}> (\`${user.tag}\`)`, inline: true },
+        { name: 'Contenu', value: content.slice(0, 1024), inline: false }
+      ]
+    }).catch(() => null);
     return interaction.editReply({ content: `-# Message envoyé à <@${user.id}>.` }).catch(() => null);
   } catch (error) {
     return replyPlain(interaction, error?.message || 'Impossible d’envoyer le DM.');

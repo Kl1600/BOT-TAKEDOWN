@@ -173,9 +173,7 @@ export async function handleMessageTranslate(interaction) {
   }
 
   const sourceTranslateId = interaction.customId || '';
-  const explicitType = sourceTranslateId.startsWith('msg_translate_')
-    ? sourceTranslateId.slice('msg_translate_'.length)
-    : null;
+  const explicitType = sourceTranslateId.startsWith('msg_translate_') ? sourceTranslateId.slice('msg_translate_'.length) : null;
 
   if (!allowedPanelTypes.has(explicitType)) {
     const errorMsg = t(lang, 'errors.translation_not_allowed');

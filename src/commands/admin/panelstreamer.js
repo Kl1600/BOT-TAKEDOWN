@@ -23,7 +23,7 @@ export async function executePrefix(message) {
   await message.delete().catch(() => null);
 
   const text = new TextDisplayBuilder().setContent(
-    `### PANEL STREAMER\n\nTu es streamer sur **Takedown** ? Lance ton live et annonce-le à la communauté !\n\n-# Clique sur le bouton ci-dessous, entre le lien de ton stream et l'annonce sera envoyée automatiquement.`
+    `### PANEL STREAMER\n\nTu es streamer sur **Takedown** ?? Lance ton live et annonce-le à la communauté !\n\n-# Clique sur le bouton ci-dessous, entre le lien de ton stream et l'annonce sera envoyée automatiquement.`
   );
 
   const row = new ActionRowBuilder().addComponents(

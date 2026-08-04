@@ -17,7 +17,7 @@ async function resolveTarget(client, guild, rawValue, fallbackUserId) {
     return null;
   }
 
-  const member = guild ? await guild.members.fetch(userId).catch(() => null) : null;
+  const member = guild ? guild.members.cache.get(userId) || await guild.members.fetch(userId).catch(() => null) : null;
   const user = member?.user || await client.users.fetch(userId).catch(() => null);
 
   if (!user) {

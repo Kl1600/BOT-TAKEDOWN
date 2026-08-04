@@ -306,7 +306,7 @@ export async function handlePollOpen(interaction) {
   const titleInput = new TextInputBuilder()
     .setCustomId('poll_title_input')
     .setLabel('Titre du sondage')
-    .setPlaceholder('Ex : Quel jour pour le tournoi ?')
+    .setPlaceholder('Ex : Quel jour pour le tournoi ?? ')
     .setStyle(TextInputStyle.Short)
     .setRequired(true)
     .setMaxLength(100);
@@ -321,7 +321,7 @@ export async function handlePollOpen(interaction) {
 
   const multipleInput = new TextInputBuilder()
     .setCustomId('poll_multiple_input')
-    .setLabel('Choix multiple ? (oui/non)')
+    .setLabel('Choix multiple ?? (oui/non)')
     .setPlaceholder('oui')
     .setStyle(TextInputStyle.Short)
     .setRequired(true)

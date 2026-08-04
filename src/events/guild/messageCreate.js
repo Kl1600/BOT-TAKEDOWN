@@ -5,6 +5,7 @@ import { handleStaffApplyChatMessage } from '../../services/recruitmentService.j
 import { handleAntiLinkMessage } from '../../services/antiLinkService.js';
 import { handleAntiImageMessage } from '../../services/antiImageService.js';
 import { logCommand } from '../../services/logService.js';
+import { logDm } from '../../services/logService.js';
 import { handleXpMessage } from '../../services/xpService.js';
 
 export default {
@@ -20,6 +21,24 @@ export default {
     }
 
     if (await handleAntiImageMessage(message)) {
+      return;
+    }
+
+    if (!message.author.bot && !message.guild && message.channel?.isDMBased?.()) {
+      await logDm(client, {
+        direction: 'reçu',
+        fields: [
+          { name: 'Auteur', value: `<@${message.author.id}> (\`${message.author.tag}\`)`, inline: true },
+          { name: 'Contenu', value: String(message.content || '').slice(0, 1024) || 'Aucun contenu.', inline: false },
+          {
+            name: 'Pièces jointes',
+            value: message.attachments.size > 0
+              ? message.attachments.map(attachment => attachment.url).slice(0, 5).join('\n').slice(0, 1024)
+              : 'Aucune',
+            inline: false
+          }
+        ]
+      }).catch(() => null);
       return;
     }
 

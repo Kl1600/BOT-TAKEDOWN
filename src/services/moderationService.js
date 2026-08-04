@@ -212,7 +212,7 @@ async function processTempBanRecord(client, record) {
     return false;
   }
 
-  await guild.members.unban(record.user_id, `[tempban] ${record.reason || 'Tempban expir?'}`).catch(err => {
+  await guild.members.unban(record.user_id, `[tempban] ${record.reason || 'Tempban expir?? '}`).catch(err => {
     logger.warn(`Impossible de lever le tempban ${record.user_id} sur ${record.guild_id}: ${err?.message || err}`);
   });
 

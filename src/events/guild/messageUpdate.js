@@ -1,6 +1,6 @@
 import { logMessage } from '../../services/logService.js';
 
-const trim = (s) => s.length > 1024 ? s.slice(0, 1021) + '…' : s;
+const trim = (s) => (s.length > 1024 ? s.slice(0, 1021) + '???' : s);
 
 export default {
   name: 'messageUpdate',
@@ -12,12 +12,8 @@ export default {
     if (newMessage.webhookId) return;
     if (oldMessage.content === newMessage.content) return;
 
-    const oldContent = oldMessage.content
-      ? trim(oldMessage.content)
-      : '*Contenu indisponible (hors cache)*';
-    const newContent = newMessage.content
-      ? trim(newMessage.content)
-      : '*Contenu indisponible*';
+    const oldContent = oldMessage.content ? trim(oldMessage.content) : '*Contenu indisponible (hors cache)*';
+    const newContent = newMessage.content ? trim(newMessage.content) : '*Contenu indisponible*';
 
     await logMessage(newMessage.client, {
       title: '✏️ Message modifié',

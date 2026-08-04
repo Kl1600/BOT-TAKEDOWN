@@ -1,15 +1,5 @@
-import { refreshPanelsForMember } from '../../services/panelRefreshService.js';
-import * as logger from '../../utils/logger.js';
-
 export default {
   name: 'guildMemberUpdate',
   once: false,
-  async execute(oldMember, newMember) {
-    try {
-      await new Promise(resolve => setTimeout(resolve, 750));
-      await refreshPanelsForMember(newMember.client, newMember.guild.id, newMember).catch(() => null);
-    } catch (err) {
-      logger.error('Erreur guildMemberUpdate:', err);
-    }
-  }
+  async execute() {}
 };

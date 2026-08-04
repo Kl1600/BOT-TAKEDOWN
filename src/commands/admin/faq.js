@@ -22,7 +22,7 @@ const FAQ_ITEMS = [
   {
     id: 'what_is_takedown',
     question: {
-      fr: 'Quâ€™est-ce que Takedown ?',
+      fr: "Qu'est-ce que Takedown ?",
       en: 'What is Takedown?'
     },
     answer: {
@@ -88,7 +88,7 @@ const FAQ_ITEMS = [
   {
     id: 'rewards',
     question: {
-      fr: 'Quelles sont les rÃ©compenses des tournois ?',
+      fr: 'Quelles sont les r?compenses des tournois ?',
       en: 'What rewards do tournaments offer?'
     },
     answer: {
@@ -132,7 +132,7 @@ const FAQ_ITEMS = [
   {
     id: 'bug',
     question: {
-      fr: 'Jâ€™ai trouvÃ© un bug, que faire ?',
+      fr: "J'ai trouv? un bug, que faire ?",
       en: 'I found a bug, what should I do?'
     },
     answer: {
@@ -143,7 +143,7 @@ const FAQ_ITEMS = [
   {
     id: 'news',
     question: {
-      fr: 'OÃ¹ suivre les nouveautÃ©s ?',
+      fr: 'O? suivre les nouveaut?s ?',
       en: 'Where can I follow the latest updates?'
     },
     answer: {

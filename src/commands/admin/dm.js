@@ -1,6 +1,7 @@
-﻿import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder } from 'discord.js';
 import { isStaffOrAdmin, prefixReply, replyErr, replyOk, replyUsage } from '../../services/moderationService.js';
 import config from '../../config/config.js';
+import { logDm } from '../../services/logService.js';
 
 function extractUserId(input) {
   if (!input) return null;
@@ -20,7 +21,7 @@ async function sendDirectMessage(client, userId, content) {
 
 export const data = new SlashCommandBuilder()
   .setName('dm')
-  .setDescription('Envoyer un message priv? ? un utilisateur')
+  .setDescription('Envoyer un message privé à un utilisateur')
   .addStringOption(option =>
     option
       .setName('id')
@@ -30,7 +31,7 @@ export const data = new SlashCommandBuilder()
   .addStringOption(option =>
     option
       .setName('message')
-      .setDescription('Message ? envoyer')
+      .setDescription('Message à envoyer')
       .setRequired(true)
       .setMaxLength(2000)
   );
@@ -51,9 +52,17 @@ export async function executeSlash(interaction) {
 
   try {
     const user = await sendDirectMessage(interaction.client, userId, message);
-    return replyOk(interaction, `? Message envoy? ? <@${user.id}>.`);
+    await logDm(interaction.client, {
+      direction: 'envoyé',
+      fields: [
+        { name: 'Auteur', value: `<@${interaction.user.id}> (\`${interaction.user.tag}\`)`, inline: true },
+        { name: 'Destinataire', value: `<@${user.id}> (\`${user.tag}\`)`, inline: true },
+        { name: 'Contenu', value: message.slice(0, 1024), inline: false }
+      ]
+    }).catch(() => null);
+    return replyOk(interaction, `Message envoyé à <@${user.id}>.`);
   } catch (error) {
-    return replyErr(interaction, error.message || 'Impossible d?envoyer le DM.');
+    return replyErr(interaction, error.message || 'Impossible d’envoyer le DM.');
   }
 }
 
@@ -71,11 +80,18 @@ export async function executePrefix(message, args) {
 
   try {
     const user = await sendDirectMessage(message.client, userId, content);
-    return prefixReply(message, `? Message envoy? ? ${user.tag}.`);
+    await logDm(message.client, {
+      direction: 'envoyé',
+      fields: [
+        { name: 'Auteur', value: `<@${message.author.id}> (\`${message.author.tag}\`)`, inline: true },
+        { name: 'Destinataire', value: `<@${user.id}> (\`${user.tag}\`)`, inline: true },
+        { name: 'Contenu', value: content.slice(0, 1024), inline: false }
+      ]
+    }).catch(() => null);
+    return prefixReply(message, `Message envoyé à ${user.tag}.`);
   } catch (error) {
-    return prefixReply(message, `? ${error.message || 'Impossible d?envoyer le DM.'}`);
+    return prefixReply(message, error.message || 'Impossible d’envoyer le DM.');
   }
 }
 
 export default { data, executeSlash, executePrefix };
-

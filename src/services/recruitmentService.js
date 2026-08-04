@@ -126,7 +126,7 @@ const APPLY_COPY = {
         {
           id: 'q7',
           label: 'Expérience staff',
-          placeholder: 'As-tu déjà eu une expérience en tant que staff ? Si oui, laquelle ?'
+          placeholder: 'As-tu d?j? eu une exp?rience en tant que staff ? Si oui, laquelle ?'
         },
         {
           id: 'q8',
@@ -248,7 +248,7 @@ function getCopy(lang) {
 function cleanDisplayText(value, maxLength = 2000) {
   return escapeMarkdown(String(value ?? ''))
     .replace(/`/g, '\\`')
-    .replace(/\r?\n/g, '\n')
+    .replace(/\r?? \n/g, '\n')
     .trim()
     .slice(0, maxLength);
 }

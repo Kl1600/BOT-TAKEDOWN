@@ -131,9 +131,7 @@ export async function handleBetaAccessButton(interaction) {
     const { member } = await grantBetaRole(interaction.user.id, interaction.client);
     const lang = getLanguageRole(member) || 'fr';
     const guild = await resolveBetaGuild(interaction.client);
-    const feedbackChannel = guild
-      ? guild.channels.cache.get(BETA_FEEDBACK_CHANNEL_ID) || await guild.channels.fetch(BETA_FEEDBACK_CHANNEL_ID).catch(() => null)
-      : null;
+    const feedbackChannel = guild.channels.cache.get(BETA_FEEDBACK_CHANNEL_ID) || await guild.channels.fetch(BETA_FEEDBACK_CHANNEL_ID).catch(() => null);
 
     const replyContent = lang === 'en'
       ? [

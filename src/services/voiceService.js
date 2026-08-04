@@ -26,7 +26,7 @@ const staffWaitTimers = new Map();
 
 function sanitizeVoiceName(name) {
   return String(name ?? '')
-    .replace(/[\\/\[\]#:*?"<>|]/g, '')
+    .replace(/[\\/\[\]#:*?? "<>|]/g, '')
     .trim()
     .slice(0, 90) || 'salon-vocal';
 }

@@ -4,7 +4,7 @@ import { executeKick, isStaffOrAdmin, replyOk, replyErr, prefixReply, replyUsage
 export const data = new SlashCommandBuilder()
   .setName('kick')
   .setDescription('Expulser un membre du serveur')
-  .addUserOption(o => o.setName('membre').setDescription('Membre ? expulser').setRequired(true))
+  .addUserOption(o => o.setName('membre').setDescription('Membre ?? expulser').setRequired(true))
   .addStringOption(o => o.setName('raison').setDescription('Raison du kick').setRequired(false).setMaxLength(500));
 
 export async function executeSlash(interaction) {
@@ -39,7 +39,7 @@ export async function executePrefix(message, args) {
     await executeKick({ guild: message.guild, mod: message.author, target: mention, raison, client: message.client });
     await message.reply(`? \`${mention.user.username}\` a ?t? expuls?. Raison : ${raison}`);
   } catch (e) {
-    await prefixReply(message, `? ${e.message}`);
+    await prefixReply(message, `?? ${e.message}`);
   }
 }
 

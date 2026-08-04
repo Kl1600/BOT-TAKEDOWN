@@ -22,7 +22,7 @@ async function replyPlain(interaction, content) {
 
 function parseFlexibleDuration(rawValue) {
   const value = String(rawValue ?? '').trim().toLowerCase();
-  const match = value.match(/^(\d+)\s*(s|sec|secs|second|secondes?|m|min|mins|minute|minutes?|h|heure|heures?|d|j|jour|jours?)$/i);
+  const match = value.match(/^(\d+)\s*(s|sec|secs|second|secondes?? |m|min|mins|minute|minutes?|h|heure|heures?|d|j|jour|jours?)$/i);
   if (!match) return null;
 
   const amount = Number(match[1]);

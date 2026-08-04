@@ -47,6 +47,11 @@ function buildEmbed({ title, description, color, fields = [] }) {
   return embed;
 }
 
+function buildDmPreview(content) {
+  const value = String(content || '').trim();
+  return value ? value.slice(0, 3500) : 'Aucun contenu.';
+}
+
 // ── Exports par catégorie ─────────────────────────────────────────────────────
 
 /** Logs généraux : création/suppression/déplacement de salon */
@@ -79,6 +84,18 @@ export async function logCommand(client, opts) {
   await sendLog(client, 'command', buildEmbed({ color: 0xEB459E, ...opts }));
 }
 
+/** Logs messages privés envoyés et reçus */
+export async function logDm(client, opts) {
+  const { direction = 'reçu', content, ...rest } = opts || {};
+  const title = direction === 'envoyé' ? 'Message privé envoyé' : 'Message privé reçu';
+  await sendLog(client, 'dm', buildEmbed({
+    color: direction === 'envoyé' ? 0x57F287 : 0xF0A500,
+    title,
+    description: buildDmPreview(content),
+    ...rest
+  }));
+}
+
 /** Logs sanctions (warn, note, demote, promote, kick, ban) */
 export async function logSanction(client, opts) {
   await sendLog(client, 'sanction', buildEmbed({ color: 0xED4245, ...opts }));
@@ -96,6 +113,6 @@ export function readableChannelType(type) {
 
 export default {
   logGeneral, logMessage, logVoice, logTicket,
-  logAnnouncement, logCommand, logSanction, logStaffApply,
+  logAnnouncement, logCommand, logDm, logSanction, logStaffApply,
   readableChannelType
 };

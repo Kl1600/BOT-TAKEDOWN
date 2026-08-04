@@ -118,7 +118,13 @@ export default {
         description: `\`${interaction.commandName}\` utilisée sur <@${interaction.targetUser?.id || 'inconnu'}>`,
         fields: [
           { name: 'Utilisateur', value: `<@${interaction.user.id}> (\`${interaction.user.tag}\`)`, inline: true },
-          { name: 'Cible', value: interaction.targetUser?.id ? `<@${interaction.targetUser.id}> (\`${interaction.targetUser.username}\`)` : 'inconnue', inline: true },
+          {
+            name: 'Cible',
+            value: interaction.targetUser
+              ? `<@${interaction.targetUser.id}> (\`${interaction.targetUser.username}\`)`
+              : 'inconnue',
+            inline: true
+          },
           { name: 'Salon', value: `<#${interaction.channelId}>`, inline: true }
         ]
       }).catch(() => null);

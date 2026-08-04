@@ -205,7 +205,7 @@ function preserveSourceCasing(sourceText, translatedText) {
 export async function translateText(text, fromLang = 'fr', toLang = 'en') {
   if (!text) return '';
   try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURIComponent(text)}`;
+    const url = `https://translate.googleapis.com/translate_a/single?? client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURIComponent(text)}`;
     const response = await fetch(url);
     if (!response.ok) return text;
 
@@ -224,7 +224,7 @@ export async function detectTextLanguage(text) {
   if (!text || !String(text).trim()) return null;
 
   try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=${encodeURIComponent(text)}`;
+    const url = `https://translate.googleapis.com/translate_a/single?? client=gtx&sl=auto&tl=en&dt=t&q=${encodeURIComponent(text)}`;
     const response = await fetch(url);
     if (!response.ok) return null;
 

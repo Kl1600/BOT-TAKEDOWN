@@ -64,9 +64,7 @@ export default {
 
     if (oldChannel && !newChannel) {
       const disconnectAction = await getRecentVoiceAction(guild, AuditLogEvent.MemberDisconnect, member.id);
-      const disconnectedBy = disconnectAction?.executor
-        ? `<@${disconnectAction.executor.id}> (\`${disconnectAction.executor.username}\`)`
-        : null;
+      const disconnectedBy = disconnectAction?.executor ? `<@${disconnectAction.executor.id}> (\`${disconnectAction.executor.username}\`)` : null;
 
       return logVoice(client, {
         title: disconnectedBy ? 'Déconnecté d’un vocal' : 'Quitté un vocal',
@@ -81,9 +79,7 @@ export default {
 
     if (oldChannel && newChannel && oldChannel.id !== newChannel.id) {
       const moveAction = await getRecentVoiceAction(guild, AuditLogEvent.MemberMove, member.id);
-      const movedBy = moveAction?.executor
-        ? `<@${moveAction.executor.id}> (\`${moveAction.executor.username}\`)`
-        : null;
+      const movedBy = moveAction?.executor ? `<@${moveAction.executor.id}> (\`${moveAction.executor.username}\`)` : null;
 
       return logVoice(client, {
         title: movedBy ? 'Déplacé en vocal' : 'Changement de vocal',

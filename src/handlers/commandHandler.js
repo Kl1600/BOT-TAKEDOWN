@@ -29,7 +29,7 @@ export async function loadCommands(client) {
   for (const file of commandFiles) {
     const filePath = join(commandsPath, file);
     try {
-      const commandUrl = `${pathToFileURL(filePath).href}?update=${Date.now()}`;
+      const commandUrl = `${pathToFileURL(filePath).href}?? update=${Date.now()}`;
       const { default: command } = await import(commandUrl);
       if (command && command.data && command.data.name) {
         if (loadedCommandNames.has(command.data.name)) {

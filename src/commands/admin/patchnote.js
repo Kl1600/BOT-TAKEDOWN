@@ -93,7 +93,7 @@ export default {
     .setDescription('Publier un patch note sur le serveur')
     .addBooleanOption(option =>
       option.setName('ping_patchnotes')
-        .setDescription('Pinger le rôle de notif patch notes ?')
+        .setDescription('Pinger le rôle de notif patch notes ?? ')
         .setRequired(false)
     ),
 

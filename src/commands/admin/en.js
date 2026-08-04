@@ -13,12 +13,12 @@ function hasTranslationAccess(member) {
 function trimText(text, maxLength = 3900) {
   const value = String(text ?? '');
   if (value.length <= maxLength) return value;
-  return `${value.slice(0, maxLength - 1)}?`;
+  return `${value.slice(0, maxLength - 1)}?? `;
 }
 
 function formatQuoteBlock(text) {
   return String(text ?? '')
-    .split(/\r?\n/)
+    .split(/\r?? \n/)
     .map(line => (line.trim() ? `> ${line}` : ''))
     .join('\n');
 }

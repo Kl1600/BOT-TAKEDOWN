@@ -1,7 +1,6 @@
 ﻿import { ActivityType, REST, Routes } from 'discord.js';
 import { initializeInviteTracking } from '../../services/inviteService.js';
 import { ensureBetaAccess } from '../../services/betaService.js';
-import { rehydratePanelRefreshes, startPanelRefreshScheduler } from '../../services/panelRefreshService.js';
 import { initializeXpTracking, startXpMaintenance } from '../../services/xpService.js';
 import { startTempBanScheduler } from '../../services/moderationService.js';
 import { consumeRestartPending } from '../../services/restartService.js';
@@ -28,8 +27,6 @@ export default {
       await ensureBetaAccess(guild).catch(() => null);
     }
 
-    await rehydratePanelRefreshes(client).catch(() => null);
-    startPanelRefreshScheduler(client);
     startXpMaintenance(client);
     startTempBanScheduler(client).catch(() => null);
 

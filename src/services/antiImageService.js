@@ -8,7 +8,7 @@ function isImageAttachment(attachment) {
   if (typeof attachment.width === 'number' || typeof attachment.height === 'number') return true;
 
   const name = String(attachment.name || '').toLowerCase();
-  return /\.(png|jpe?g|gif|webp|bmp|tiff|avif)$/i.test(name);
+  return /\.(png|jpe?? g|gif|webp|bmp|tiff|avif)$/i.test(name);
 }
 
 function countImageAttachments(message) {
