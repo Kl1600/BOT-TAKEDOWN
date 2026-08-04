@@ -92,7 +92,7 @@ export default {
     .setDescription('Publier un patch note sur le serveur')
     .addBooleanOption(option =>
       option.setName('ping_patchnotes')
-        .setDescription('Pinger le rÃ´le de notif patch notes ?? ')
+        .setDescription('Pinger le rôle de notif patch notes ? ')
         .setRequired(false)
     ),
 
@@ -108,7 +108,7 @@ export default {
     const input = new TextInputBuilder()
       .setCustomId('patchnote_content_input')
       .setLabel('Contenu du patch note')
-      .setPlaceholder('Entrez votre patch note ici. Utilisez separator sur une ligne pour insÃ©rer une sÃ©paration.')
+      .setPlaceholder('Entrez votre patch note ici. Utilisez separator sur une ligne pour insérer une séparation.')
       .setStyle(TextInputStyle.Paragraph)
       .setRequired(true)
       .setMaxLength(4000);

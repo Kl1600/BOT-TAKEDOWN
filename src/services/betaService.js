@@ -38,16 +38,16 @@ export function buildBetaAccessPanelContainer(lang = 'fr', translateDisabled = f
         '-# 🇬🇧 Click below to translate to English.'
       ].join('\n')
     : [
-        '### ACCÃËS BÃÅ TA',
+        '### ACCÈS BÊTA',
         '',
-        'Actuellement Takedown est en bÃÂªta.',
+        'Actuellement Takedown est en bêta.',
         '',
-        'Si vous voulez participer ÃÂ  la bÃÂªta, vous avez juste ÃÂ  cliquer sur le bouton Beta pour rÃÂ©cupÃÂ©rer le rÃÂ´le beta et avoir accÃÂ¨s au serveur.',
+        'Si vous voulez participer à la bêta, vous avez juste à cliquer sur le bouton Beta pour récupérer le rôle beta et avoir accès au serveur.',
         '',
         'Ensuite, tapez `takedown` dans FiveM et rejoignez.',
         '',
-        `La bÃÂªta dure jusqu'au minimum ${BETA_END_DATE_LABEL}.`,
-        'Elle sert ÃÂ  faire des tests et ÃÂ  trouver les bugs potentiels, ou mÃÂªme ÃÂ  recueillir vos retours sur les bugs, amÃÂ©liorations, ajouts et dÃÂ©fauts.',
+        `La bêta dure jusqu'au minimum ${BETA_END_DATE_LABEL}.`,
+        'Elle sert à faire des tests et à trouver les bugs potentiels, ou même à recueillir vos retours sur les bugs, améliorations, ajouts et défauts.',
         '',
         '-# 🇬🇧 Click below to translate to English.'
       ].join('\n');
@@ -89,7 +89,7 @@ async function ensureBetaFeedbackAccess(guild) {
     ViewChannel: true,
     SendMessages: true,
     ReadMessageHistory: true
-  }).catch(err => logger.warn(`Impossible de configurer l'accÃÂ¨s beta: ${err?.message || err}`));
+  }).catch(err => logger.warn(`Impossible de configurer l'accès beta: ${err?.message || err}`));
 }
 
 async function grantBetaRole(userId, client) {
@@ -105,12 +105,12 @@ async function grantBetaRole(userId, client) {
 
   const role = guild.roles.cache.get(BETA_ROLE_ID) || await guild.roles.fetch(BETA_ROLE_ID).catch(() => null);
   if (!role) {
-    throw new Error('RÃÂ´le beta introuvable.');
+    throw new Error('Rôle beta introuvable.');
   }
 
   if (!member.roles.cache.has(BETA_ROLE_ID)) {
-    await member.roles.add(role, 'AccÃÂ¨s bÃÂªta').catch(err => {
-      throw new Error(err?.message || 'Impossible dÃ¢â¬â¢ajouter le rÃÂ´le beta.');
+    await member.roles.add(role, 'Accès bêta').catch(err => {
+      throw new Error(err?.message || 'Impossible d’ajouter le rôle beta.');
     });
   }
 
@@ -134,12 +134,12 @@ export async function handleBetaAccessButton(interaction) {
 
     const replyContent = lang === 'en'
       ? [
-          'Ã¢Åâ¦ The beta role has been added.',
+          '✅ The beta role has been added.',
           feedbackChannel ? `You can now access <#${BETA_FEEDBACK_CHANNEL_ID}>.` : null
         ].filter(Boolean).join('\n')
       : [
-          'Ã¢Åâ¦ Le rÃÂ´le beta tÃ¢â¬â¢a ÃÂ©tÃÂ© ajoutÃÂ©.',
-          feedbackChannel ? `Tu peux maintenant accÃÂ©der au salon <#${BETA_FEEDBACK_CHANNEL_ID}>.` : null
+          '✅ Le rôle beta t’a été ajouté.',
+          feedbackChannel ? `Tu peux maintenant accéder au salon <#${BETA_FEEDBACK_CHANNEL_ID}>.` : null
         ].filter(Boolean).join('\n');
 
     const replyPayload = { content: replyContent };
@@ -151,7 +151,7 @@ export async function handleBetaAccessButton(interaction) {
   } catch (err) {
     const lang = getLanguageRole(interaction.member) || 'fr';
     const errorPayload = {
-      content: `-# ${err?.message || (lang === 'en' ? 'Unable to add the beta role.' : 'Impossible dÃ¢â¬â¢ajouter le rÃÂ´le beta.')}`
+      content: `-# ${err?.message || (lang === 'en' ? 'Unable to add the beta role.' : 'Impossible d’ajouter le rôle beta.')}`
     };
     if (interaction.inGuild?.()) {
       errorPayload.flags = MessageFlags.Ephemeral;

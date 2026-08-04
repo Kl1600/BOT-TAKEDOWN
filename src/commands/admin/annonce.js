@@ -91,7 +91,7 @@ export default {
     .setDescription('Publier une annonce sur le serveur')
     .addBooleanOption(option =>
       option.setName('ping_everyone')
-        .setDescription('Faire un ping @everyone ? (Par dÃ©faut : non)')
+        .setDescription('Faire un ping @everyone ? (Par défaut : non)')
         .setRequired(false)
     ),
 
@@ -107,7 +107,7 @@ export default {
     const input = new TextInputBuilder()
       .setCustomId('annonce_content_input')
       .setLabel('Contenu de l\'annonce')
-      .setPlaceholder('Entrez votre annonce ici. Utilisez separator sur une ligne pour insÃ©rer une sÃ©paration.')
+      .setPlaceholder('Entrez votre annonce ici. Utilisez separator sur une ligne pour insérer une séparation.')
       .setStyle(TextInputStyle.Paragraph)
       .setRequired(true)
       .setMaxLength(4000);
