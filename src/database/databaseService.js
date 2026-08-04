@@ -610,21 +610,21 @@ export async function upsertInviteReferral({
 
 export async function markInviteReferralLeft(guildId, inviteeId, leftAt = Math.floor(Date.now() / 1000)) {
   return db.run(
-    'UPDATE guild_invite_referrals SET left_at = ?? WHERE guild_id = ? AND invitee_id = ?',
+    'UPDATE guild_invite_referrals SET left_at = ? WHERE guild_id = ? AND invitee_id = ?',
     [leftAt, guildId, inviteeId]
   );
 }
 
 export async function getInviteReferral(guildId, inviteeId) {
   return db.get(
-    'SELECT * FROM guild_invite_referrals WHERE guild_id = ?? AND invitee_id = ?',
+    'SELECT * FROM guild_invite_referrals WHERE guild_id = ? AND invitee_id = ?',
     [guildId, inviteeId]
   );
 }
 
 export async function getInviteReferralsByInviter(guildId, inviterId) {
   return db.query(
-    'SELECT * FROM guild_invite_referrals WHERE guild_id = ?? AND inviter_id = ? ORDER BY joined_at DESC',
+    'SELECT * FROM guild_invite_referrals WHERE guild_id = ? AND inviter_id = ? ORDER BY joined_at DESC',
     [guildId, inviterId]
   );
 }
@@ -636,7 +636,7 @@ export async function getInviteLeaderboard(guildId, limit = 20) {
      WHERE guild_id = ?
      GROUP BY inviter_id
      ORDER BY total_invites DESC, inviter_id ASC
-     LIMIT ?? `,
+     LIMIT ? `,
     [guildId, limit]
   );
 }
@@ -654,13 +654,13 @@ export async function getInviteRank(guildId, inviterId) {
      WHERE current.total_invites > (
        SELECT COUNT(*)
        FROM guild_invite_referrals
-       WHERE guild_id = ? AND inviter_id = ??  )
+       WHERE guild_id = ? AND inviter_id = ?  )
      OR (
        current.total_invites = (
          SELECT COUNT(*)
          FROM guild_invite_referrals
-         WHERE guild_id = ? AND inviter_id = ??  )
-       AND current.inviter_id < ??  )`,
+         WHERE guild_id = ? AND inviter_id = ?  )
+       AND current.inviter_id < ?  )`,
     [guildId, guildId, inviterId, guildId, inviterId, inviterId]
   );
 }
@@ -795,7 +795,7 @@ export async function getTempBans() {
 
 export async function getXpProfile(guildId, userId) {
   return db.get(
-    'SELECT * FROM guild_xp_profiles WHERE guild_id = ?? AND user_id = ?',
+    'SELECT * FROM guild_xp_profiles WHERE guild_id = ? AND user_id = ?',
     [guildId, userId]
   );
 }
@@ -837,8 +837,8 @@ export async function getXpLeaderboard(guildId, limit = 10) {
   return db.query(
     `SELECT guild_id, user_id, total_xp, total_messages, total_voice_seconds, total_takedown_seconds
      FROM guild_xp_profiles
-     WHERE guild_id = ?? ORDER BY total_xp DESC, total_messages DESC, user_id ASC
-     LIMIT ?? `,
+     WHERE guild_id = ? ORDER BY total_xp DESC, total_messages DESC, user_id ASC
+     LIMIT ? `,
     [guildId, limit]
   );
 }
@@ -852,8 +852,8 @@ export async function getXpRank(guildId, userId) {
      FROM guild_xp_profiles
      WHERE guild_id = ?
        AND (
-         total_xp > ?? OR (total_xp = ? AND total_messages > ?)
-         OR (total_xp = ?? AND total_messages = ? AND user_id <= ?)
+         total_xp > ? OR (total_xp = ? AND total_messages > ?)
+         OR (total_xp = ? AND total_messages = ? AND user_id <= ?)
        )`,
     [
       guildId,
