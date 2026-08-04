@@ -12,6 +12,7 @@ import { handleInviteProfileModalSubmit } from '../../services/inviteService.js'
 import { handleBanListSearchModal } from '../../commands/admin/banlist.js';
 import { handleEnModalSubmit } from '../../commands/admin/en.js';
 import { handleEnUserModalSubmit } from '../../commands/admin/enUser.js';
+import { handleEnMessageModalSubmit } from '../../commands/admin/enMessage.js';
 import { handleBanUserModalSubmit } from '../../commands/admin/banUser.js';
 import { handleKickUserModalSubmit } from '../../commands/admin/kickUser.js';
 import { handleMuteUserModalSubmit } from '../../commands/admin/muteUser.js';
@@ -237,6 +238,12 @@ export default {
           await handleEnUserModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal traduction en_user:', err);
+        }
+      } else if (interaction.customId.startsWith('translate_en_message_modal:')) {
+        try {
+          await handleEnMessageModalSubmit(interaction);
+        } catch (err) {
+          logger.error('Erreur modal traduction en message:', err);
         }
       } else if (interaction.customId.startsWith('userctx_ban_reason_')) {
         try {

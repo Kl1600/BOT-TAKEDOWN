@@ -3,7 +3,6 @@ import { initializeInviteTracking } from '../../services/inviteService.js';
 import { ensureBetaAccess } from '../../services/betaService.js';
 import { initializeXpTracking, startXpMaintenance } from '../../services/xpService.js';
 import { startTempBanScheduler } from '../../services/moderationService.js';
-import { refreshAllPanels, startPanelRefreshScheduler } from '../../services/panelRefreshService.js';
 import { consumeRestartPending } from '../../services/restartService.js';
 import dbService from '../../database/dbProxy.js';
 import config from '../../config/config.js';
@@ -38,11 +37,6 @@ export default {
       }],
       status: config.status.presence
     });
-
-    await refreshAllPanels(client, { source: 'startup' }).catch(err => {
-      logger.warn(`Impossible de rafraîchir les panels au démarrage: ${err?.message || err}`);
-    });
-    startPanelRefreshScheduler(client);
 
     const pendingRestart = await consumeRestartPending().catch(() => null);
     if (pendingRestart?.channelId && pendingRestart.guildId) {
