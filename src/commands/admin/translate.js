@@ -15,7 +15,7 @@ function trimText(text, maxLength = 3900) {
 
 function formatQuoteBlock(text) {
   return String(text ?? '')
-    .split(/\r?? \n/)
+    .split(/\r?\n/)
     .map(line => (line.trim() ? `> ${line}` : ''))
     .join('\n');
 }

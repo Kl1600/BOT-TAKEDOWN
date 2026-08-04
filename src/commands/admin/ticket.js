@@ -6,7 +6,7 @@ import { buildTicketPanelContainer } from '../../services/ticketService.js';
 import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
 
 registerPanelRefreshBuilder('ticket', async ({ member }) => {
-  return [buildTicketPanelContainer('fr', member)];
+  return [await buildTicketPanelContainer('fr', member)];
 });
 
 export default {
@@ -16,7 +16,7 @@ export default {
 
   async executeSlash(interaction, lang) {
     if (!await checkPermissions(interaction, interaction.member)) return;
-    const message = await sendV2Container(interaction.channel, buildTicketPanelContainer('fr', interaction.member));
+    const message = await sendV2Container(interaction.channel, await buildTicketPanelContainer('fr', interaction.member));
     registerPanelRefresh({
       key: `ticket:${message?.id || interaction.channelId}`,
       guildId: interaction.guildId,
@@ -25,9 +25,7 @@ export default {
       memberId: interaction.user.id,
       refreshOnMemberUpdate: true,
       panelType: 'ticket',
-      buildComponents: async member => {
-        return [buildTicketPanelContainer('fr', member)];
-      }
+      buildComponents: async member => [await buildTicketPanelContainer('fr', member)]
     });
     await interaction.reply({ content: 'Panneau de ticket envoyé avec succès.', flags: MessageFlags.Ephemeral });
   },
@@ -35,7 +33,7 @@ export default {
   async executePrefix(message, args, lang) {
     if (!await checkPermissions(message, message.member)) return;
     await message.delete().catch(() => null);
-    const sentMessage = await sendV2Container(message.channel, buildTicketPanelContainer('fr', message.member));
+    const sentMessage = await sendV2Container(message.channel, await buildTicketPanelContainer('fr', message.member));
     registerPanelRefresh({
       key: `ticket:${sentMessage?.id || message.channelId}`,
       guildId: message.guildId,
@@ -44,9 +42,7 @@ export default {
       memberId: message.author.id,
       refreshOnMemberUpdate: true,
       panelType: 'ticket',
-      buildComponents: async member => {
-        return [buildTicketPanelContainer('fr', member)];
-      }
+      buildComponents: async member => [await buildTicketPanelContainer('fr', member)]
     });
   }
 };

@@ -178,6 +178,79 @@ function applyTranslationFixes(sourceText, translatedText, fromLang, toLang) {
   return result;
 }
 
+function normalizeDetectionText(text) {
+  return String(text ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, ' ')
+    .replace(/[^a-z0-9\s']/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function scoreLanguage(text, language) {
+  const normalized = normalizeDetectionText(text);
+  if (!normalized) return 0;
+
+  const tokens = normalized.split(' ');
+  const tokenSet = new Set(tokens);
+
+  const englishHints = new Set([
+    'a', 'an', 'and', 'are', 'as', 'be', 'by', 'can', 'do', 'for', 'from',
+    'hello', 'hi', 'how', 'i', 'in', 'is', 'it', 'me', 'my', 'of', 'on', 'or',
+    'please', 'so', 'that', 'the', 'this', 'to', 'we', 'what', 'when', 'where',
+    'who', 'why', 'will', 'with', 'you', 'your', 'everyone', 'good', 'morning',
+    'evening', 'thanks', 'thank', 'have', 'has', 'not', 'no', 'yes'
+  ]);
+
+  const frenchHints = new Set([
+    'au', 'aux', 'avec', 'ce', 'ces', 'cet', 'cette', 'de', 'des', 'du',
+    'dans', 'est', 'et', 'fait', 'faites', 'bonjour', 'bonsoir', 'je', 'la',
+    'le', 'les', 'leur', 'leurs', 'mais', 'nous', 'par', 'pas', 'pour', 'que',
+    'qui', 'sur', 'tu', 'vous', 'une', 'un', 'vos', 'etre', 'tous',
+    'tout', 'merci', 'salut', 'oui', 'non', 'comment', 'traduire'
+  ]);
+
+  const hints = language === 'en' ? englishHints : frenchHints;
+  let score = 0;
+
+  for (const token of tokenSet) {
+    if (hints.has(token)) score += 1;
+  }
+
+  if (language === 'fr') {
+    if (/[àâçéèêëîïôùûüÿœæ]/i.test(text)) score += 2;
+    if (/\b(?:le|la|les|des|du|une|un|que|qui|pour|avec|sans|dans|sur|pas|est|sont)\b/i.test(text)) {
+      score += 1;
+    }
+  } else if (language === 'en') {
+    if (/\b(?:the|and|you|your|with|for|that|this|is|are|hello|thanks|thank|everyone)\b/i.test(text)) {
+      score += 1;
+    }
+  }
+
+  return score;
+}
+
+function guessTextLanguage(text) {
+  const frScore = scoreLanguage(text, 'fr');
+  const enScore = scoreLanguage(text, 'en');
+
+  if (frScore === 0 && enScore === 0) {
+    return null;
+  }
+
+  if (enScore > frScore) {
+    return 'en';
+  }
+
+  if (frScore > enScore) {
+    return 'fr';
+  }
+
+  return null;
+}
+
 function preserveSourceCasing(sourceText, translatedText) {
   if (!sourceText || !translatedText) {
     return translatedText;
@@ -205,9 +278,9 @@ function preserveSourceCasing(sourceText, translatedText) {
 export async function translateText(text, fromLang = 'fr', toLang = 'en') {
   if (!text) return '';
   try {
-    const url = `https://translate.googleapis.com/translate_a/single?? client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURIComponent(text)}`;
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURIComponent(text)}`;
     const response = await fetch(url);
-    if (!response.ok) return text;
+    if (!response.ok) return preserveSourceCasing(text, applyTranslationFixes(text, text, fromLang, toLang));
 
     const data = await response.json();
     if (data && data[0]) {
@@ -223,21 +296,32 @@ export async function translateText(text, fromLang = 'fr', toLang = 'en') {
 export async function detectTextLanguage(text) {
   if (!text || !String(text).trim()) return null;
 
+  const heuristic = guessTextLanguage(text);
+
   try {
-    const url = `https://translate.googleapis.com/translate_a/single?? client=gtx&sl=auto&tl=en&dt=t&q=${encodeURIComponent(text)}`;
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=${encodeURIComponent(text)}`;
     const response = await fetch(url);
-    if (!response.ok) return null;
+    if (!response.ok) return heuristic;
 
     const data = await response.json();
     const source = data?.[2];
     if (typeof source === 'string' && source.trim()) {
-      return source.trim().toLowerCase();
+      const detected = source.trim().toLowerCase();
+      if ((detected === 'en' || detected === 'fr') && heuristic && heuristic !== detected) {
+        const heuristicScore = scoreLanguage(text, heuristic);
+        const detectedScore = scoreLanguage(text, detected);
+        if (heuristicScore >= detectedScore + 1) {
+          return heuristic;
+        }
+      }
+
+      return detected;
     }
   } catch {
     // ignore detection failures
   }
 
-  return null;
+  return heuristic;
 }
 
 export default {

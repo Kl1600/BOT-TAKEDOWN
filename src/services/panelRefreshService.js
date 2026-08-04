@@ -59,7 +59,7 @@ async function resolveMember(guild, memberId) {
   return guild.members.cache.get(memberId) || await guild.members.fetch(memberId).catch(() => null);
 }
 
-async function refreshRecord(client, record) {
+async function refreshRecord(client, record, memberOverride = null) {
   const panelType = String(record.panel_type || '');
   const builder = panelBuilders.get(panelType);
   if (typeof builder !== 'function') {
@@ -81,7 +81,7 @@ async function refreshRecord(client, record) {
     return 0;
   }
 
-  const member = await resolveMember(guild, record.member_id);
+  const member = memberOverride || await resolveMember(guild, record.member_id);
   const payload = normalizePayload(record.payload);
   const messageIds = normalizeMessageIds(record.message_ids);
 
@@ -213,6 +213,12 @@ export async function refreshPanelsForMember(client = refreshClient, memberOrId 
 
   let totalRefreshed = 0;
   for (const record of records || []) {
+    const panelType = String(record.panel_type || '');
+    if (panelType === 'ticket') {
+      totalRefreshed += await refreshRecord(client, record, await resolveMember(await resolveGuild(client, record.guild_id), memberId));
+      continue;
+    }
+
     if (String(record.member_id || '') !== String(memberId)) continue;
     totalRefreshed += await refreshRecord(client, record);
   }

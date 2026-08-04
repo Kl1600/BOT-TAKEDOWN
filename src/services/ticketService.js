@@ -1,7 +1,7 @@
 ﻿import { ChannelType, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, ContainerBuilder, StringSelectMenuBuilder, TextDisplayBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { sendV2Container } from '../utils/v2Helper.js';
 import config from '../config/config.js';
-import { getLanguage, t } from '../utils/language.js';
+import { getLanguage, isEnglishOnly, t } from '../utils/language.js';
 import dbService from '../database/dbProxy.js';
 import { logTicket } from './logService.js';
 import { generateTranscript } from '../utils/transcriptor.js';
@@ -39,11 +39,10 @@ const TICKET_CATEGORY_OPTIONS = {
   ]
 };
 
-export function buildTicketPanelContainer(lang, member = null) {
-  const hasFrenchRole = Boolean(member?.roles?.cache?.has(config.roles.fr));
-  const hasEnglishRole = Boolean(member?.roles?.cache?.has(config.roles.en));
-  const disableFrenchSelect = hasEnglishRole && !hasFrenchRole;
-  const disableEnglishSelect = hasFrenchRole;
+export async function buildTicketPanelContainer(lang, member = null) {
+  const englishOnly = await isEnglishOnly(member);
+  const disableFrenchSelect = englishOnly;
+  const disableEnglishSelect = !englishOnly;
   const panelLang = 'fr';
   const text = new TextDisplayBuilder().setContent(
     `### ${t(panelLang, 'commands.ticket.panel.title').toUpperCase()}\n\n` +
