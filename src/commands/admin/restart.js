@@ -20,7 +20,7 @@ function getRestartMessage(lang) {
 async function triggerRestart() {
   setTimeout(() => {
     process.exit(0);
-  }, 1500);
+  }, 4000);
 }
 
 export const data = new SlashCommandBuilder()

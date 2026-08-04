@@ -68,6 +68,13 @@ async function fetchFreshMember(member) {
   });
 }
 
+function getLanguageFromRoles(roles) {
+  if (!roles) return null;
+  if (roles.has(config.roles.fr)) return 'fr';
+  if (roles.has(config.roles.en)) return 'en';
+  return null;
+}
+
 function applyGlossary(text, fromLang, toLang) {
   const rules = TRANSLATION_GLOSSARY[`${fromLang}To${toLang}`];
   if (!rules || !text) return text;
@@ -82,16 +89,12 @@ function applyGlossary(text, fromLang, toLang) {
 export async function getLanguage(member) {
   if (!member) return config.welcome.defaultLang || 'fr';
 
-  const freshMember = await fetchFreshMember(member);
+  const cachedLanguage = getLanguageFromRoles(member?.roles?.cache);
+  if (cachedLanguage) return cachedLanguage;
 
-  if (freshMember.roles && freshMember.roles.cache) {
-    if (freshMember.roles.cache.has(config.roles.fr)) {
-      return 'fr';
-    }
-    if (freshMember.roles.cache.has(config.roles.en)) {
-      return 'en';
-    }
-  }
+  const freshMember = await fetchFreshMember(member);
+  const freshLanguage = getLanguageFromRoles(freshMember?.roles?.cache);
+  if (freshLanguage) return freshLanguage;
 
   if (member.forceLanguage === 'fr' || member.forceLanguage === 'en') {
     return member.forceLanguage;
@@ -113,6 +116,11 @@ export async function getLanguage(member) {
 export async function isEnglishOnly(member) {
   if (!member) return false;
 
+  const cachedRoles = member?.roles?.cache;
+  if (cachedRoles) {
+    return cachedRoles.has(config.roles.en) && !cachedRoles.has(config.roles.fr);
+  }
+
   const freshMember = await fetchFreshMember(member);
   const roles = freshMember?.roles?.cache;
   if (!roles) return false;
@@ -123,6 +131,11 @@ export async function isEnglishOnly(member) {
 export async function hasFrenchRole(member) {
   if (!member) return false;
 
+  const cachedRoles = member?.roles?.cache;
+  if (cachedRoles) {
+    return cachedRoles.has(config.roles.fr);
+  }
+
   const freshMember = await fetchFreshMember(member);
   const roles = freshMember?.roles?.cache;
   if (!roles) return false;
@@ -132,6 +145,9 @@ export async function hasFrenchRole(member) {
 
 export async function getFaqAnswerLanguage(member) {
   if (!member) return config.welcome.defaultLang || 'fr';
+
+  const cachedLanguage = getLanguageFromRoles(member?.roles?.cache);
+  if (cachedLanguage) return cachedLanguage;
 
   const freshMember = await fetchFreshMember(member);
   const roles = freshMember?.roles?.cache;

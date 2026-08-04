@@ -30,42 +30,47 @@ function getInteractionCommand(client, interaction) {
     || null;
 }
 
+async function replyInteractionFailure(interaction, lang, error) {
+  const errMsg = t(lang, 'errors.command_error');
+  if (interaction.replied || interaction.deferred) {
+    await interaction.followUp({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => null);
+    return;
+  }
+
+  await interaction.reply({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => null);
+}
+
 export default {
   name: 'interactionCreate',
   once: false,
   async execute(interaction, client) {
     // 1. Route Slash Commands
     if (interaction.isChatInputCommand()) {
-      const command = getInteractionCommand(client, interaction);
-      if (!command) return;
-
       const lang = 'fr';
-      logger.debug(`Slash Command: /${interaction.commandName} par ${interaction.user.tag} (${interaction.user.id})`);
-      const optionsText = interaction.options.data
-        .map(option => `${option.name}=${option.value ?? option.options?.map(sub => `${sub.name}=${sub.value}`).join(',') ?? ''}`)
-        .join(' | ') || 'aucune option';
-
       try {
+        const command = getInteractionCommand(client, interaction);
+        if (!command) return;
+
+        logger.debug(`Slash Command: /${interaction.commandName} par ${interaction.user.tag} (${interaction.user.id})`);
+        const optionsText = interaction.options.data
+          .map(option => `${option.name}=${option.value ?? option.options?.map(sub => `${sub.name}=${sub.value}`).join(',') ?? ''}`)
+          .join(' | ') || 'aucune option';
+
         await command.executeSlash(interaction, lang);
+
+        await logCommand(client, {
+          title: 'Commande slash',
+          description: `\`/${interaction.commandName}\` utilisée dans <#${interaction.channelId}>`,
+          fields: [
+            { name: 'Utilisateur', value: `<@${interaction.user.id}> (\`${interaction.user.tag}\`)`, inline: true },
+            { name: 'Salon', value: `<#${interaction.channelId}>`, inline: true },
+            { name: 'Options', value: optionsText.slice(0, 1024), inline: false }
+          ]
+        }).catch(() => null);
       } catch (err) {
         logger.error(`Erreur commande slash ${interaction.commandName}:`, err);
-        const errMsg = t(lang, 'errors.command_error');
-        if (interaction.replied || interaction.deferred) {
-          await interaction.followUp({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => null);
-        } else {
-          await interaction.reply({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => null);
-        }
+        await replyInteractionFailure(interaction, lang, err);
       }
-
-      await logCommand(client, {
-        title: 'Commande slash',
-        description: `\`/${interaction.commandName}\` utilisée dans <#${interaction.channelId}>`,
-        fields: [
-          { name: 'Utilisateur', value: `<@${interaction.user.id}> (\`${interaction.user.tag}\`)`, inline: true },
-          { name: 'Salon', value: `<#${interaction.channelId}>`, inline: true },
-          { name: 'Options', value: optionsText.slice(0, 1024), inline: false }
-        ]
-      }).catch(() => null);
       return;
     }
 
@@ -85,12 +90,7 @@ export default {
         }
       } catch (err) {
         logger.error(`Erreur menu message ${interaction.commandName}:`, err);
-        const errMsg = t(lang, 'errors.command_error');
-        if (interaction.replied || interaction.deferred) {
-          await interaction.followUp({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => null);
-        } else {
-          await interaction.reply({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => null);
-        }
+        await replyInteractionFailure(interaction, lang, err);
       }
 
       await logCommand(client, {
@@ -119,12 +119,7 @@ export default {
         }
       } catch (err) {
         logger.error(`Erreur menu utilisateur ${interaction.commandName}:`, err);
-        const errMsg = t(lang, 'errors.command_error');
-        if (interaction.replied || interaction.deferred) {
-          await interaction.followUp({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => null);
-        } else {
-          await interaction.reply({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => null);
-        }
+        await replyInteractionFailure(interaction, lang, err);
       }
 
       await logCommand(client, {
@@ -152,6 +147,7 @@ export default {
         await handleComponentInteraction(interaction);
       } catch (err) {
         logger.error(`Erreur bouton ${interaction.customId}:`, err);
+        await replyInteractionFailure(interaction, 'fr', err);
       }
       return;
     }
@@ -173,6 +169,7 @@ export default {
         }
       } catch (err) {
         logger.error(`Erreur select menu ${interaction.customId}:`, err);
+        await replyInteractionFailure(interaction, 'fr', err);
       }
       return;
     }
@@ -186,6 +183,7 @@ export default {
           await handleTicketModalSubmit(interaction);
         } catch (err) {
           logger.error(`Erreur modal ${interaction.customId}:`, err);
+          await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId.startsWith('annonce_modal')) {
         try {
@@ -194,6 +192,7 @@ export default {
           await handleAnnonceModalSubmit(interaction, lang);
         } catch (err) {
           logger.error('Erreur modal annonce:', err);
+          await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId.startsWith('patchnote_modal')) {
         try {
@@ -202,72 +201,84 @@ export default {
           await handlePatchNoteModalSubmit(interaction, lang);
         } catch (err) {
           logger.error('Erreur modal patchnote:', err);
+          await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId.startsWith('staffapply_modal_')) {
         try {
           await handleStaffApplyModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal staffapply:', err);
+          await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId.startsWith('invite_profile_modal_submit_')) {
         try {
           await handleInviteProfileModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal invite profile:', err);
+          await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId.startsWith('banlist_search_modal_')) {
         try {
           await handleBanListSearchModal(interaction);
         } catch (err) {
           logger.error('Erreur modal banlist:', err);
+          await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId === 'streamer_live_modal') {
         try {
           await handleStreamerLiveModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal streamer live:', err);
+          await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId.startsWith('translate_en_modal:')) {
         try {
           await handleEnModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal traduction en:', err);
+          await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId.startsWith('translate_en_user_modal:')) {
         try {
           await handleEnUserModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal traduction en_user:', err);
+          await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId.startsWith('translate_en_message_modal:')) {
         try {
           await handleEnMessageModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal traduction en message:', err);
+          await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId.startsWith('userctx_ban_reason_')) {
         try {
           await handleBanUserModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal ban user:', err);
+          await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId.startsWith('userctx_kick_reason_')) {
         try {
           await handleKickUserModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal kick user:', err);
+          await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId.startsWith('userctx_mute_reason_')) {
         try {
           await handleMuteUserModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal mute user:', err);
+          await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId.startsWith('userctx_dm_message_')) {
         try {
           await handleDmUserModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal dm user:', err);
+          await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId.startsWith('poll_modal_create_')) {
         try {
@@ -275,6 +286,7 @@ export default {
           await handlePollModalSubmit(interaction, lang);
         } catch (err) {
           logger.error('Erreur modal sondage:', err);
+          await replyInteractionFailure(interaction, 'fr', err);
         }
       }
     }
