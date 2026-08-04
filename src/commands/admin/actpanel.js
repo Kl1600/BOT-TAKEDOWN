@@ -23,6 +23,7 @@ export async function executeSlash(interaction) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
+    await new Promise(resolve => setTimeout(resolve, 750));
     const refreshedCount = await refreshAllPanels(interaction.client);
     return interaction.editReply({
       content: refreshedCount > 0
@@ -45,6 +46,7 @@ export async function executePrefix(message) {
   await message.delete().catch(() => null);
 
   try {
+    await new Promise(resolve => setTimeout(resolve, 750));
     const refreshedCount = await refreshAllPanels(message.client);
     const confirmation = await message.channel.send(
       refreshedCount > 0

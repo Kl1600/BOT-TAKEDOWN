@@ -86,7 +86,7 @@ export function unregisterPanelRefresh(key) {
   dbService.deletePanelRefreshRecord(String(key)).catch(() => null);
 }
 
-async function refreshEntry(client, entry) {
+async function refreshEntry(client, entry, memberOverride = null) {
   if (entry.panelType === 'staffapply' && entry.memberId && hasActiveStaffApplySession(entry.memberId)) {
     return false;
   }
@@ -96,22 +96,17 @@ async function refreshEntry(client, entry) {
     : null;
   if (!guild) return false;
 
-  const member = entry.memberId
-    ? await fetchFreshGuildMember(guild, entry.memberId)
-    : null;
-  if (member) {
-    member.forceLanguage = 'fr';
-  }
+  const member = memberOverride && memberOverride.guild?.id === guild.id
+    ? memberOverride
+    : entry.memberId
+      ? await fetchFreshGuildMember(guild, entry.memberId)
+      : null;
 
   let components = null;
   try {
     components = await entry.buildComponents(member, client);
   } catch (err) {
     logger.warn(`Impossible de reconstruire un panel: ${err?.message || err}`);
-  } finally {
-    if (member) {
-      delete member.forceLanguage;
-    }
   }
 
   if (!Array.isArray(components) || components.length === 0) {
@@ -160,9 +155,10 @@ export async function refreshAllPanels(client) {
   return refreshedCount;
 }
 
-export async function refreshPanelsForMember(client, guildId, memberId) {
+export async function refreshPanelsForMember(client, guildId, memberOrId) {
   const normalizedGuildId = String(guildId);
-  const normalizedMemberId = String(memberId);
+  const memberOverride = memberOrId && typeof memberOrId === 'object' ? memberOrId : null;
+  const normalizedMemberId = String(memberOverride?.id || memberOrId);
   const languageSensitivePanels = new Set([
     'ticket',
     'faq',
@@ -180,7 +176,7 @@ export async function refreshPanelsForMember(client, guildId, memberId) {
     if (entry.guildId !== normalizedGuildId) continue;
     if (entry.memberId !== normalizedMemberId) continue;
     if (!entry.refreshOnMemberUpdate && !languageSensitivePanels.has(entry.panelType)) continue;
-    await refreshEntry(client, entry);
+    await refreshEntry(client, entry, memberOverride);
   }
 }
 

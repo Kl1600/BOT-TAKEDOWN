@@ -1,6 +1,7 @@
 ﻿import { ContainerBuilder, TextDisplayBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, MessageFlags } from 'discord.js';
 import config from '../config/config.js';
 import { isStaffOrAdmin } from './moderationService.js';
+import { refreshPanelsForMember } from './panelRefreshService.js';
 import { sendV2Container } from '../utils/v2Helper.js';
 
 const ROLE_BUTTONS = [
@@ -124,6 +125,9 @@ export async function handleRolePanelButton(interaction) {
       }
 
       await member.roles.remove(roleId);
+      const refreshedMember = await interaction.guild.members.fetch(member.id).catch(() => member);
+      await new Promise(resolve => setTimeout(resolve, 750));
+      await refreshPanelsForMember(interaction.client, interaction.guild.id, refreshedMember).catch(() => null);
       await interaction.reply({
         content: `-# Le rôle **${button.label}** a été retiré.`,
         flags: MessageFlags.Ephemeral
@@ -139,6 +143,10 @@ export async function handleRolePanelButton(interaction) {
         : '1519750090498244670';
       await member.roles.remove(otherLanguageRole).catch(() => null);
     }
+
+    const refreshedMember = await interaction.guild.members.fetch(member.id).catch(() => member);
+    await new Promise(resolve => setTimeout(resolve, 750));
+    await refreshPanelsForMember(interaction.client, interaction.guild.id, refreshedMember).catch(() => null);
 
     await interaction.reply({
       content: `-# Le rôle **${button.label}** a été ajouté.`,
@@ -158,3 +166,5 @@ export default {
   sendStaffRolePanel,
   handleRolePanelButton
 };
+
+

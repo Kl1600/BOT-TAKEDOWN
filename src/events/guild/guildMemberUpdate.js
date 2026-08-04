@@ -6,7 +6,8 @@ export default {
   once: false,
   async execute(oldMember, newMember) {
     try {
-      await refreshPanelsForMember(newMember.client, newMember.guild.id, newMember.id).catch(() => null);
+      await new Promise(resolve => setTimeout(resolve, 750));
+      await refreshPanelsForMember(newMember.client, newMember.guild.id, newMember).catch(() => null);
     } catch (err) {
       logger.error('Erreur guildMemberUpdate:', err);
     }
