@@ -126,7 +126,7 @@ const APPLY_COPY = {
         {
           id: 'q7',
           label: 'Expérience staff',
-          placeholder: 'As-tu d?j? eu une exp?rience en tant que staff ? Si oui, laquelle ?'
+          placeholder: 'As-tu déjà eu une expérience en tant que staff ? Si oui, laquelle ?'
         },
         {
           id: 'q8',

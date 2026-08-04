@@ -271,7 +271,7 @@ export async function startTempBanScheduler(client) {
   await sweep().catch(() => null);
   tempBanSweepTimer = setInterval(() => {
     sweep().catch(err => {
-      logger.warn(`Erreur v?rification tempban: ${err?.message || err}`);
+      logger.warn(`Erreur vérification tempban: ${err?.message || err}`);
     });
   }, 60 * 1000);
 }

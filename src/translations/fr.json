@@ -1,20 +1,20 @@
 {
   "errors": {
-    "no_permission": "-# Vous ne poss?dez pas les permissions n?cessaires.",
-    "command_error": "-# Une erreur est survenue lors de l'ex?cution de cette commande.",
-    "only_guild": "-# Cette commande ne peut ?tre utilis?e que dans un serveur.",
-    "no_ticket_category": "-# Cat?gorie de tickets introuvable dans la configuration.",
-    "ticket_already_exists": "-# Vous avez d?j? un ticket ouvert.",
-    "ticket_not_found": "-# Ticket introuvable dans la base de donn?es.",
-    "ticket_creation_failed": "-# Impossible de cr?er le salon du ticket.",
-    "not_in_ticket": "-# Cette action doit ?tre effectu?e dans un ticket.",
-    "ticket_already_closed": "-# Ce ticket est d?j? ferm?.",
-    "french_cannot_translate": "-# Traduction indisponible pour le r?le fran?ais.",
-    "already_claimed": "-# Ce ticket est d?j? pris en charge.",
-    "english_only_translate": "-# La traduction est r?serv?e aux membres ayant uniquement le r?le anglais.",
-    "translation_not_allowed": "-# Ce panneau ne peut pas ?tre traduit.",
-    "translate_reply_only": "-# Utilisez cette commande en r?ponse ? un message.",
-    "translate_not_english": "-# Le message cit? doit ?tre en anglais pour ?tre traduit."
+    "no_permission": "-# Vous ne possédez pas les permissions nécessaires.",
+    "command_error": "-# Une erreur est survenue lors de l'exécution de cette commande.",
+    "only_guild": "-# Cette commande ne peut être utilisée que dans un serveur.",
+    "no_ticket_category": "-# Catégorie de tickets introuvable dans la configuration.",
+    "ticket_already_exists": "-# Vous avez déjà un ticket ouvert.",
+    "ticket_not_found": "-# Ticket introuvable dans la base de données.",
+    "ticket_creation_failed": "-# Impossible de créer le salon du ticket.",
+    "not_in_ticket": "-# Cette action doit être effectuée dans un ticket.",
+    "ticket_already_closed": "-# Ce ticket est déjà fermé.",
+    "french_cannot_translate": "-# Traduction indisponible pour le rôle français.",
+    "already_claimed": "-# Ce ticket est déjà pris en charge.",
+    "english_only_translate": "-# La traduction est réservée aux membres ayant uniquement le rôle anglais.",
+    "translation_not_allowed": "-# Ce panneau ne peut pas être traduit.",
+    "translate_reply_only": "-# Utilisez cette commande en réponse à un message.",
+    "translate_not_english": "-# Le message cité doit être en anglais pour être traduit."
   },
   "commands": {
     "annonce": {

@@ -88,7 +88,7 @@ const FAQ_ITEMS = [
   {
     id: 'rewards',
     question: {
-      fr: 'Quelles sont les r?compenses des tournois ?',
+      fr: 'Quelles sont les récompenses des tournois ?',
       en: 'What rewards do tournaments offer?'
     },
     answer: {
@@ -132,7 +132,7 @@ const FAQ_ITEMS = [
   {
     id: 'bug',
     question: {
-      fr: "J'ai trouv? un bug, que faire ?",
+      fr: "J'ai trouvé un bug, que faire ?",
       en: 'I found a bug, what should I do?'
     },
     answer: {
@@ -143,7 +143,7 @@ const FAQ_ITEMS = [
   {
     id: 'news',
     question: {
-      fr: 'O? suivre les nouveaut?s ?',
+      fr: 'Où suivre les nouveautés ?',
       en: 'Where can I follow the latest updates?'
     },
     answer: {
@@ -343,4 +343,3 @@ export default {
     }
   }
 };
-
