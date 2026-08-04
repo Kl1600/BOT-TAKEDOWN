@@ -1,8 +1,9 @@
-import { ActionRowBuilder, MessageFlags, ModalBuilder, SlashCommandBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { ActionRowBuilder, ApplicationCommandType, ContextMenuCommandBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { getLanguage, translateText, t } from '../../utils/language.js';
 import { replyErr } from '../../services/moderationService.js';
 
 const TRANSLATION_ROLE_ID = '1509613216463065243';
+const MODAL_PREFIX = 'translate_en_user_modal:';
 
 function hasTranslationAccess(member) {
   return Boolean(member?.roles?.cache?.has(TRANSLATION_ROLE_ID));
@@ -32,19 +33,24 @@ async function replyPlainError(interaction, content) {
   }).catch(() => null);
 }
 
-export const data = new SlashCommandBuilder()
-  .setName('en')
-  .setDescription('Traduire un texte français en anglais')
+export const data = new ContextMenuCommandBuilder()
+  .setName('en_user')
+  .setType(ApplicationCommandType.User)
   .setDefaultMemberPermissions(null)
   .setDMPermission(false);
 
-export async function executeSlash(interaction) {
+export async function executeUserContextMenu(interaction) {
   if (!hasTranslationAccess(interaction.member)) {
     return replyErr(interaction, 'Permissions insuffisantes.');
   }
 
+  const targetUser = interaction.targetUser || null;
+  if (!targetUser) {
+    return replyPlainError(interaction, 'Utilisateur introuvable.');
+  }
+
   const modal = new ModalBuilder()
-    .setCustomId(`translate_en_modal:${interaction.id}`)
+    .setCustomId(`${MODAL_PREFIX}${targetUser.id}`)
     .setTitle('A文 Translation');
 
   const textInput = new TextInputBuilder()
@@ -59,13 +65,20 @@ export async function executeSlash(interaction) {
   await interaction.showModal(modal);
 }
 
-export async function handleEnModalSubmit(interaction) {
+export async function handleEnUserModalSubmit(interaction) {
   if (!hasTranslationAccess(interaction.member)) {
     return replyPlainError(interaction, 'Permissions insuffisantes.');
   }
 
   const lang = await getLanguage(interaction.member);
+  const match = String(interaction.customId || '').match(/^translate_en_user_modal:(\d{17,20})$/);
+  const targetUserId = match?.[1] || null;
   const sourceText = interaction.fields.getTextInputValue('texte')?.trim();
+
+  if (!targetUserId) {
+    return replyPlainError(interaction, 'Utilisateur introuvable.');
+  }
+
   if (!sourceText) {
     return replyPlainError(interaction, t(lang, 'errors.translate_reply_only'));
   }
@@ -78,11 +91,12 @@ export async function handleEnModalSubmit(interaction) {
       content: [
         '**A文 Translation**',
         `Sent by <@${interaction.user.id}>`,
+        `-# **Recipient : <@${targetUserId}>**`,
         formatQuoteBlock(trimText(translatedText, 1800))
       ].join('\n'),
       allowedMentions: {
         parse: [],
-        users: [interaction.user.id]
+        users: [interaction.user.id, targetUserId]
       }
     };
 
@@ -98,6 +112,6 @@ export async function handleEnModalSubmit(interaction) {
 
 export default {
   data,
-  executeSlash,
-  handleEnModalSubmit
+  executeUserContextMenu,
+  handleEnUserModalSubmit
 };

@@ -13,7 +13,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * pour éviter tout double déclenchement lié aux events ready/clientReady.
  */
 export async function loadCommands(client) {
-  client.commands = new Collection();
+  client.prefixCommands = new Collection();
+  client.commands = client.prefixCommands;
+  client.applicationCommands = new Collection();
   client.slashCommandsData = []; // Stocke les données brutes pour l'enregistrement
 
   const commandsPath = join(__dirname, '../commands/admin');
@@ -24,7 +26,8 @@ export async function loadCommands(client) {
   }
 
   const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-  const loadedCommandNames = new Set();
+  const loadedPrefixCommandNames = new Set();
+  const loadedApplicationCommandKeys = new Set();
 
   for (const file of commandFiles) {
     const filePath = join(commandsPath, file);
@@ -32,23 +35,38 @@ export async function loadCommands(client) {
       const commandUrl = `${pathToFileURL(filePath).href}?? update=${Date.now()}`;
       const { default: command } = await import(commandUrl);
       if (command && command.data && command.data.name) {
-        if (loadedCommandNames.has(command.data.name)) {
-          logger.warn(`Command name duplicate ignored: ${command.data.name} (${file})`);
+        const commandJson = command.data.toJSON();
+        const commandTypeKey = commandJson.type === 2
+          ? 'user'
+          : commandJson.type === 3
+            ? 'message'
+            : 'chat';
+        const applicationCommandKey = `${commandTypeKey}:${commandJson.name}`;
+
+        if (loadedApplicationCommandKeys.has(applicationCommandKey)) {
+          logger.warn(`Command name duplicate ignored: ${applicationCommandKey} (${file})`);
           continue;
         }
-        loadedCommandNames.add(command.data.name);
-        client.commands.set(command.data.name, command);
-        client.slashCommandsData.push(command.data.toJSON());
+        loadedApplicationCommandKeys.add(applicationCommandKey);
 
-        if (Array.isArray(command.aliases)) {
-          for (const alias of command.aliases) {
-            if (!alias || loadedCommandNames.has(alias)) continue;
-            loadedCommandNames.add(alias);
-            client.commands.set(alias, command);
-            client.slashCommandsData.push({
-              ...command.data.toJSON(),
-              name: alias
-            });
+        client.applicationCommands.set(applicationCommandKey, command);
+        client.slashCommandsData.push(commandJson);
+
+        if (typeof command.executePrefix === 'function') {
+          if (loadedPrefixCommandNames.has(command.data.name)) {
+            logger.warn(`Prefix command duplicate ignored: ${command.data.name} (${file})`);
+            continue;
+          }
+
+          loadedPrefixCommandNames.add(command.data.name);
+          client.prefixCommands.set(command.data.name, command);
+
+          if (Array.isArray(command.aliases)) {
+            for (const alias of command.aliases) {
+              if (!alias || loadedPrefixCommandNames.has(alias)) continue;
+              loadedPrefixCommandNames.add(alias);
+              client.prefixCommands.set(alias, command);
+            }
           }
         }
       }

@@ -11,10 +11,23 @@ import * as logger from '../../utils/logger.js';
 import { handleInviteProfileModalSubmit } from '../../services/inviteService.js';
 import { handleBanListSearchModal } from '../../commands/admin/banlist.js';
 import { handleEnModalSubmit } from '../../commands/admin/en.js';
+import { handleEnUserModalSubmit } from '../../commands/admin/enUser.js';
 import { handleBanUserModalSubmit } from '../../commands/admin/banUser.js';
 import { handleKickUserModalSubmit } from '../../commands/admin/kickUser.js';
 import { handleMuteUserModalSubmit } from '../../commands/admin/muteUser.js';
 import { handleDmUserModalSubmit } from '../../commands/admin/dmUser.js';
+
+function getInteractionCommand(client, interaction) {
+  const typeKey = interaction.isUserContextMenuCommand()
+    ? 'user'
+    : interaction.isMessageContextMenuCommand()
+      ? 'message'
+      : 'chat';
+
+  return client.applicationCommands?.get(`${typeKey}:${interaction.commandName}`)
+    || client.commands?.get(interaction.commandName)
+    || null;
+}
 
 export default {
   name: 'interactionCreate',
@@ -22,7 +35,7 @@ export default {
   async execute(interaction, client) {
     // 1. Route Slash Commands
     if (interaction.isChatInputCommand()) {
-      const command = client.commands.get(interaction.commandName);
+      const command = getInteractionCommand(client, interaction);
       if (!command) return;
 
       const lang = 'fr';
@@ -57,7 +70,7 @@ export default {
 
     // 1b. Route Message Context Menu Commands
     if (interaction.isMessageContextMenuCommand()) {
-      const command = client.commands.get(interaction.commandName);
+      const command = getInteractionCommand(client, interaction);
       if (!command) return;
 
       const lang = 'fr';
@@ -93,7 +106,7 @@ export default {
 
     // 1c. Route User Context Menu Commands
     if (interaction.isUserContextMenuCommand()) {
-      const command = client.commands.get(interaction.commandName);
+      const command = getInteractionCommand(client, interaction);
       if (!command) return;
 
       const lang = 'fr';
@@ -218,6 +231,12 @@ export default {
           await handleEnModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal traduction en:', err);
+        }
+      } else if (interaction.customId.startsWith('translate_en_user_modal:')) {
+        try {
+          await handleEnUserModalSubmit(interaction);
+        } catch (err) {
+          logger.error('Erreur modal traduction en_user:', err);
         }
       } else if (interaction.customId.startsWith('userctx_ban_reason_')) {
         try {
