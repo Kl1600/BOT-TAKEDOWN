@@ -1,4 +1,4 @@
-import { MessageFlags, SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+﻿import { MessageFlags, SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
 import { isStaffOrAdmin, replyErr, prefixReply } from '../../services/moderationService.js';
 import { refreshAllPanels } from '../../services/panelRefreshService.js';
 import * as logger from '../../utils/logger.js';
@@ -13,7 +13,7 @@ function canRefreshPanels(member) {
 
 export const data = new SlashCommandBuilder()
   .setName('refreshpanel')
-  .setDescription('Forcer le rafraîchissement de tous les panels');
+  .setDescription('Forcer le rafraÃ®chissement de tous les panels');
 
 export async function executeSlash(interaction) {
   if (!canRefreshPanels(interaction.member)) {
@@ -24,34 +24,34 @@ export async function executeSlash(interaction) {
 
   try {
     await new Promise(resolve => setTimeout(resolve, 750));
-    const refreshedCount = await refreshAllPanels(interaction.client, { forceFrenchLanguage: true });
+    const refreshedCount = await refreshAllPanels(interaction.client);
     return interaction.editReply({
       content: refreshedCount > 0
-        ? `✅ ${refreshedCount} panel(s) rafraîchi(s).`
-        : 'ℹ️ Aucun panel à rafraîchir.'
+        ? `âœ… ${refreshedCount} panel(s) rafraÃ®chi(s).`
+        : 'â„¹ï¸ Aucun panel Ã  rafraÃ®chir.'
     });
   } catch (err) {
     logger.error('Erreur refreshpanel:', err);
     return interaction.editReply({
-      content: `❌ ${err.message || 'Impossible de rafraîchir les panels.'}`
+      content: `âŒ ${err.message || 'Impossible de rafraÃ®chir les panels.'}`
     }).catch(() => null);
   }
 }
 
 export async function executePrefix(message) {
   if (!canRefreshPanels(message.member)) {
-    return prefixReply(message, '❌ Permissions insuffisantes.');
+    return prefixReply(message, 'âŒ Permissions insuffisantes.');
   }
 
   await message.delete().catch(() => null);
 
   try {
     await new Promise(resolve => setTimeout(resolve, 750));
-    const refreshedCount = await refreshAllPanels(message.client, { forceFrenchLanguage: true });
+    const refreshedCount = await refreshAllPanels(message.client);
     const confirmation = await message.channel.send(
       refreshedCount > 0
-        ? `✅ ${refreshedCount} panel(s) rafraîchi(s).`
-        : 'ℹ️ Aucun panel à rafraîchir.'
+        ? `âœ… ${refreshedCount} panel(s) rafraÃ®chi(s).`
+        : 'â„¹ï¸ Aucun panel Ã  rafraÃ®chir.'
     ).catch(() => null);
 
     if (confirmation) {
@@ -61,8 +61,9 @@ export async function executePrefix(message) {
     }
   } catch (err) {
     logger.error('Erreur refreshpanel prefix:', err);
-    await prefixReply(message, `❌ ${err.message || 'Impossible de rafraîchir les panels.'}`);
+    await prefixReply(message, `âŒ ${err.message || 'Impossible de rafraÃ®chir les panels.'}`);
   }
 }
 
 export default { data, executeSlash, executePrefix };
+

@@ -1,4 +1,4 @@
-import {
+﻿import {
   SlashCommandBuilder,
   ContainerBuilder,
   TextDisplayBuilder,
@@ -7,7 +7,7 @@ import {
   ActionRowBuilder,
   MessageFlags
 } from 'discord.js';
-import { getLanguage, getFaqAnswerLanguage, isEnglishOnly, t } from '../../utils/language.js';
+import { getLanguage, isEnglishOnly, t } from '../../utils/language.js';
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
 import { appendSeparatorComponent, sendV2Container } from '../../utils/v2Helper.js';
 import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
@@ -22,11 +22,11 @@ const FAQ_ITEMS = [
   {
     id: 'what_is_takedown',
     question: {
-      fr: 'Qu’est-ce que Takedown ?',
+      fr: 'Quâ€™est-ce que Takedown ?',
       en: 'What is Takedown?'
     },
     answer: {
-      fr: 'Takedown est un serveur FiveM basé sur l’univers des courses-poursuites. Il mélange open world, mode Ranked compétitif basé sur le MMR et tournois avec récompenses.',
+      fr: 'Takedown est un serveur FiveM basÃ© sur lâ€™univers des courses-poursuites. Il mÃ©lange open world, mode Ranked compÃ©titif basÃ© sur le MMR et tournois avec rÃ©compenses.',
       en: 'Takedown is a FiveM server built around chase gameplay. It combines open-world play, a competitive Ranked mode based on MMR, and tournaments with rewards.'
     }
   },
@@ -48,7 +48,7 @@ const FAQ_ITEMS = [
       en: 'What is the purpose of the game?'
     },
     answer: {
-      fr: 'Le but est de profiter de courses-poursuites dynamiques en open world ou en mode compétitif selon ton style de jeu.',
+      fr: 'Le but est de profiter de courses-poursuites dynamiques en open world ou en mode compÃ©titif selon ton style de jeu.',
       en: 'The goal is to enjoy dynamic chase gameplay in open world or in competitive modes depending on your playstyle.'
     }
   },
@@ -59,7 +59,7 @@ const FAQ_ITEMS = [
       en: 'How does Ranked work?'
     },
     answer: {
-      fr: 'Le mode Ranked fonctionne avec un système de MMR. Les deux joueurs spawn avec le même véhicule, les matchs sont équilibrés, et tu gagnes ou perds du MMR selon tes performances.',
+      fr: 'Le mode Ranked fonctionne avec un systÃ¨me de MMR. Les deux joueurs spawn avec le mÃªme vÃ©hicule, les matchs sont Ã©quilibrÃ©s, et tu gagnes ou perds du MMR selon tes performances.',
       en: 'Ranked uses an MMR system. Both players spawn with the same vehicle, matches are balanced, and you gain or lose MMR depending on your performance.'
     }
   },
@@ -70,8 +70,8 @@ const FAQ_ITEMS = [
       en: 'Is there a leaderboard?'
     },
     answer: {
-      fr: 'Oui, le classement est basé sur le MMR des joueurs. Les meilleurs joueurs peuvent gagner des récompenses.',
-      en: 'Yes, the leaderboard is based on players’ MMR. Top players can win rewards.'
+      fr: 'Oui, le classement est basÃ© sur le MMR des joueurs. Les meilleurs joueurs peuvent gagner des rÃ©compenses.',
+      en: 'Yes, the leaderboard is based on playersâ€™ MMR. Top players can win rewards.'
     }
   },
   {
@@ -81,18 +81,18 @@ const FAQ_ITEMS = [
       en: 'How do I join tournaments?'
     },
     answer: {
-      fr: 'Les tournois sont annoncés sur Discord et en jeu. L’inscription se fait via les salons dédiés, les places sont limitées, et des récompenses sont possibles.',
+      fr: 'Les tournois sont annoncÃ©s sur Discord et en jeu. Lâ€™inscription se fait via les salons dÃ©diÃ©s, les places sont limitÃ©es, et des rÃ©compenses sont possibles.',
       en: 'Tournaments are announced on Discord and in-game. Registration happens through dedicated channels, spots are limited, and rewards may be available.'
     }
   },
   {
     id: 'rewards',
     question: {
-      fr: 'Quelles sont les récompenses des tournois ?',
+      fr: 'Quelles sont les rÃ©compenses des tournois ?',
       en: 'What rewards do tournaments offer?'
     },
     answer: {
-      fr: 'Les récompenses peuvent être du cash price, des titres exclusifs, des récompenses en jeu ou une reconnaissance dans le classement.',
+      fr: 'Les rÃ©compenses peuvent Ãªtre du cash price, des titres exclusifs, des rÃ©compenses en jeu ou une reconnaissance dans le classement.',
       en: 'Rewards may include cash prizes, exclusive titles, in-game rewards, or recognition on the leaderboard.'
     }
   },
@@ -103,7 +103,7 @@ const FAQ_ITEMS = [
       en: 'Can I play with my friends?'
     },
     answer: {
-      fr: 'Oui. En open world tu peux jouer librement avec tes amis, et certains événements ou tournois permettent aussi le jeu en équipe.',
+      fr: 'Oui. En open world tu peux jouer librement avec tes amis, et certains Ã©vÃ©nements ou tournois permettent aussi le jeu en Ã©quipe.',
       en: 'Yes. In open world you can freely play with your friends, and some events or tournaments also allow team play.'
     }
   },
@@ -114,7 +114,7 @@ const FAQ_ITEMS = [
       en: 'Can new players play Ranked?'
     },
     answer: {
-      fr: 'Oui. Les nouveaux joueurs doivent effectuer 10 parties de placement. Pendant ces 10 parties, aucun MMR n’est gagné ou perdu.',
+      fr: 'Oui. Les nouveaux joueurs doivent effectuer 10 parties de placement. Pendant ces 10 parties, aucun MMR nâ€™est gagnÃ© ou perdu.',
       en: 'Yes. New players must complete 10 placement matches. During those 10 matches, no MMR is gained or lost.'
     }
   },
@@ -125,14 +125,14 @@ const FAQ_ITEMS = [
       en: 'How do I become staff?'
     },
     answer: {
-      fr: 'Rends-toi ici : <#1519999288434888774>\nRemplis le questionnaire de recrutement. Si ta candidature est retenue, tu seras contacté via ticket.',
+      fr: 'Rends-toi ici : <#1519999288434888774>\nRemplis le questionnaire de recrutement. Si ta candidature est retenue, tu seras contactÃ© via ticket.',
       en: 'Go here: <#1519999288434888774>\nFill out the recruitment questionnaire. If your application is selected, you will be contacted via ticket.'
     }
   },
   {
     id: 'bug',
     question: {
-      fr: 'J’ai trouvé un bug, que faire ?',
+      fr: 'Jâ€™ai trouvÃ© un bug, que faire ?',
       en: 'I found a bug, what should I do?'
     },
     answer: {
@@ -143,11 +143,11 @@ const FAQ_ITEMS = [
   {
     id: 'news',
     question: {
-      fr: 'Où suivre les nouveautés ?',
+      fr: 'OÃ¹ suivre les nouveautÃ©s ?',
       en: 'Where can I follow the latest updates?'
     },
     answer: {
-      fr: 'Les nouveautés sont disponibles en jeu et sur Discord ici : <#1519998704298496000>',
+      fr: 'Les nouveautÃ©s sont disponibles en jeu et sur Discord ici : <#1519998704298496000>',
       en: 'The latest updates are available in-game and on Discord here: <#1519998704298496000>'
     }
   }
@@ -163,18 +163,24 @@ function buildFaqQuestionBlock(item) {
 }
 
 async function buildFaqItemButtons(item, member) {
-  const lang = await getFaqAnswerLanguage(member);
+  const freshMember = member?.guild?.members?.cache?.get(member.id) || member;
+  const roles = freshMember?.roles?.cache;
+  const hasFrenchRole = Boolean(roles?.has(config.roles.fr));
+  const hasEnglishRole = Boolean(roles?.has(config.roles.en));
+  const disableFrenchReply = hasEnglishRole && !hasFrenchRole;
+  const disableEnglishReply = hasFrenchRole;
+
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`faq_answer_${item.id}_fr`)
       .setLabel('Réponse')
       .setStyle(ButtonStyle.Secondary)
-      .setDisabled(lang === 'en'),
+      .setDisabled(disableFrenchReply),
     new ButtonBuilder()
       .setCustomId(`faq_answer_${item.id}_en`)
       .setLabel('Answer')
       .setStyle(ButtonStyle.Secondary)
-      .setDisabled(lang === 'fr')
+      .setDisabled(disableEnglishReply)
   );
 }
 
@@ -259,7 +265,7 @@ function buildAnswerMessage(lang, item) {
 }
 
 export async function handleFaqButton(interaction) {
-  const lang = await getFaqAnswerLanguage(interaction.member);
+  const lang = interaction.customId.endsWith('_en') ? 'en' : 'fr';
   const item = getFaqItem(interaction.customId);
 
   if (!item) {
@@ -330,3 +336,4 @@ export default {
     }
   }
 };
+

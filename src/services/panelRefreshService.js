@@ -86,7 +86,7 @@ export function unregisterPanelRefresh(key) {
   dbService.deletePanelRefreshRecord(String(key)).catch(() => null);
 }
 
-async function refreshEntry(client, entry, memberOverride = null, options = {}) {
+async function refreshEntry(client, entry, memberOverride = null) {
   if (entry.panelType === 'staffapply' && entry.memberId && hasActiveStaffApplySession(entry.memberId)) {
     return false;
   }
@@ -102,10 +102,6 @@ async function refreshEntry(client, entry, memberOverride = null, options = {}) 
       ? await fetchFreshGuildMember(guild, entry.memberId)
       : null;
 
-  const shouldForceFrench = Boolean(options.forceFrenchLanguage) && member;
-  if (shouldForceFrench) {
-    member.forceLanguage = 'fr';
-  }
 
   let components = null;
   try {
@@ -149,10 +145,10 @@ async function refreshEntry(client, entry, memberOverride = null, options = {}) 
   return true;
 }
 
-export async function refreshAllPanels(client, options = {}) {
+export async function refreshAllPanels(client) {
   let refreshedCount = 0;
   for (const entry of refreshEntries.values()) {
-    const refreshed = await refreshEntry(client, entry, null, options);
+    const refreshed = await refreshEntry(client, entry);
     if (refreshed) {
       refreshedCount += 1;
     }
@@ -244,4 +240,5 @@ export default {
   rehydratePanelRefreshes,
   startPanelRefreshScheduler
 };
+
 
