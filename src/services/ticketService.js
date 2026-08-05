@@ -20,7 +20,7 @@ function slugifyChannelName(input) {
 }
 
 
-const TICKET_CATEGORY_OPTIONS = {
+export const TICKET_CATEGORY_OPTIONS = {
   fr: [
     { label: 'Support/Autres', value: '1527610387703271484' },
     { label: 'Partenariats', value: '1527610362164281414' },
