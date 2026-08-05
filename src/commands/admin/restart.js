@@ -44,6 +44,9 @@ export async function executeSlash(interaction) {
   }).catch(() => null);
 
   await markRestartPending({
+    mode: 'slash',
+    applicationId: interaction.applicationId,
+    token: interaction.token,
     guildId: interaction.guildId,
     channelId: interaction.channelId
   });
@@ -58,10 +61,12 @@ export async function executePrefix(message) {
     return prefixReply(message, getInsufficientPermissionsMessage(lang));
   }
 
-  await message.reply(getRestartMessage(lang)).catch(() => null);
+  const sentMessage = await message.reply(getRestartMessage(lang)).catch(() => null);
   await markRestartPending({
+    mode: 'prefix',
     guildId: message.guild.id,
-    channelId: message.channel.id
+    channelId: message.channel.id,
+    messageId: sentMessage?.id || null
   });
   await triggerRestart();
 }

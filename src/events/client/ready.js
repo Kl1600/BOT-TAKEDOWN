@@ -39,10 +39,22 @@ export default {
     });
 
     const pendingRestart = await consumeRestartPending().catch(() => null);
-    if (pendingRestart?.channelId && pendingRestart.guildId) {
+    if (pendingRestart?.mode === 'slash' && pendingRestart?.token) {
+      await client.rest.patch(
+        Routes.webhookMessage(pendingRestart.applicationId || client.user.id, pendingRestart.token, '@original'),
+        { body: { content: '✅ Bot redémarré avec succès.' } }
+      ).catch(err => {
+        logger.warn(`Impossible de mettre à jour la réponse de restart slash: ${err?.message || err}`);
+      });
+    } else if (pendingRestart?.channelId && pendingRestart?.messageId) {
       const channel = await client.channels.fetch(pendingRestart.channelId).catch(() => null);
       if (channel?.isTextBased()) {
-        await channel.send({ content: '✅ Bot redémarré avec succès.' }).catch(() => null);
+        const message = await channel.messages.fetch(pendingRestart.messageId).catch(() => null);
+        if (message) {
+          await message.edit({ content: '✅ Bot redémarré avec succès.' }).catch(err => {
+            logger.warn(`Impossible de mettre à jour le message de restart: ${err?.message || err}`);
+          });
+        }
       }
     }
 

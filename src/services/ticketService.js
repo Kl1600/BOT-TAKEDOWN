@@ -1,7 +1,7 @@
 ﻿import { ChannelType, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, ContainerBuilder, StringSelectMenuBuilder, TextDisplayBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { sendV2Container } from '../utils/v2Helper.js';
 import config from '../config/config.js';
-import { getLanguage, hasFrenchRole, isEnglishOnly, t } from '../utils/language.js';
+import { getLanguage, t } from '../utils/language.js';
 import dbService from '../database/dbProxy.js';
 import { logTicket } from './logService.js';
 import { generateTranscript } from '../utils/transcriptor.js';
