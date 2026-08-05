@@ -13,8 +13,8 @@ function getInsufficientPermissionsMessage(lang) {
 
 function getRestartMessage(lang) {
   return lang === 'en'
-    ? '✅ Restarting the bot...'
-    : '✅ Redémarrage en cours...';
+    ? ':arrows_counterclockwise: Restarting the bot...'
+    : ':arrows_counterclockwise: Redémarrage en cours...';
 }
 
 async function triggerRestart() {
