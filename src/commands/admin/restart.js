@@ -18,9 +18,14 @@ function getRestartMessage(lang) {
 }
 
 async function triggerRestart() {
+  const uptimeMs = Math.floor(process.uptime() * 1000);
+  const restartDelayMs = uptimeMs < 60000
+    ? Math.max(4000, 65000 - uptimeMs)
+    : 4000;
+
   setTimeout(() => {
     process.exit(0);
-  }, 4000);
+  }, restartDelayMs);
 }
 
 export const data = new SlashCommandBuilder()
