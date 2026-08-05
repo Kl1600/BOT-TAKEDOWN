@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { isStaffOrAdmin, prefixReply, replyErr, replyOk, replyUsage } from '../../services/moderationService.js';
 import config from '../../config/config.js';
 import { logDm } from '../../services/logService.js';
@@ -48,7 +48,7 @@ export async function executeSlash(interaction) {
     return replyUsage(interaction, '`/dm <id> <message>`');
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const user = await sendDirectMessage(interaction.client, userId, message);

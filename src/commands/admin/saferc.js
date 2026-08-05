@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { isStaffOrAdmin, prefixReply, replyUsage, replyErr, replyOk } from '../../services/moderationService.js';
 import dbService from '../../database/dbProxy.js';
 import config from '../../config/config.js';
@@ -39,7 +39,7 @@ export async function executeSlash(interaction) {
     return replyErr(interaction, 'ID Discord invalide.');
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const removed = await clearCooldown(userId);
   if (!removed) {

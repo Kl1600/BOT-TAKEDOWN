@@ -1,4 +1,4 @@
-import { ApplicationCommandType, ContextMenuCommandBuilder } from 'discord.js';
+import { ApplicationCommandType, ContextMenuCommandBuilder, MessageFlags } from 'discord.js';
 import { detectTextLanguage, getLanguage, translateText, t } from '../../utils/language.js';
 
 const TRANSLATION_ROLE_ID = '1509613216463065243';
@@ -27,7 +27,7 @@ async function replyPlainError(interaction, content) {
 
   return interaction.reply({
     content,
-    ephemeral: true
+    flags: MessageFlags.Ephemeral
   }).catch(() => null);
 }
 
@@ -54,7 +54,7 @@ export async function executeContextMenu(interaction) {
     return replyPlainError(interaction, t(lang, 'errors.translate_reply_only'));
   }
 
-  await interaction.deferReply({ ephemeral: true }).catch(() => null);
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral }).catch(() => null);
 
   try {
     const detectedLang = await detectTextLanguage(sourceText);

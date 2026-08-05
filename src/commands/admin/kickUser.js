@@ -17,7 +17,7 @@ async function replyPlain(interaction, content) {
   if (interaction.deferred || interaction.replied) {
     return interaction.editReply({ content }).catch(() => null);
   }
-  return interaction.reply({ content, ephemeral: true }).catch(() => null);
+  return interaction.reply({ content, flags: MessageFlags.Ephemeral }).catch(() => null);
 }
 
 export const data = new ContextMenuCommandBuilder()
