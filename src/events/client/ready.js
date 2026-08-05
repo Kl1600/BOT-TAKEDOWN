@@ -52,9 +52,10 @@ export default {
     const rest = new REST({ version: '10' }).setToken(config.token);
 
     try {
-      const targetGuildIds = config.guildId
-        ? [config.guildId]
-        : [...client.guilds.cache.keys()];
+      const targetGuildIds = [...new Set([
+        ...client.guilds.cache.keys(),
+        config.guildId
+      ].filter(Boolean))];
 
       for (const guildId of targetGuildIds) {
         await rest.put(Routes.applicationGuildCommands(client.user.id, guildId), {
@@ -65,15 +66,6 @@ export default {
       await rest.put(Routes.applicationCommands(client.user.id), {
         body: []
       });
-
-      if (config.guildId) {
-        for (const guild of client.guilds.cache.values()) {
-          if (String(guild.id) === String(config.guildId)) continue;
-          await rest.put(Routes.applicationGuildCommands(client.user.id, guild.id), {
-            body: []
-          }).catch(() => null);
-        }
-      }
     } catch (err) {
       logger.error('Echec enregistrement des slash commands', err);
     }
