@@ -24,7 +24,7 @@ async function triggerRestart() {
     : 4000;
 
   setTimeout(() => {
-    process.exit(0);
+    process.exit(1);
   }, restartDelayMs);
 }
 
