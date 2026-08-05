@@ -1,6 +1,8 @@
-import { SlashCommandBuilder, MessageFlags } from 'discord.js';
+﻿import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { isStaffOrAdmin, replyErr, replyOk, prefixReply } from '../../services/moderationService.js';
 import * as logger from '../../utils/logger.js';
+
+const BULK_DELETE_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
 
 async function clearChannel(channel) {
   let totalDeleted = 0;
@@ -9,20 +11,20 @@ async function clearChannel(channel) {
     const messages = await channel.messages.fetch({ limit: 100 }).catch(() => null);
     if (!messages || messages.size === 0) break;
 
-    const deletable = messages.filter(message => !message.pinned);
-    if (deletable.size === 0) break;
+    const deletable = [...messages.values()].filter(message => !message.pinned);
+    if (deletable.length === 0) break;
 
-    const bulk = deletable.filter(message => Date.now() - message.createdTimestamp < 14 * 24 * 60 * 60 * 1000);
-    const oldMessages = deletable.filter(message => Date.now() - message.createdTimestamp >= 14 * 24 * 60 * 60 * 1000);
+    const recentMessages = deletable.filter(message => Date.now() - message.createdTimestamp < BULK_DELETE_MAX_AGE_MS);
+    const oldMessages = deletable.filter(message => Date.now() - message.createdTimestamp >= BULK_DELETE_MAX_AGE_MS);
 
-    if (bulk.size > 0) {
-      const deleted = await channel.bulkDelete(bulk, true).catch(() => null);
+    if (recentMessages.length > 0) {
+      const deleted = await channel.bulkDelete(recentMessages, true).catch(() => null);
       totalDeleted += deleted?.size ?? 0;
     }
 
-    for (const message of oldMessages.values()) {
-      await message.delete().catch(() => null);
-      totalDeleted += 1;
+    if (oldMessages.length > 0) {
+      const results = await Promise.allSettled(oldMessages.map(message => message.delete()));
+      totalDeleted += results.filter(result => result.status === 'fulfilled').length;
     }
 
     if (messages.size < 100) break;
@@ -69,6 +71,5 @@ export async function executePrefix(message) {
     await prefixReply(message, `❌ ${err.message || 'Impossible de vider le salon.'}`);
   }
 }
- 
 
 export default { data, executeSlash, executePrefix };
