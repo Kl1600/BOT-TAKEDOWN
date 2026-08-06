@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, MessageFlags } from 'discord.js';
+﻿import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { executeUnban, isStaffOrAdmin, replyOk, replyErr, prefixReply, replyUsage } from '../../services/moderationService.js';
 
 export const data = new SlashCommandBuilder()
@@ -43,3 +43,4 @@ export async function executePrefix(message, args) {
 }
 
 export default { data, executeSlash, executePrefix };
+

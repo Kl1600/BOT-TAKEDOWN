@@ -37,7 +37,7 @@ export async function executePrefix(message, args) {
 
   try {
     await executeKick({ guild: message.guild, mod: message.author, target: mention, raison, client: message.client });
-    return message.reply(`✅ <@${mention.id}> kick du serveur.`);
+    return message.channel.send(`✅ <@${mention.id}> kick du serveur.`);
   } catch (e) {
     await prefixReply(message, `❌ ${e.message}`);
   }

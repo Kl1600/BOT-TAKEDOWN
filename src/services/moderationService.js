@@ -177,7 +177,14 @@ export async function prefixReply(message, msg) {
   if (isPermissionDeniedMessage(msg)) {
     return replyPermissionDenied(message, msg);
   }
-  return message.reply({ content: msg }).catch(() => null);
+  const payload = { content: msg };
+
+  const reply = await message.reply(payload).catch(() => null);
+  if (reply) {
+    return reply;
+  }
+
+  return message.channel.send(payload).catch(() => null);
 }
 
 /**

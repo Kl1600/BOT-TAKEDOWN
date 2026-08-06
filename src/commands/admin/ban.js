@@ -107,10 +107,10 @@ Exemples : \`${message.client.prefix || '+'}ban 123456789012345678 7j Spam\` ou 
         unbanAt
       });
       const reasonLine = raison ? `\n-# Raison : ${raison}` : '';
-      return message.reply(`✅ \`${displayName}\` a été banni pour ${raison || 'aucune raison fournie'} pendant <t:${unbanAt}:R>.${reasonLine}`);
+      return message.channel.send(`✅ \`${displayName}\` a été banni pour ${raison || 'aucune raison fournie'} pendant <t:${unbanAt}:R>.${reasonLine}`);
     }
 
-    return message.reply(`✅ \`${displayName}\` a été banni pour ${raison || 'aucune raison fournie'}.`);
+    return message.channel.send(`✅ \`${displayName}\` a été banni pour ${raison || 'aucune raison fournie'}.`);
   } catch (e) {
     await prefixReply(message, `❌ ${e.message}`);
   }
