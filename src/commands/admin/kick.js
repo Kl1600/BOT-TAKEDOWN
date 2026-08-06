@@ -21,7 +21,7 @@ export async function executeSlash(interaction) {
 
   try {
     await executeKick({ guild: interaction.guild, mod: interaction.user, target, raison, client: interaction.client });
-    return replyOk(interaction, `✅ \`${target.user.username}\` a été expulsé.\n-# Raison : ${raison}`, 0xF0A500);
+    return replyOk(interaction, `✅ <@${target.id}> kick du serveur.`, 0xF0A500);
   } catch (e) {
     return replyErr(interaction, e.message);
   }
@@ -37,7 +37,7 @@ export async function executePrefix(message, args) {
 
   try {
     await executeKick({ guild: message.guild, mod: message.author, target: mention, raison, client: message.client });
-    await message.reply(`✅ \`${mention.user.username}\` a été expulsé. Raison : ${raison}`);
+    return message.reply(`✅ <@${mention.id}> kick du serveur.`);
   } catch (e) {
     await prefixReply(message, `❌ ${e.message}`);
   }

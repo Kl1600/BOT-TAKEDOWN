@@ -12,14 +12,21 @@ import config from '../config/config.js';
 let footerPatchApplied = false;
 
 function buildFooterText() {
+  const now = new Date();
+  const date = new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Europe/Paris'
+  }).format(now);
   const time = new Intl.DateTimeFormat('fr-FR', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
     timeZone: 'Europe/Paris'
-  }).format(new Date());
+  }).format(now);
 
-  return `-# © Takedown - Fivem • Aujourd’hui à ${time}`;
+  return `-# © Takedown - Fivem • ${date} à ${time}`;
 }
 
 function buildFooterComponent() {

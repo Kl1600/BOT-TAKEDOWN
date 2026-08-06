@@ -1,8 +1,8 @@
-import { SlashCommandBuilder, MessageFlags } from 'discord.js';
+﻿import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { executeBan, isStaffOrAdmin, replyOk, replyErr, prefixReply, replyUsage, resolveMemberFromInput, parseDurationInput, registerTempBan, extractDiscordId } from '../../services/moderationService.js';
 
 export const data = new SlashCommandBuilder()
-.setName('ban')
+  .setName('ban')
   .setDescription('Bannir un membre du serveur')
   .addStringOption(o => o.setName('membre').setDescription('ID ou mention du membre à bannir').setRequired(true))
   .addStringOption(o => o.setName('duree').setDescription('Durée optionnelle du ban (ex: 7j, 24h)').setRequired(false).setMaxLength(20))
@@ -42,6 +42,8 @@ Exemples : \`/ban @user 7j Spam\` ou \`/ban @user Spam\``;
       client: interaction.client,
       sendDm: Boolean(target)
     });
+
+    const displayName = target?.user?.username || userId;
     if (durationMs) {
       const unbanAt = Math.floor((Date.now() + durationMs) / 1000);
       await registerTempBan(interaction.client, {
@@ -51,9 +53,11 @@ Exemples : \`/ban @user 7j Spam\` ou \`/ban @user Spam\``;
         reason: raison,
         unbanAt
       });
-      return replyOk(interaction, `✅ \`${target?.user?.username || userId}\` a été banni temporairement.\n-# Fin du ban : <t:${unbanAt}:R>\n-# Raison : ${raison}`, 0xED4245);
+      const reasonLine = raison ? `\n-# Raison : ${raison}` : '';
+      return replyOk(interaction, `✅ \`${displayName}\` a été banni pour ${raison || 'aucune raison fournie'} pendant <t:${unbanAt}:R>.${reasonLine}`, 0xED4245);
     }
-    return replyOk(interaction, `✅ \`${target?.user?.username || userId}\` a été banni.\n-# Raison : ${raison}`, 0xED4245);
+
+    return replyOk(interaction, `✅ \`${displayName}\` a été banni pour ${raison || 'aucune raison fournie'}.`, 0xED4245);
   } catch (e) {
     return replyErr(interaction, e.message);
   }
@@ -91,6 +95,8 @@ Exemples : \`${message.client.prefix || '+'}ban 123456789012345678 7j Spam\` ou 
       client: message.client,
       sendDm: Boolean(mention)
     });
+
+    const displayName = mention?.user?.username || userId;
     if (durationMs) {
       const unbanAt = Math.floor((Date.now() + durationMs) / 1000);
       await registerTempBan(message.client, {
@@ -100,9 +106,11 @@ Exemples : \`${message.client.prefix || '+'}ban 123456789012345678 7j Spam\` ou 
         reason: raison,
         unbanAt
       });
-      return message.reply(`✅ \`${mention?.user?.username || userId}\` a été banni temporairement. Fin du ban : <t:${unbanAt}:R>`);
+      const reasonLine = raison ? `\n-# Raison : ${raison}` : '';
+      return message.reply(`✅ \`${displayName}\` a été banni pour ${raison || 'aucune raison fournie'} pendant <t:${unbanAt}:R>.${reasonLine}`);
     }
-    await message.reply(`✅ \`${mention?.user?.username || userId}\` a été banni. Raison : ${raison}`);
+
+    return message.reply(`✅ \`${displayName}\` a été banni pour ${raison || 'aucune raison fournie'}.`);
   } catch (e) {
     await prefixReply(message, `❌ ${e.message}`);
   }
