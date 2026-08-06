@@ -1,10 +1,10 @@
-import { SlashCommandBuilder, MessageFlags } from 'discord.js';
+﻿import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { executeMute, hasTicketManagementAccess, replyErr, prefixReply, replyUsage, MUTE_DURATIONS, resolveMemberFromInput } from '../../services/moderationService.js';
 
 export const data = new SlashCommandBuilder()
   .setName('mute')
   .setDescription('Mettre en sourdine un membre (timeout Discord)')
-  .addUserOption(o => o.setName('membre').setDescription('Membre à mute').setRequired(true))
+  .addStringOption(o => o.setName('membre').setDescription('ID ou mention du membre à mute').setRequired(true))
   .addStringOption(o => o
     .setName('duree')
     .setDescription('Durée du mute')
@@ -30,7 +30,7 @@ export async function executeSlash(interaction) {
   }
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  const target = interaction.options.getMember('membre');
+  const target = await resolveMemberFromInput(interaction.guild, interaction.options.getString('membre', true));
   const dureeKey = interaction.options.getString('duree');
   const raison = interaction.options.getString('raison') || 'Aucune raison fournie';
   const seconds = MUTE_DURATIONS[dureeKey] || 600;

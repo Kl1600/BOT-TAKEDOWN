@@ -1,18 +1,19 @@
-﻿import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from 'discord.js';
+﻿import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { executeKick, isStaffOrAdmin, replyOk, replyErr, prefixReply, replyUsage, resolveMemberFromInput } from '../../services/moderationService.js';
 
 export const data = new SlashCommandBuilder()
   .setName('kick')
   .setDescription('Expulser un membre du serveur')
-  .addUserOption(o => o.setName('membre').setDescription('Membre ?? expulser').setRequired(true))
+  .addStringOption(o => o.setName('membre').setDescription('ID ou mention du membre à expulser').setRequired(true))
   .addStringOption(o => o.setName('raison').setDescription('Raison du kick').setRequired(false).setMaxLength(500));
 
 export async function executeSlash(interaction) {
-  if (!isStaffOrAdmin(interaction.member))
+  if (!isStaffOrAdmin(interaction.member)) {
     return replyErr(interaction, 'Permissions insuffisantes.');
+  }
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  const target = interaction.options.getMember('membre');
+  const target = await resolveMemberFromInput(interaction.guild, interaction.options.getString('membre', true));
   const raison = interaction.options.getString('raison') || 'Aucune raison fournie';
 
   if (!target) return replyUsage(interaction, '`/kick <membre> [raison]`');
@@ -20,8 +21,7 @@ export async function executeSlash(interaction) {
 
   try {
     await executeKick({ guild: interaction.guild, mod: interaction.user, target, raison, client: interaction.client });
-    return replyOk(interaction, `? \`${target.user.username}\` a ?t? expuls?.
--# Raison : ${raison}`, 0xF0A500);
+    return replyOk(interaction, `✅ \`${target.user.username}\` a été expulsé.\n-# Raison : ${raison}`, 0xF0A500);
   } catch (e) {
     return replyErr(interaction, e.message);
   }
@@ -37,11 +37,10 @@ export async function executePrefix(message, args) {
 
   try {
     await executeKick({ guild: message.guild, mod: message.author, target: mention, raison, client: message.client });
-    await message.reply(`? \`${mention.user.username}\` a ?t? expuls?. Raison : ${raison}`);
+    await message.reply(`✅ \`${mention.user.username}\` a été expulsé. Raison : ${raison}`);
   } catch (e) {
-    await prefixReply(message, `?? ${e.message}`);
+    await prefixReply(message, `❌ ${e.message}`);
   }
 }
 
 export default { data, executeSlash, executePrefix };
-

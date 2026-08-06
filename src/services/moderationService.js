@@ -1,4 +1,4 @@
-import {
+﻿import {
   ContainerBuilder,
   TextDisplayBuilder,
   ButtonBuilder,
@@ -377,15 +377,48 @@ export async function executeKick({ guild, mod, target, raison, client }) {
   });
 }
 
-// ── MUTE ──────────────────────────────────────────────────────────────────────
 
+export async function purgeRecentMessagesFromUser(guild, userId, cutoffMs = 10 * 60 * 1000) {
+  const cutoffTimestamp = Date.now() - cutoffMs;
+  const textChannels = guild.channels.cache.filter(channel => channel?.isTextBased?.() && channel?.messages?.fetch);
+  let deletedCount = 0;
+
+  for (const channel of textChannels.values()) {
+    const messages = await channel.messages.fetch({ limit: 100 }).catch(() => null);
+    if (!messages || messages.size === 0) continue;
+
+    const matched = messages.filter(message =>
+      !message.pinned &&
+      message.author?.id === userId &&
+      message.createdTimestamp >= cutoffTimestamp
+    );
+
+    if (matched.size === 0) continue;
+
+    const bulk = matched.filter(message => Date.now() - message.createdTimestamp < 14 * 24 * 60 * 60 * 1000);
+    const oldMessages = matched.filter(message => Date.now() - message.createdTimestamp >= 14 * 24 * 60 * 60 * 1000);
+
+    if (bulk.size > 0) {
+      const deleted = await channel.bulkDelete([...bulk.values()], true).catch(() => null);
+      deletedCount += deleted?.size ?? 0;
+    }
+
+    if (oldMessages.size > 0) {
+      const results = await Promise.allSettled([...oldMessages.values()].map(message => message.delete()));
+      deletedCount += results.filter(result => result.status === 'fulfilled').length;
+    }
+  }
+
+  return deletedCount;
+}
 export async function executeMute({ guild, mod, target, seconds, dureeLabel, raison, client }) {
   if (!target.moderatable)
     throw new Error('Impossible de mute ce membre (son rôle est supérieur ou égal au mien).');
 
-  // Discord limite le timeout à 28 jours
   const clampedMs = Math.min(seconds * 1000, 28 * 24 * 3600 * 1000);
   await target.timeout(clampedMs, `[${mod.username}] ${raison}`);
+
+  await purgeRecentMessagesFromUser(guild, target.id, 10 * 60 * 1000).catch(() => null);
 
   const until = new Date(Date.now() + clampedMs);
 
@@ -406,7 +439,6 @@ export async function executeMute({ guild, mod, target, seconds, dureeLabel, rai
 
   return until;
 }
-
 // ── UNMUTE ────────────────────────────────────────────────────────────────────
 
 export async function executeUnmute({ mod, target, raison, client }) {
@@ -573,3 +605,4 @@ export default {
   executeBan, executeUnban, executeKick, executeMute, executeUnmute,
   executeLock, executeUnlock, executeTicketClose, executeTicketRename
 };
+
