@@ -278,25 +278,46 @@ export async function startTempBanScheduler(client) {
 
 // ── BAN ───────────────────────────────────────────────────────────────────────
 
-export async function executeBan({ guild, mod, target, raison, days = 0, client }) {
-  if (!target.bannable)
+export async function executeBan({ guild, mod, target = null, userId = null, raison, days = 0, client, sendDm = true }) {
+  const cleanId = extractDiscordId(userId || target?.id || target?.user?.id);
+  if (!cleanId) {
+    throw new Error('ID Discord invalide.');
+  }
+
+  let member = target || null;
+  if (!member?.user) {
+    member = await guild.members.fetch(cleanId).catch(() => null);
+  }
+
+  if (member?.bannable === false) {
     throw new Error('Impossible de bannir ce membre (son rôle est supérieur ou égal au mien).');
+  }
 
-  // DM avant le ban (impossible après)
-  await target.user.send(
-    `🔨 Vous avez été **banni** de **${guild.name}**.\n> **Raison :** ${raison}`
-  ).catch(() => null);
+  const username = member?.user?.username || 'Utilisateur inconnu';
 
-  await target.ban({
-    reason: `[${mod.username}] ${raison}`,
-    deleteMessageSeconds: Math.min(days, 7) * 86400
-  });
+  if (sendDm && member?.user) {
+    await member.user.send(
+      `🔨 Vous avez été **banni** de **${guild.name}**.\n> **Raison :** ${raison}`
+    ).catch(() => null);
+  }
+
+  if (member?.ban) {
+    await member.ban({
+      reason: `[${mod.username}] ${raison}`,
+      deleteMessageSeconds: Math.min(days, 7) * 86400
+    });
+  } else {
+    await guild.members.ban(cleanId, {
+      reason: `[${mod.username}] ${raison}`,
+      deleteMessageSeconds: Math.min(days, 7) * 86400
+    });
+  }
 
   await logSanction(client, {
     title: '🔨 Membre banni', color: 0xED4245,
     fields: [
       { name: 'Modérateur', value: `<@${mod.id}> (\`${mod.username}\`)`, inline: true },
-      { name: 'Membre',     value: `\`${target.user.username}\` (\`${target.user.id}\`)`, inline: true },
+      { name: 'Membre',     value: `\`${username}\` (\`${cleanId}\`)`, inline: true },
       { name: 'Raison',     value: raison, inline: false },
       { name: 'Messages supprimés', value: `${days} jour(s)`, inline: true }
     ]
