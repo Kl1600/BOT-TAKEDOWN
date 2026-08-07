@@ -31,7 +31,7 @@ export async function executePrefix(message, args) {
 
   try {
     await executeLock({ channel, mod: message.author, raison, client: message.client });
-    await message.reply(`✅ <#${channel.id}> est verrouillé. Raison : ${raison}`);
+    await message.channel.send(`✅ <#${channel.id}> est verrouillé. Raison : ${raison}`);
   } catch (e) {
     await prefixReply(message, `❌ ${e.message}`);
   }

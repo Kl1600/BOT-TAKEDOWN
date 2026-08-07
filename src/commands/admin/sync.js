@@ -64,7 +64,7 @@ export async function executePrefix(message) {
 
   try {
     const count = await syncGuildCommands(message.client, message.guild.id);
-    await message.reply(`✅ ${count} commandes synchronisées sur ce serveur.`).catch(() => null);
+    await message.channel.send(`✅ ${count} commandes synchronisées sur ce serveur.`).catch(() => null);
   } catch (err) {
     logger.error('Erreur sync slash commands:', err);
     await prefixReply(message, `❌ ${err.message}`);

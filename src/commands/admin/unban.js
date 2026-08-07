@@ -36,7 +36,7 @@ export async function executePrefix(message, args) {
 
   try {
     const user = await executeUnban({ guild: message.guild, mod: message.author, userId, raison, client: message.client });
-    await message.reply(`✅ \`${user.username}\` a été débanni. Raison : ${raison}`);
+    await message.channel.send(`✅ \`${user.username}\` a été débanni. Raison : ${raison}`);
   } catch (e) {
     await prefixReply(message, `❌ ${e.message}`);
   }

@@ -118,6 +118,14 @@ export async function replyUsage(context, usageMessage) {
 
   if (typeof context.reply === 'function') {
     const response = await context.reply({ content: usageMessage }).catch(() => null);
+    if (response) {
+      await autoDeleteUsageResponse(context, response);
+      return response;
+    }
+  }
+
+  if (typeof context.channel?.send === 'function') {
+    const response = await context.channel.send({ content: usageMessage }).catch(() => null);
     await autoDeleteUsageResponse(context, response);
     return response;
   }

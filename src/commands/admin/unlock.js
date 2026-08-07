@@ -31,7 +31,7 @@ export async function executePrefix(message, args) {
 
   try {
     await executeUnlock({ channel, mod: message.author, raison, client: message.client });
-    await message.reply(`✅ <#${channel.id}> est déverrouillé.`);
+    await message.channel.send(`✅ <#${channel.id}> est déverrouillé.`);
   } catch (e) {
     await prefixReply(message, `❌ ${e.message}`);
   }

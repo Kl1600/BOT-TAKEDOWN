@@ -126,7 +126,7 @@ export default {
     const content = message.content.slice(prefix.length + commandUsed.length).trim();
 
     if (!content) {
-      await message.reply({
+      await message.channel.send({
         content: `Utilisation : \`${prefix}patchnote <contenu du patch note>\``
       }).catch(() => null);
       return;

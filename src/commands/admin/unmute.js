@@ -36,7 +36,7 @@ export async function executePrefix(message, args) {
 
   try {
     await executeUnmute({ mod: message.author, target: mention, raison, client: message.client });
-    await message.reply(`✅ Le mute de \`${mention.user.username}\` a été retiré.`);
+    await message.channel.send(`✅ Le mute de \`${mention.user.username}\` a été retiré.`);
   } catch (e) {
     await prefixReply(message, `❌ ${e.message}`);
   }

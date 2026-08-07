@@ -72,7 +72,7 @@ export default {
     } catch (err) {
       logger.error(`Erreur commande préfixée "${commandName}":`, err);
       const errMsg = t(lang, 'errors.command_error');
-      await message.reply({ content: errMsg }).catch(() => null);
+      await message.channel.send({ content: errMsg }).catch(() => null);
     } finally {
       await logCommand(client, {
         title: 'Commande préfixe',

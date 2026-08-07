@@ -66,7 +66,7 @@ export async function executePrefix(message) {
     return prefixReply(message, getInsufficientPermissionsMessage(lang));
   }
 
-  const sentMessage = await message.reply(getRestartMessage(lang)).catch(() => null);
+  const sentMessage = await message.channel.send({ content: getRestartMessage(lang) }).catch(() => null);
   await markRestartPending({
     mode: 'prefix',
     guildId: message.guild.id,

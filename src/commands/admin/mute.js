@@ -70,7 +70,7 @@ Durées : 5m, 10m, 30m, 1h, 6h, 12h, 24h, 7j, 28j`);
 
   try {
     await executeMute({ guild: message.guild, mod: message.author, target: mention, seconds, dureeLabel: dureeRaw, raison, client: message.client });
-    await message.reply({ content: `✅ \`${mention.user.username}\` est en sourdine pendant **${dureeRaw}**.\n-# Raison : ${raison}` }).catch(() => null);
+    await message.channel.send({ content: `✅ \`${mention.user.username}\` est en sourdine pendant **${dureeRaw}**.\n-# Raison : ${raison}` }).catch(() => null);
   } catch (e) {
     await prefixReply(message, `❌ ${e.message}`);
   }
