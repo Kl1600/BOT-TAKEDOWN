@@ -34,13 +34,7 @@ const getGuideReplacements = () => ({
 });
 
 function buildGuideContainer(content, translateDisabled = false) {
-  const sections = splitContentBySeparator(
-    String(content).replace(
-      /\n(?:[?\-=━─—–]{10,})\n/g,
-      '\nseparator\n'
-    ),
-    'separator'
-  );
+  const sections = splitContentBySeparator(String(content), 'separator');
 
   const container = new ContainerBuilder().setAccentColor(config.colors.primary);
 
