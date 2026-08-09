@@ -35,7 +35,10 @@ const getGuideReplacements = () => ({
 
 function buildGuideContainer(content, translateDisabled = false) {
   const sections = splitContentBySeparator(
-    String(content).replace(/\n(?:[?-]{10,})\n/g, '\nseparator\n'),
+    String(content).replace(
+      /\n(?:[?\-=━─—–]{10,})\n/g,
+      '\nseparator\n'
+    ),
     'separator'
   );
 
