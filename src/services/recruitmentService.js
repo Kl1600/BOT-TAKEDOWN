@@ -487,18 +487,18 @@ function buildReviewContainer(session, user, appId, appStatus = 'pending', statu
   const payload = buildApplicationPayload(session, user, appId);
 
   const headerText = new TextDisplayBuilder().setContent(payload.summary);
-  const statusText = new TextDisplayBuilder().setContent(buildApplicationStateText(appStatus, session.lang));
   const section1 = new TextDisplayBuilder().setContent(payload.sections[0]);
   const section2 = new TextDisplayBuilder().setContent(payload.sections[1]);
+  const statusRow = buildApplicationStatusButton(appStatus, session.lang);
 
   const container = new ContainerBuilder()
     .setAccentColor(statusLabel ? config.colors.secondary : config.colors.primary)
     .addTextDisplayComponents(headerText)
-    .addTextDisplayComponents(section1)
-    .addTextDisplayComponents(section2);
+    .addActionRowComponents(statusRow);
 
   if (!statusLabel) {
-    container.addTextDisplayComponents(statusText);
+    container.addTextDisplayComponents(section1);
+    container.addTextDisplayComponents(section2);
     const reviewBtn = new ButtonBuilder()
       .setCustomId(`staffapply_review_${appId}`)
       .setLabel(session.lang === 'en' ? 'Mark as reviewed' : 'Prendre en charge')
