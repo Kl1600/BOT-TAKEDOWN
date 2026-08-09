@@ -92,10 +92,13 @@ export function appendSeparatorComponent(container, options = {}) {
 
 export function splitContentBySeparator(content, separatorToken = 'separator') {
   return String(content ?? '')
-    .split(/\r?? \n/)
+    .split(/\r?\n/)
     .reduce((sections, line) => {
       const trimmed = line.trim();
-      if (trimmed.toLowerCase() === separatorToken.toLowerCase()) {
+      const isTokenSeparator = trimmed.toLowerCase() === separatorToken.toLowerCase();
+      const isDecorativeSeparator = /^[\-=━─—–_]{10,}$/.test(trimmed);
+
+      if (isTokenSeparator || isDecorativeSeparator) {
         sections.push('__SEPARATOR__');
         return sections;
       }
