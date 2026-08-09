@@ -326,16 +326,27 @@ function buildApplicationStateText(status, lang) {
   return `### STATUT DE LA CANDIDATURE\n\n**${getApplicationStateLabel(status, lang)}**`;
 }
 
+function buildApplicationStatusButton(status, lang) {
+  return new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`staffapply_status_${status}`)
+      .setLabel(getApplicationStateLabel(status, lang))
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(true)
+  );
+}
+
 function buildApplicationStatusContainer(status, lang) {
   return new ContainerBuilder()
     .setAccentColor(config.colors.primary)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         lang === 'en'
-          ? `### Application status\n\n\`\`\`${getApplicationStateLabel(status, lang)}\`\`\``
-          : `### Statut de la candidature\n\n\`\`\`${getApplicationStateLabel(status, lang)}\`\`\``
+          ? '### Application status'
+          : '### Statut de la candidature'
       )
-    );
+    )
+    .addActionRowComponents(buildApplicationStatusButton(status, lang));
 }
 
 async function getActiveStaffApplyCooldown(userId) {
@@ -483,11 +494,11 @@ function buildReviewContainer(session, user, appId, appStatus = 'pending', statu
   const container = new ContainerBuilder()
     .setAccentColor(statusLabel ? config.colors.secondary : config.colors.primary)
     .addTextDisplayComponents(headerText)
-    .addTextDisplayComponents(statusText)
     .addTextDisplayComponents(section1)
     .addTextDisplayComponents(section2);
 
   if (!statusLabel) {
+    container.addTextDisplayComponents(statusText);
     const reviewBtn = new ButtonBuilder()
       .setCustomId(`staffapply_review_${appId}`)
       .setLabel(session.lang === 'en' ? 'Mark as reviewed' : 'Prendre en charge')
@@ -518,6 +529,7 @@ function buildReviewContainer(session, user, appId, appStatus = 'pending', statu
     container: new ContainerBuilder()
       .setAccentColor(config.colors.secondary)
       .addTextDisplayComponents(headerText)
+      .addActionRowComponents(buildApplicationStatusButton(appStatus, session.lang))
       .addTextDisplayComponents(section1)
       .addTextDisplayComponents(section2)
       .addTextDisplayComponents(terminalStatusText),
