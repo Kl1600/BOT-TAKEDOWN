@@ -23,8 +23,8 @@ export async function executePrefix(message) {
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('streamer_go_live')
-      .setLabel('Je lance mon live !')
-      .setStyle(ButtonStyle.Danger)
+      .setLabel('Start')
+      .setStyle(ButtonStyle.Secondary)
   );
 
   await message.channel.send({

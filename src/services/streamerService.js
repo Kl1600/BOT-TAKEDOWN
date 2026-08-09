@@ -34,8 +34,8 @@ export async function sendStreamerPanel(interaction) {
 
   const liveBtn = new ButtonBuilder()
     .setCustomId('streamer_go_live')
-    .setLabel('Je lance mon live !')
-    .setStyle(ButtonStyle.Danger);
+    .setLabel('Start')
+    .setStyle(ButtonStyle.Secondary);
 
   await interaction.channel.send({
     content: 'Appuie pour lancer un live',
