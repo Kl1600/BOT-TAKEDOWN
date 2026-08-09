@@ -32,25 +32,15 @@ function formatUnixDate(unixTimestamp) {
 export async function sendStreamerPanel(interaction) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const text = new TextDisplayBuilder().setContent(
-    'PANEL STREAMER\n\n' +
-    'Tu es streamer sur **Takedown** ? Lance ton live et annonce-le à la communauté !\n\n' +
-    '-# Clique sur le bouton ci-dessous, entre le lien de ton stream et l\'annonce sera envoyée automatiquement.'
-  );
-
   const liveBtn = new ButtonBuilder()
     .setCustomId('streamer_go_live')
     .setLabel('Je lance mon live !')
     .setStyle(ButtonStyle.Danger);
 
-  const container = new ContainerBuilder()
-    .setAccentColor(config.colors.primary)
-    .addTextDisplayComponents(text);
-
-  appendSeparatorComponent(container);
-  container.addActionRowComponents(new ActionRowBuilder().addComponents(liveBtn));
-
-  await sendV2Container(interaction.channel, container);
+  await interaction.channel.send({
+    content: 'Appuie pour lancer un live',
+    components: [new ActionRowBuilder().addComponents(liveBtn)]
+  }).catch(() => null);
   await interaction.deleteReply().catch(() => null);
 }
 
