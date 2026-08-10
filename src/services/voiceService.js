@@ -1,4 +1,16 @@
-﻿import { ChannelType, EmbedBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+﻿import {
+  ChannelType,
+  ContainerBuilder,
+  TextDisplayBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  PermissionFlagsBits,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  MessageFlags
+} from 'discord.js';
 import * as logger from '../utils/logger.js';
 
 // Salons vocaux déclencheurs (Join-to-Create)
@@ -47,10 +59,8 @@ function getStatusLabel(status) {
   }
 }
 
-function buildStaffWaitEmbed(userId, joinedAt, status) {
-  const descriptionLines = [
-    `**<@${userId}>** est en attente staff.`
-  ];
+function buildStaffWaitPanel(userId, joinedAt, status) {
+  const descriptionLines = [`**<@${userId}>** est en attente staff.`];
 
   if (status === 'waiting') {
     descriptionLines.push(`Attend depuis <t:${Math.floor(joinedAt / 1000)}:R>.`);
@@ -58,22 +68,22 @@ function buildStaffWaitEmbed(userId, joinedAt, status) {
 
   descriptionLines.push(`-# Merci d'essayer de prendre en charge le membre rapidement.`);
 
-  const embed = new EmbedBuilder()
-    .setColor(0xED4245)
-    .setDescription(descriptionLines.join('\n'))
-    .setTimestamp();
-
-  const components = [
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`staff_wait_status_${status}`)
-        .setLabel(getStatusLabel(status))
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(true)
+  const container = new ContainerBuilder()
+    .setAccentColor(0xED4245)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(descriptionLines.join('\n'))
     )
-  ];
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`staff_wait_status_${status}`)
+          .setLabel(getStatusLabel(status))
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(true)
+      )
+    );
 
-  return { embed, components };
+  return container;
 }
 
 function getOrCreateStaffWaitRecord(guildId, userId) {
@@ -114,11 +124,10 @@ async function updateStaffWaitAlert(client, record, nextStatus) {
     if (!message) return;
 
     record.status = nextStatus;
-    const statusMessage = buildStaffWaitEmbed(record.userId, record.joinedAt, nextStatus);
     await message.edit({
       content: `<@&${STAFF_WAIT_ROLE_ID}>`,
-      embeds: [statusMessage.embed],
-      components: statusMessage.components
+      components: [buildStaffWaitPanel(record.userId, record.joinedAt, nextStatus)],
+      flags: MessageFlags.IsComponentsV2
     }).catch(() => null);
 
     clearStaffWaitTimer(record);
@@ -141,11 +150,10 @@ async function sendStaffWaitAlert(client, record) {
       || await client.channels.fetch(STAFF_WAIT_ALERT_CHANNEL_ID).catch(() => null);
     if (!alertChannel?.isTextBased()) return;
 
-    const staffWaitMessage = buildStaffWaitEmbed(record.userId, record.joinedAt, 'waiting');
     const message = await alertChannel.send({
       content: `<@&${STAFF_WAIT_ROLE_ID}>`,
-      embeds: [staffWaitMessage.embed],
-      components: staffWaitMessage.components
+      components: [buildStaffWaitPanel(record.userId, record.joinedAt, 'waiting')],
+      flags: MessageFlags.IsComponentsV2
     }).catch(() => null);
 
     if (!message) return;
