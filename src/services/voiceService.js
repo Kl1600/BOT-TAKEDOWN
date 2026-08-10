@@ -1,4 +1,4 @@
-﻿import { ChannelType, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
+﻿import { ChannelType, EmbedBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import * as logger from '../utils/logger.js';
 
 // Salons vocaux déclencheurs (Join-to-Create)
@@ -58,15 +58,22 @@ function buildStaffWaitEmbed(userId, joinedAt, status) {
 
   descriptionLines.push(`-# Merci d'essayer de prendre en charge le membre rapidement.`);
 
-  return new EmbedBuilder()
+  const embed = new EmbedBuilder()
     .setColor(0xED4245)
     .setDescription(descriptionLines.join('\n'))
-    .addFields({
-      name: 'Statut',
-      value: `\`${getStatusLabel(status)}\``,
-      inline: false
-    })
     .setTimestamp();
+
+  const components = [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`staff_wait_status_${status}`)
+        .setLabel(getStatusLabel(status))
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true)
+    )
+  ];
+
+  return { embed, components };
 }
 
 function getOrCreateStaffWaitRecord(guildId, userId) {
@@ -107,9 +114,11 @@ async function updateStaffWaitAlert(client, record, nextStatus) {
     if (!message) return;
 
     record.status = nextStatus;
+    const statusMessage = buildStaffWaitEmbed(record.userId, record.joinedAt, nextStatus);
     await message.edit({
       content: `<@&${STAFF_WAIT_ROLE_ID}>`,
-      embeds: [buildStaffWaitEmbed(record.userId, record.joinedAt, nextStatus)]
+      embeds: [statusMessage.embed],
+      components: statusMessage.components
     }).catch(() => null);
 
     clearStaffWaitTimer(record);
@@ -132,9 +141,11 @@ async function sendStaffWaitAlert(client, record) {
       || await client.channels.fetch(STAFF_WAIT_ALERT_CHANNEL_ID).catch(() => null);
     if (!alertChannel?.isTextBased()) return;
 
+    const staffWaitMessage = buildStaffWaitEmbed(record.userId, record.joinedAt, 'waiting');
     const message = await alertChannel.send({
       content: `<@&${STAFF_WAIT_ROLE_ID}>`,
-      embeds: [buildStaffWaitEmbed(record.userId, record.joinedAt, 'waiting')]
+      embeds: [staffWaitMessage.embed],
+      components: staffWaitMessage.components
     }).catch(() => null);
 
     if (!message) return;
