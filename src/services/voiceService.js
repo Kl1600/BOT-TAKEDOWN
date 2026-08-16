@@ -42,26 +42,26 @@ const VOICE_COPY = {
   FR: {
     title: '## Gestion du salon vocal', description: 'Seul le créateur du salon peut utiliser ces commandes.',
     public: 'Public', private: 'Privé', makePublic: 'Rendre public', makePrivate: 'Rendre privé',
-    whitelist: 'Liste blanche', blacklist: 'Liste noire', limit: 'Places', kick: 'Expulser',
+    whitelist: 'Liste blanche', blacklist: 'Liste noire', limit: 'Places', kick: 'Expulser', transfer: 'Transférer',
     ownerOnly: 'Seul le créateur de ce salon peut utiliser cette commande.', missing: 'Ce salon vocal temporaire n\'est plus disponible.',
     privateOnly: 'Passe d\'abord le salon en privé pour gérer la liste blanche.', publicOnly: 'Passe d\'abord le salon en public pour gérer la liste noire.',
     whitelistHelp: 'Choisis un membre à autoriser ou à retirer de la liste blanche.', blacklistHelp: 'Choisis un membre à bloquer ou à retirer de la liste noire.',
-    kickHelp: 'Choisis un membre actuellement présent dans ton salon.', add: 'Ajouter', remove: 'Retirer',
+    kickHelp: 'Choisis un membre actuellement présent dans ton salon.', transferHelp: 'Choisis le nouveau propriétaire parmi les membres présents dans ton salon.', add: 'Ajouter', remove: 'Retirer',
     limitTitle: 'Nombre de places', limitLabel: 'Entre 0 et 99 (0 = illimité)', limitPlaceholder: 'Exemple : 5',
     invalidLimit: 'Le nombre de places doit être compris entre 0 et 99.', updated: 'Modification enregistrée.',
-    invalidTarget: 'Ce membre n\'est pas dans ton salon vocal.', ownerTarget: 'Tu ne peux pas te cibler toi-même.'
+    invalidTarget: 'Ce membre n\'est pas dans ton salon vocal.', ownerTarget: 'Tu ne peux pas te cibler toi-même.', transferred: 'La propriété du salon a été transférée.'
   },
   ENG: {
     title: '## Voice channel controls', description: 'Only the channel creator can use these controls.',
     public: 'Public', private: 'Private', makePublic: 'Make public', makePrivate: 'Make private',
-    whitelist: 'Whitelist', blacklist: 'Blacklist', limit: 'User limit', kick: 'Kick',
+    whitelist: 'Whitelist', blacklist: 'Blacklist', limit: 'User limit', kick: 'Kick', transfer: 'Transfer',
     ownerOnly: 'Only the creator of this channel can use this control.', missing: 'This temporary voice channel is no longer available.',
     privateOnly: 'Make the channel private before managing its whitelist.', publicOnly: 'Make the channel public before managing its blacklist.',
     whitelistHelp: 'Choose a member to add to or remove from the whitelist.', blacklistHelp: 'Choose a member to add to or remove from the blacklist.',
-    kickHelp: 'Choose a member currently connected to your channel.', add: 'Add', remove: 'Remove',
+    kickHelp: 'Choose a member currently connected to your channel.', transferHelp: 'Choose the new owner from the members connected to your channel.', add: 'Add', remove: 'Remove',
     limitTitle: 'User limit', limitLabel: 'Between 0 and 99 (0 = unlimited)', limitPlaceholder: 'Example: 5',
     invalidLimit: 'The user limit must be between 0 and 99.', updated: 'Change saved.',
-    invalidTarget: 'This member is not connected to your voice channel.', ownerTarget: 'You cannot target yourself.'
+    invalidTarget: 'This member is not connected to your voice channel.', ownerTarget: 'You cannot target yourself.', transferred: 'Channel ownership has been transferred.'
   }
 };
 
@@ -91,7 +91,8 @@ function buildVoiceControlPanel(record) {
     ))
     .addActionRowComponents(new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId(`voice_whitelist_${record.channelId}`).setLabel(copy.whitelist).setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId(`voice_blacklist_${record.channelId}`).setLabel(copy.blacklist).setStyle(ButtonStyle.Secondary)
+      new ButtonBuilder().setCustomId(`voice_blacklist_${record.channelId}`).setLabel(copy.blacklist).setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(`voice_transfer_${record.channelId}`).setLabel(copy.transfer).setStyle(ButtonStyle.Secondary)
     ));
 }
 
@@ -143,6 +144,16 @@ function buildKickPanel(record) {
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${copy.kick}\n${copy.kickHelp}`))
     .addActionRowComponents(new ActionRowBuilder().addComponents(
       new UserSelectMenuBuilder().setCustomId(`voice_kick_select_${record.channelId}`).setPlaceholder(copy.kick).setMinValues(1).setMaxValues(1)
+    ));
+}
+
+function buildTransferPanel(record) {
+  const copy = getVoiceCopy(record);
+  return new ContainerBuilder()
+    .setAccentColor(0x5865F2)
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${copy.transfer}\n${copy.transferHelp}`))
+    .addActionRowComponents(new ActionRowBuilder().addComponents(
+      new UserSelectMenuBuilder().setCustomId(`voice_transfer_select_${record.channelId}`).setPlaceholder(copy.transfer).setMinValues(1).setMaxValues(1)
     ));
 }
 
@@ -389,7 +400,7 @@ export async function handleLeaveDynamic(oldState) {
 }
 
 export async function handleVoiceButton(interaction) {
-  const match = interaction.customId.match(/^voice_(privacy|limit|kick|whitelist|blacklist)_(\d+)$/);
+  const match = interaction.customId.match(/^voice_(privacy|limit|kick|whitelist|blacklist|transfer)_(\d+)$/);
   if (!match) return false;
 
   const [, action, channelId] = match;
@@ -447,6 +458,11 @@ export async function handleVoiceButton(interaction) {
     return true;
   }
 
+  if (action === 'transfer') {
+    await replyEphemeral(interaction, '', [buildTransferPanel(record)]);
+    return true;
+  }
+
   if (action === 'whitelist') {
     if (!record.isPrivate) {
       await replyEphemeral(interaction, copy.privateOnly);
@@ -467,9 +483,10 @@ export async function handleVoiceButton(interaction) {
 export async function handleVoiceUserSelect(interaction) {
   const listMatch = interaction.customId.match(/^voice_(whitelist|blacklist)_(add|remove)_(\d+)$/);
   const kickMatch = interaction.customId.match(/^voice_kick_select_(\d+)$/);
-  if (!listMatch && !kickMatch) return false;
+  const transferMatch = interaction.customId.match(/^voice_transfer_select_(\d+)$/);
+  if (!listMatch && !kickMatch && !transferMatch) return false;
 
-  const channelId = kickMatch ? kickMatch[1] : listMatch[3];
+  const channelId = kickMatch?.[1] || transferMatch?.[1] || listMatch[3];
   const { record, error } = getOwnedVoiceRecord(interaction, channelId);
   if (!record) {
     await replyEphemeral(interaction, error);
@@ -497,6 +514,45 @@ export async function handleVoiceUserSelect(interaction) {
     }
     await target.voice.setChannel(null);
     await replyEphemeral(interaction, copy.updated);
+    return true;
+  }
+
+  if (transferMatch) {
+    if (userId === record.ownerId) {
+      await replyEphemeral(interaction, copy.ownerTarget);
+      return true;
+    }
+    const newOwner = channel.members.get(userId);
+    if (!newOwner) {
+      await replyEphemeral(interaction, copy.invalidTarget);
+      return true;
+    }
+
+    const previousOwnerId = record.ownerId;
+    await channel.permissionOverwrites.edit(previousOwnerId, {
+      ViewChannel: record.isPrivate ? true : null,
+      Connect: record.isPrivate ? true : null,
+      Speak: record.isPrivate ? true : null,
+      MoveMembers: null,
+      MuteMembers: null,
+      DeafenMembers: null
+    });
+    await channel.permissionOverwrites.edit(userId, {
+      ViewChannel: true,
+      Connect: true,
+      Speak: true,
+      MoveMembers: true,
+      MuteMembers: true,
+      DeafenMembers: true
+    });
+
+    record.ownerId = userId;
+    record.blacklist.delete(userId);
+    record.whitelist.delete(userId);
+    if (record.isPrivate) record.whitelist.add(previousOwnerId);
+    dynamicChannelOwners.set(channelId, userId);
+    await updateVoiceControlPanel(interaction, record);
+    await replyEphemeral(interaction, copy.transferred);
     return true;
   }
 
