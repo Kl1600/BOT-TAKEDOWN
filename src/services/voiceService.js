@@ -40,7 +40,7 @@ const staffWaitTimers = new Map();
 
 const VOICE_COPY = {
   FR: {
-    title: '## 🎧 Gestion du salon vocal', description: 'Seul le créateur du salon peut utiliser ces commandes.',
+    title: '## Gestion du salon vocal', description: 'Seul le créateur du salon peut utiliser ces commandes.',
     public: 'Public', private: 'Privé', makePublic: 'Rendre public', makePrivate: 'Rendre privé',
     whitelist: 'Liste blanche', blacklist: 'Liste noire', limit: 'Places', kick: 'Expulser',
     ownerOnly: 'Seul le créateur de ce salon peut utiliser cette commande.', missing: 'Ce salon vocal temporaire n\'est plus disponible.',
@@ -52,7 +52,7 @@ const VOICE_COPY = {
     invalidTarget: 'Ce membre n\'est pas dans ton salon vocal.', ownerTarget: 'Tu ne peux pas te cibler toi-même.'
   },
   ENG: {
-    title: '## 🎧 Voice channel controls', description: 'Only the channel creator can use these controls.',
+    title: '## Voice channel controls', description: 'Only the channel creator can use these controls.',
     public: 'Public', private: 'Private', makePublic: 'Make public', makePrivate: 'Make private',
     whitelist: 'Whitelist', blacklist: 'Blacklist', limit: 'User limit', kick: 'Kick',
     ownerOnly: 'Only the creator of this channel can use this control.', missing: 'This temporary voice channel is no longer available.',
