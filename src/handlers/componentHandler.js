@@ -17,11 +17,16 @@ import { handlePollOpen, handlePollVote, handlePollSetupRoleSelect, handlePollSe
 import { handleInviteProfileButton } from '../services/inviteService.js';
 import { handleBetaAccessButton } from '../services/betaService.js';
 import { handleBanListButton } from '../commands/admin/banlist.js';
+import { handleVoiceButton } from '../services/voiceService.js';
 
 export async function handleComponentInteraction(interaction) {
   if (!interaction.isButton()) return;
 
   const customId = interaction.customId;
+
+  if (await handleVoiceButton(interaction)) {
+    return;
+  }
 
   if (customId === 'staffapply_open') {
     await handleStaffApplyOpen(interaction);

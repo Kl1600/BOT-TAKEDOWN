@@ -17,6 +17,7 @@ import { handleBanUserModalSubmit } from '../../commands/admin/banUser.js';
 import { handleKickUserModalSubmit } from '../../commands/admin/kickUser.js';
 import { handleMuteUserModalSubmit } from '../../commands/admin/muteUser.js';
 import { handleDmUserModalSubmit } from '../../commands/admin/dmUser.js';
+import { handleVoiceUserSelect, handleVoiceModalSubmit } from '../../services/voiceService.js';
 
 const SLASH_MODAL_COMMANDS = new Set(['en', 'annonce', 'patchnote']);
 const SLASH_EPHEMERAL_COMMANDS = new Set(['help', 'restart', 'sync', 'clear', 'categorie']);
@@ -27,7 +28,8 @@ const BUTTON_MODAL_PREFIXES = [
   'staffapply_open',
   'staffapply_start',
   'staffapply_continue_',
-  'poll_open_modal_'
+  'poll_open_modal_',
+  'voice_limit_'
 ];
 const AUTO_ACK_DELAY_MS = 1200;
 
@@ -281,6 +283,8 @@ export default {
           await handlePollSetupChannelSelect(interaction);
         } else if (interaction.customId === 'candidatt_select') {
           await handleCandidattSelect(interaction);
+        } else if (interaction.customId.startsWith('voice_')) {
+          await handleVoiceUserSelect(interaction);
         }
       } catch (err) {
         logger.error(`Erreur select menu ${interaction.customId}:`, err);
@@ -299,6 +303,13 @@ export default {
           await handleTicketModalSubmit(interaction);
         } catch (err) {
           logger.error(`Erreur modal ${interaction.customId}:`, err);
+          await replyInteractionFailure(interaction, 'fr', err);
+        }
+      } else if (interaction.customId.startsWith('voice_limit_modal_')) {
+        try {
+          await handleVoiceModalSubmit(interaction);
+        } catch (err) {
+          logger.error('Erreur modal limite vocal:', err);
           await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId.startsWith('annonce_modal')) {
