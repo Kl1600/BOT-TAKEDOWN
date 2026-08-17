@@ -44,8 +44,6 @@ function stripReglementTranslateHint(text) {
     .trim();
 }
 
-const TRANSLATE_HINT = '-# 🇬🇧 Click below to translate to English.';
-
 function normalizeComponentData(component) {
   const data = typeof component?.toJSON === 'function' ? component.toJSON() : component;
   return JSON.parse(JSON.stringify(data));
@@ -62,12 +60,22 @@ function hasTranslateHint(text) {
 async function translateTextDisplayContent(content) {
   if (isFooterText(content)) return content;
 
-  const includesHint = hasTranslateHint(content);
   const sourceText = stripReglementTranslateHint(content);
-  if (!sourceText) return includesHint ? TRANSLATE_HINT : content;
+  if (!sourceText) return '';
 
-  const translatedText = await translateText(sourceText, 'fr', 'en');
-  return includesHint ? `${translatedText.trim()}\n\n${TRANSLATE_HINT}` : translatedText;
+  return translateText(sourceText, 'fr', 'en');
+}
+
+function isTranslateButton(component) {
+  const customId = component?.custom_id ?? component?.customId;
+  return typeof customId === 'string' && customId.startsWith('msg_translate');
+}
+
+function isEmptyTextComponent(component) {
+  return typeof component?.content === 'string'
+    && component.content.trim().length === 0
+    && !Array.isArray(component.components)
+    && !component.accessory;
 }
 
 async function translateComponentTree(component, translateContent = translateTextDisplayContent) {
@@ -91,9 +99,15 @@ async function translateComponentTree(component, translateContent = translateTex
     }
 
     if (Array.isArray(node.components)) {
+      node.components = node.components.filter(child => !isTranslateButton(child));
       for (const child of node.components) {
         await visit(child);
       }
+      node.components = node.components.filter(child => {
+        if (isEmptyTextComponent(child)) return false;
+        if (Array.isArray(child?.components) && child.components.length === 0) return false;
+        return true;
+      });
     }
 
     if (Array.isArray(node.options)) {
@@ -192,7 +206,8 @@ async function translateGuideStack(interaction) {
   let sectionIndex = 0;
 
   return translateStructuredStack(interaction, async content => {
-    if (isFooterText(content) || hasTranslateHint(content)) return content;
+    if (isFooterText(content)) return content;
+    if (hasTranslateHint(content)) return '';
     const translatedSection = englishSections[sectionIndex];
     sectionIndex += 1;
     return translatedSection ?? await translateTextDisplayContent(content);
