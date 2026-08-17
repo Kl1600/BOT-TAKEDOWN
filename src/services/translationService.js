@@ -1,7 +1,7 @@
 import { ContainerBuilder, TextDisplayBuilder, MessageFlags, Routes } from 'discord.js';
 import { getLanguage, t, translateText } from '../utils/language.js';
 import { editV2InteractionReply } from '../utils/v2Helper.js';
-import { getModesTranslationGroup } from './modesService.js';
+import { resolveModesTranslationGroup } from './modesService.js';
 import config from '../config/config.js';
 
 function extractText(component) {
@@ -200,7 +200,7 @@ async function translateGuideStack(interaction) {
 }
 
 async function translateModesStack(interaction) {
-  const messageIds = getModesTranslationGroup(interaction.message?.id) || [interaction.message?.id].filter(Boolean);
+  const messageIds = await resolveModesTranslationGroup(interaction.message);
   const translatedContainersByMessage = [];
 
   for (const messageId of messageIds) {
