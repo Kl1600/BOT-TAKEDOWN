@@ -1,6 +1,6 @@
-import { ActionRowBuilder, ButtonBuilder, ContainerBuilder, TextDisplayBuilder, MessageFlags, Routes } from 'discord.js';
+import { ContainerBuilder, TextDisplayBuilder, MessageFlags, Routes } from 'discord.js';
 import { getLanguage, t, translateText } from '../utils/language.js';
-import { createErrorContainer, editV2InteractionReply } from '../utils/v2Helper.js';
+import { editV2InteractionReply } from '../utils/v2Helper.js';
 import { getModesTranslationGroup } from './modesService.js';
 import config from '../config/config.js';
 
@@ -36,22 +36,6 @@ function extractRenderableText(message) {
   return text.trim();
 }
 
-function extractComponentText(component) {
-  let text = '';
-
-  if (component?.content) {
-    text += `${component.content} `;
-  }
-
-  if (Array.isArray(component?.components)) {
-    for (const child of component.components) {
-      text += extractComponentText(child);
-    }
-  }
-
-  return text.trim();
-}
-
 function stripReglementTranslateHint(text) {
   return String(text ?? '')
     .replace(/^\s*-\#\s*🇬🇧\s*Click below to translate to English\.\s*$/gmi, '')
@@ -60,58 +44,71 @@ function stripReglementTranslateHint(text) {
     .trim();
 }
 
-function cloneActionRows(component) {
-  const rows = [];
+const TRANSLATE_HINT = '-# 🇬🇧 Click below to translate to English.';
 
-  if (!Array.isArray(component?.components)) {
-    return rows;
+function normalizeComponentData(component) {
+  const data = typeof component?.toJSON === 'function' ? component.toJSON() : component;
+  return JSON.parse(JSON.stringify(data));
+}
+
+function isFooterText(text) {
+  return /^\s*-#\s*©\s*Takedown\s*-\s*Fivem\s*•/i.test(String(text ?? ''));
+}
+
+function hasTranslateHint(text) {
+  return /Click below to translate to English\./i.test(String(text ?? ''));
+}
+
+async function translateTextDisplayContent(content) {
+  if (isFooterText(content)) return content;
+
+  const includesHint = hasTranslateHint(content);
+  const sourceText = stripReglementTranslateHint(content);
+  if (!sourceText) return includesHint ? TRANSLATE_HINT : content;
+
+  const translatedText = await translateText(sourceText, 'fr', 'en');
+  return includesHint ? `${translatedText.trim()}\n\n${TRANSLATE_HINT}` : translatedText;
+}
+
+async function translateComponentTree(component, translateContent = translateTextDisplayContent) {
+  const translated = normalizeComponentData(component);
+
+  async function visit(node) {
+    if (!node || typeof node !== 'object') return;
+
+    if (typeof node.content === 'string') {
+      node.content = await translateContent(node.content);
+    }
+
+    for (const property of ['label', 'placeholder', 'description']) {
+      if (typeof node[property] === 'string') {
+        node[property] = await translateTextDisplayContent(node[property]);
+      }
+    }
+
+    if (node.emoji == null) {
+      delete node.emoji;
+    }
+
+    if (Array.isArray(node.components)) {
+      for (const child of node.components) {
+        await visit(child);
+      }
+    }
+
+    if (Array.isArray(node.options)) {
+      for (const option of node.options) {
+        await visit(option);
+      }
+    }
+
+    if (node.accessory) {
+      await visit(node.accessory);
+    }
   }
 
-  for (const row of component.components) {
-    if (!Array.isArray(row?.components) || row.components.length === 0) {
-      continue;
-    }
-
-    const actionRow = new ActionRowBuilder();
-    let hasButton = false;
-
-    for (const item of row.components) {
-      if (typeof item !== 'object' || item === null) {
-        continue;
-      }
-
-      if (item.style === undefined) {
-        continue;
-      }
-
-      const button = new ButtonBuilder();
-      const customId = item.custom_id ?? item.customId;
-      if (customId) {
-        button.setCustomId(customId);
-      }
-      if (item.label !== undefined) {
-        button.setLabel(item.label);
-      }
-      if (item.style !== undefined) {
-        button.setStyle(item.style);
-      }
-      if (item.disabled !== undefined) {
-        button.setDisabled(item.disabled);
-      }
-      if (item.emoji !== undefined) {
-        button.setEmoji(item.emoji);
-      }
-
-      actionRow.addComponents(button);
-      hasButton = true;
-    }
-
-    if (hasButton) {
-      rows.push(actionRow);
-    }
-  }
-
-  return rows;
+  await visit(translated);
+  return translated;
 }
 
 function normalizeEmbedData(embed) {
@@ -163,31 +160,43 @@ async function translateEmbedData(embed, fromLang = 'fr', toLang = 'en') {
   return translated;
 }
 
-async function translateReglementStack(interaction) {
+async function translateStructuredStack(interaction, translateContent = translateTextDisplayContent) {
   const originalComponents = Array.isArray(interaction.message?.components)
     ? interaction.message.components
     : [];
-
-  const translatedContainers = [];
-
-  for (let index = 0; index < originalComponents.length; index += 1) {
-    const component = originalComponents[index];
-    const rawText = stripReglementTranslateHint(extractComponentText(component));
-    const translatedText = await translateText(rawText, 'fr', 'en');
-
-    const text = new TextDisplayBuilder().setContent(translatedText);
-    const container = new ContainerBuilder()
-      .setAccentColor(config.colors.primary)
-      .addTextDisplayComponents(text);
-
-    for (const actionRow of cloneActionRows(component)) {
-      container.addActionRowComponents(actionRow);
-    }
-
-    translatedContainers.push(container);
+  const translatedComponents = [];
+  for (const component of originalComponents) {
+    translatedComponents.push(await translateComponentTree(component, translateContent));
   }
+  return translatedComponents;
+}
 
-  return translatedContainers;
+function getGuideEnglishSections() {
+  const content = t('en', 'commands.guide.content', {
+    presentation: config.guide.channels.presentation,
+    announcements: config.guide.channels.announcements,
+    rules: config.guide.channels.rules,
+    support: config.guide.channels.support,
+    status: config.guide.channels.status,
+    patchnotes: config.guide.channels.patchnotes
+  });
+
+  return String(content)
+    .split(/^\s*separator\s*$/gmi)
+    .map(section => section.trim())
+    .filter(Boolean);
+}
+
+async function translateGuideStack(interaction) {
+  const englishSections = getGuideEnglishSections();
+  let sectionIndex = 0;
+
+  return translateStructuredStack(interaction, async content => {
+    if (isFooterText(content) || hasTranslateHint(content)) return content;
+    const translatedSection = englishSections[sectionIndex];
+    sectionIndex += 1;
+    return translatedSection ?? await translateTextDisplayContent(content);
+  });
 }
 
 async function translateModesStack(interaction) {
@@ -202,21 +211,13 @@ async function translateModesStack(interaction) {
     if (!message) continue;
 
     const originalComponents = Array.isArray(message.components) ? message.components : [];
-    const translatedContainers = [];
+    const translatedComponents = [];
 
     for (const component of originalComponents) {
-      const rawText = extractComponentText(component);
-      const translatedText = await translateText(rawText, 'fr', 'en');
-
-      const text = new TextDisplayBuilder().setContent(translatedText);
-      const container = new ContainerBuilder()
-        .setAccentColor(config.colors.primary)
-        .addTextDisplayComponents(text);
-
-      translatedContainers.push(container);
+      translatedComponents.push(await translateComponentTree(component));
     }
 
-    translatedContainersByMessage.push({ messageId, translatedContainers });
+    translatedContainersByMessage.push({ messageId, translatedComponents });
   }
 
   return translatedContainersByMessage;
@@ -251,15 +252,17 @@ export async function handleMessageTranslate(interaction) {
 
   const hasEmbeds = Array.isArray(interaction.message?.embeds) && interaction.message.embeds.length > 0;
 
-  if (explicitType === 'reglement') {
+  if (explicitType === 'reglement' || explicitType === 'guide') {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    const translatedContainers = await translateReglementStack(interaction);
+    const translatedComponents = explicitType === 'guide'
+      ? await translateGuideStack(interaction)
+      : await translateStructuredStack(interaction);
     return await interaction.client.rest.patch(
       Routes.webhookMessage(interaction.applicationId, interaction.token, '@original'),
       {
         body: {
-          components: translatedContainers.map(container => container.toJSON()),
-          flags: MessageFlags.IsComponentsV2
+          components: translatedComponents,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
         }
       }
     );
@@ -277,13 +280,13 @@ export async function handleMessageTranslate(interaction) {
 
     const [firstEntry, ...remainingEntries] = translatedMessages;
     await interaction.editReply({
-      components: firstEntry.translatedContainers,
+      components: firstEntry.translatedComponents,
       flags: MessageFlags.IsComponentsV2
     });
 
     for (const entry of remainingEntries) {
       await interaction.followUp({
-        components: entry.translatedContainers,
+        components: entry.translatedComponents,
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
       });
     }
@@ -302,16 +305,27 @@ export async function handleMessageTranslate(interaction) {
     });
   }
 
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2 });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  const originalComponents = Array.isArray(interaction.message?.components) ? interaction.message.components : [];
+  if (originalComponents.length > 0) {
+    const translatedComponents = await translateStructuredStack(interaction);
+    return interaction.client.rest.patch(
+      Routes.webhookMessage(interaction.applicationId, interaction.token, '@original'),
+      {
+        body: {
+          components: translatedComponents,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
+        }
+      }
+    );
+  }
+
   const rawText = extractRenderableText(interaction.message);
   const translatedText = await translateText(rawText.trim(), 'fr', 'en');
-
-  const text = new TextDisplayBuilder().setContent(translatedText);
   const container = new ContainerBuilder()
     .setAccentColor(config.colors.primary)
-    .addTextDisplayComponents(text);
-
-  return await editV2InteractionReply(interaction, container);
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(translatedText));
+  return editV2InteractionReply(interaction, container);
 }
 
 export default {
