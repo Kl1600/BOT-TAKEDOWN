@@ -31,6 +31,7 @@ const STAFF_WAIT_CHANNEL_IDS = new Set([
 const STAFF_WAIT_ROLE_ID = '1532824877516718141';
 const STAFF_WAIT_ALERT_CHANNEL_ID = '1532829411894755368';
 const STAFF_WAIT_DELAY_MS = 5_000;
+const STAFF_WAIT_REPING_MS = 5 * 60_000;
 
 // Stockage en mémoire des salons vocaux dynamiques créés
 const dynamicChannels = new Set();
@@ -180,6 +181,18 @@ function getStatusLabel(status) {
   }
 }
 
+function getStaffWaitFooter(status) {
+  switch (status) {
+    case 'claimed':
+      return `-# Merci d'avoir pris en charge le membre.`;
+    case 'left':
+      return `-# Essayez de prendre en charge les membre qui attendent SVP.`;
+    case 'waiting':
+    default:
+      return `-# Merci d'essayer de prendre en charge le membre rapidement.`;
+  }
+}
+
 function buildStaffWaitPanel(userId, joinedAt, status) {
   const descriptionLines = [`**<@${userId}>** est en attente staff.`];
 
@@ -187,7 +200,7 @@ function buildStaffWaitPanel(userId, joinedAt, status) {
     descriptionLines.push(`Attend depuis <t:${Math.floor(joinedAt / 1000)}:R>.`);
   }
 
-  descriptionLines.push(`-# Merci d'essayer de prendre en charge le membre rapidement.`);
+  descriptionLines.push(getStaffWaitFooter(status));
 
   const container = new ContainerBuilder()
     .setAccentColor(0xED4245)
@@ -219,6 +232,7 @@ function getOrCreateStaffWaitRecord(guildId, userId) {
       joinedAt: Date.now(),
       channelId: null,
       timeoutId: null,
+      reminderTimeoutId: null,
       pingMessageId: null,
       messageId: null,
       messageChannelId: null
@@ -234,8 +248,21 @@ function clearStaffWaitTimer(record) {
   record.timeoutId = null;
 }
 
+function clearStaffWaitReminder(record) {
+  if (!record?.reminderTimeoutId) return;
+  clearTimeout(record.reminderTimeoutId);
+  record.reminderTimeoutId = null;
+}
+
 async function updateStaffWaitAlert(client, record, nextStatus) {
   try {
+    if (!record) return;
+
+    record.status = nextStatus;
+    clearStaffWaitTimer(record);
+    clearStaffWaitReminder(record);
+    staffWaitTimers.delete(getStaffWaitKey(record.guildId, record.userId));
+
     if (!record?.alerted || !record.messageId || !record.messageChannelId) return;
 
     const alertChannel = client.channels.cache.get(record.messageChannelId)
@@ -245,7 +272,6 @@ async function updateStaffWaitAlert(client, record, nextStatus) {
     const message = await alertChannel.messages.fetch(record.messageId).catch(() => null);
     if (!message) return;
 
-    record.status = nextStatus;
     await message.edit({
       content: null,
       components: [buildStaffWaitPanel(record.userId, record.joinedAt, nextStatus)],
@@ -253,11 +279,46 @@ async function updateStaffWaitAlert(client, record, nextStatus) {
       allowedMentions: { parse: [] }
     });
 
-    clearStaffWaitTimer(record);
-    staffWaitTimers.delete(getStaffWaitKey(record.guildId, record.userId));
   } catch (err) {
     logger.error('Erreur lors de la mise à jour du ping staff vocal:', err);
   }
+}
+
+async function sendStaffWaitReminder(client, record) {
+  try {
+    record.reminderTimeoutId = null;
+    if (!record.alerted || record.status !== 'waiting') return;
+
+    const guild = client.guilds.cache.get(record.guildId)
+      || await client.guilds.fetch(record.guildId).catch(() => null);
+    if (!guild) return;
+
+    const member = await guild.members.fetch(record.userId).catch(() => null);
+    if (!member?.voice?.channelId || member.voice.channelId !== record.channelId) return;
+    if (!STAFF_WAIT_CHANNEL_IDS.has(member.voice.channelId)) return;
+
+    const alertChannel = client.channels.cache.get(STAFF_WAIT_ALERT_CHANNEL_ID)
+      || await client.channels.fetch(STAFF_WAIT_ALERT_CHANNEL_ID).catch(() => null);
+    if (!alertChannel?.isTextBased()) return;
+
+    await alertChannel.send({
+      content: `<@&${STAFF_WAIT_ROLE_ID}>`,
+      allowedMentions: {
+        parse: [],
+        roles: [STAFF_WAIT_ROLE_ID]
+      }
+    });
+  } catch (err) {
+    logger.error('Erreur lors du rappel du ping staff vocal:', err);
+  }
+}
+
+function scheduleStaffWaitReminder(client, record) {
+  clearStaffWaitReminder(record);
+  const remainingDelay = Math.max(0, record.joinedAt + STAFF_WAIT_REPING_MS - Date.now());
+  record.reminderTimeoutId = setTimeout(() => {
+    void sendStaffWaitReminder(client, record);
+  }, remainingDelay);
 }
 
 async function sendStaffWaitAlert(client, record) {
@@ -297,6 +358,7 @@ async function sendStaffWaitAlert(client, record) {
     record.messageChannelId = alertChannel.id;
     record.status = 'waiting';
     clearStaffWaitTimer(record);
+    scheduleStaffWaitReminder(client, record);
   } catch (err) {
     logger.error('Erreur lors de l\'envoi du ping staff vocal:', err);
   }
@@ -313,6 +375,7 @@ function scheduleStaffWaitAlert(newState) {
   record.joinedAt = Date.now();
   record.status = 'waiting';
   clearStaffWaitTimer(record);
+  clearStaffWaitReminder(record);
 
   record.timeoutId = setTimeout(() => {
     void sendStaffWaitAlert(member.client, record);
