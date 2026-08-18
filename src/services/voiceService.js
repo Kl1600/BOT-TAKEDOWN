@@ -181,7 +181,13 @@ function getStatusLabel(status) {
 }
 
 function buildStaffWaitPanel(userId, joinedAt, status) {
-  const descriptionLines = [`**<@${userId}>** est en attente staff.`];
+  const descriptionLines = [];
+
+  if (status === 'waiting') {
+    descriptionLines.push(`<@&${STAFF_WAIT_ROLE_ID}>`);
+  }
+
+  descriptionLines.push(`**<@${userId}>** est en attente staff.`);
 
   if (status === 'waiting') {
     descriptionLines.push(`Attend depuis <t:${Math.floor(joinedAt / 1000)}:R>.`);
@@ -246,10 +252,11 @@ async function updateStaffWaitAlert(client, record, nextStatus) {
 
     record.status = nextStatus;
     await message.edit({
-      content: `<@&${STAFF_WAIT_ROLE_ID}>`,
+      content: null,
       components: [buildStaffWaitPanel(record.userId, record.joinedAt, nextStatus)],
-      flags: MessageFlags.IsComponentsV2
-    }).catch(() => null);
+      flags: MessageFlags.IsComponentsV2,
+      allowedMentions: { parse: [] }
+    });
 
     clearStaffWaitTimer(record);
     staffWaitTimers.delete(getStaffWaitKey(record.guildId, record.userId));
@@ -272,10 +279,13 @@ async function sendStaffWaitAlert(client, record) {
     if (!alertChannel?.isTextBased()) return;
 
     const message = await alertChannel.send({
-      content: `<@&${STAFF_WAIT_ROLE_ID}>`,
       components: [buildStaffWaitPanel(record.userId, record.joinedAt, 'waiting')],
-      flags: MessageFlags.IsComponentsV2
-    }).catch(() => null);
+      flags: MessageFlags.IsComponentsV2,
+      allowedMentions: {
+        parse: [],
+        roles: [STAFF_WAIT_ROLE_ID]
+      }
+    });
 
     if (!message) return;
 
