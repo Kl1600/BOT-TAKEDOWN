@@ -181,13 +181,7 @@ function getStatusLabel(status) {
 }
 
 function buildStaffWaitPanel(userId, joinedAt, status) {
-  const descriptionLines = [];
-
-  if (status === 'waiting') {
-    descriptionLines.push(`<@&${STAFF_WAIT_ROLE_ID}>`);
-  }
-
-  descriptionLines.push(`**<@${userId}>** est en attente staff.`);
+  const descriptionLines = [`**<@${userId}>** est en attente staff.`];
 
   if (status === 'waiting') {
     descriptionLines.push(`Attend depuis <t:${Math.floor(joinedAt / 1000)}:R>.`);
@@ -225,6 +219,7 @@ function getOrCreateStaffWaitRecord(guildId, userId) {
       joinedAt: Date.now(),
       channelId: null,
       timeoutId: null,
+      pingMessageId: null,
       messageId: null,
       messageChannelId: null
     };
@@ -278,18 +273,26 @@ async function sendStaffWaitAlert(client, record) {
       || await client.channels.fetch(STAFF_WAIT_ALERT_CHANNEL_ID).catch(() => null);
     if (!alertChannel?.isTextBased()) return;
 
-    const message = await alertChannel.send({
-      components: [buildStaffWaitPanel(record.userId, record.joinedAt, 'waiting')],
-      flags: MessageFlags.IsComponentsV2,
+    const pingMessage = await alertChannel.send({
+      content: `<@&${STAFF_WAIT_ROLE_ID}>`,
       allowedMentions: {
         parse: [],
         roles: [STAFF_WAIT_ROLE_ID]
       }
     });
 
+    const message = await alertChannel.send({
+      components: [buildStaffWaitPanel(record.userId, record.joinedAt, 'waiting')],
+      flags: MessageFlags.IsComponentsV2
+    }).catch(async err => {
+      await pingMessage.delete().catch(() => null);
+      throw err;
+    });
+
     if (!message) return;
 
     record.alerted = true;
+    record.pingMessageId = pingMessage.id;
     record.messageId = message.id;
     record.messageChannelId = alertChannel.id;
     record.status = 'waiting';
