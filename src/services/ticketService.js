@@ -5,6 +5,7 @@ import { getLanguage, t } from '../utils/language.js';
 import dbService from '../database/dbProxy.js';
 import { logTicket } from './logService.js';
 import { generateTranscript } from '../utils/transcriptor.js';
+import * as logger from '../utils/logger.js';
 
 const BOT_OWNER_ID = '1481543558715408426';
 
@@ -81,6 +82,20 @@ export async function buildTicketPanelContainer(lang, member = null) {
     .addActionRowComponents(new ActionRowBuilder().addComponents(frenchSelect))
     .addActionRowComponents(new ActionRowBuilder().addComponents(englishSelect));
 }
+
+async function resetTicketCategorySelects(interaction, member) {
+  if (!interaction.message) return;
+
+  try {
+    const refreshedPanel = await buildTicketPanelContainer('fr', member);
+    await interaction.message.edit({
+      components: [refreshedPanel],
+      flags: MessageFlags.IsComponentsV2
+    });
+  } catch (err) {
+    logger.error('Impossible de réinitialiser les sélecteurs du panneau ticket:', err);
+  }
+}
 /**
  * Clic sur "Ouvrir un ticket" â†’ ouvre directement le modal de raison (FR uniquement)
  */
@@ -115,6 +130,7 @@ export async function handleTicketCategorySelect(interaction) {
   const selectedLang = interaction.customId.endsWith('_en') ? 'en' : 'fr';
   const selectedCategoryId = interaction.values?.[0];
   const freshMember = await interaction.guild.members.fetch(interaction.user.id, { force: true }).catch(() => interaction.member);
+  await resetTicketCategorySelects(interaction, freshMember);
   const canUseEnglish = freshMember?.roles?.cache?.has(config.roles.en) && !freshMember?.roles?.cache?.has(config.roles.fr);
   const canUseFrench = freshMember?.roles?.cache?.has(config.roles.fr);
 
@@ -496,7 +512,6 @@ export async function handleTicketDelete(interaction) {
     });
   }, 5000);
 }
-
 
 
 
