@@ -6,6 +6,12 @@ import dbService from '../database/dbProxy.js';
 import { logTicket } from './logService.js';
 import { generateTranscript } from '../utils/transcriptor.js';
 
+const BOT_OWNER_ID = '1481543558715408426';
+
+function canOpenMultipleTickets(userId) {
+  return String(userId) === BOT_OWNER_ID;
+}
+
 function slugifyChannelName(input) {
   const cleaned = input
     .toString()
@@ -127,14 +133,16 @@ export async function handleTicketCategorySelect(interaction) {
     return true;
   }
 
-  const existingTicket = await dbService.getUserActiveTicket(interaction.user.id);
-  if (existingTicket) {
-    const channel = interaction.guild.channels.cache.get(existingTicket.channel_id);
-    if (channel) {
-      await sendError(`${t(selectedLang, 'errors.ticket_already_exists')} (<#${channel.id}>)`);
-      return true;
+  if (!canOpenMultipleTickets(interaction.user.id)) {
+    const existingTicket = await dbService.getUserActiveTicket(interaction.user.id);
+    if (existingTicket) {
+      const channel = interaction.guild.channels.cache.get(existingTicket.channel_id);
+      if (channel) {
+        await sendError(`${t(selectedLang, 'errors.ticket_already_exists')} (<#${channel.id}>)`);
+        return true;
+      }
+      await dbService.deleteTicket(existingTicket.channel_id);
     }
-    await dbService.deleteTicket(existingTicket.channel_id);
   }
 
   const matchedCategory = (TICKET_CATEGORY_OPTIONS[selectedLang] || []).find(option => option.value === selectedCategoryId);
@@ -181,16 +189,18 @@ async function createTicketForUser(interaction, selectedLang, selectedCategoryId
     await interaction.deferReply({ flags: MessageFlags.Ephemeral }).catch(() => null);
   }
 
-  const existingTicket = await dbService.getUserActiveTicket(user.id);
-  if (existingTicket) {
-    const channel = guild.channels.cache.get(existingTicket.channel_id);
-    if (channel) {
-      return interaction.editReply({
-        content: `${t(selectedLang, 'errors.ticket_already_exists')} (<#${channel.id}>)`
-      }).catch(() => null);
-    }
+  if (!canOpenMultipleTickets(user.id)) {
+    const existingTicket = await dbService.getUserActiveTicket(user.id);
+    if (existingTicket) {
+      const channel = guild.channels.cache.get(existingTicket.channel_id);
+      if (channel) {
+        return interaction.editReply({
+          content: `${t(selectedLang, 'errors.ticket_already_exists')} (<#${channel.id}>)`
+        }).catch(() => null);
+      }
 
-    await dbService.deleteTicket(existingTicket.channel_id);
+      await dbService.deleteTicket(existingTicket.channel_id);
+    }
   }
 
   await dbService.setUserLanguage(user.id, selectedLang);
@@ -486,7 +496,6 @@ export async function handleTicketDelete(interaction) {
     });
   }, 5000);
 }
-
 
 
 
