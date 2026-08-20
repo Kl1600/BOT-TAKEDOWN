@@ -19,6 +19,14 @@ const translations = {
   en: enTranslations
 };
 
+const TRANSLATION_TIMEOUT_MS = 10_000;
+
+async function fetchTranslation(url) {
+  return fetch(url, {
+    signal: AbortSignal.timeout(TRANSLATION_TIMEOUT_MS)
+  });
+}
+
 const TRANSLATION_GLOSSARY = {
   frToEn: [
     [/acceptation du règlement/gi, 'acceptance of the rules'],
@@ -303,7 +311,7 @@ export async function translateText(text, fromLang = 'fr', toLang = 'en') {
   if (!text) return '';
   try {
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURIComponent(text)}`;
-    const response = await fetch(url);
+    const response = await fetchTranslation(url);
     if (!response.ok) return preserveSourceCasing(text, applyTranslationFixes(text, text, fromLang, toLang));
 
     const data = await response.json();
@@ -324,7 +332,7 @@ export async function detectTextLanguage(text) {
 
   try {
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=${encodeURIComponent(text)}`;
-    const response = await fetch(url);
+    const response = await fetchTranslation(url);
     if (!response.ok) return heuristic;
 
     const data = await response.json();

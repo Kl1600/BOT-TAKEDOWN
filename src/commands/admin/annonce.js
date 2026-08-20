@@ -14,15 +14,9 @@ import { t, isEnglishOnly } from '../../utils/language.js';
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
 import { logAnnouncement } from '../../services/logService.js';
 import { appendSeparatorComponent, splitContentBySeparator, sendV2Container } from '../../utils/v2Helper.js';
-import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
 import config from '../../config/config.js';
 
 const translateHint = '-# 🇬🇧 Click below to translate to English.';
-
-registerPanelRefreshBuilder('annonce', async ({ member, payload }) => {
-  const translateDisabled = !(await isEnglishOnly(member));
-  return [buildAnnouncementContainer(payload.content, translateDisabled)];
-});
 
 function buildAnnouncementContainer(content, translateDisabled = false) {
   const button = new ButtonBuilder()
@@ -62,17 +56,7 @@ export async function handleAnnonceModalSubmit(interaction, lang) {
     await interaction.channel.send({ content: '@everyone' }).catch(() => null);
   }
 
-  const sentMessage = await sendV2Container(interaction.channel, container);
-  registerPanelRefresh({
-    key: `annonce:${sentMessage?.id || interaction.channelId}:${interaction.user.id}`,
-    guildId: interaction.guildId,
-    channelId: interaction.channelId,
-    messageIds: sentMessage?.id,
-    memberId: interaction.user.id,
-    panelType: 'annonce',
-    payload: { content },
-    buildComponents: async member => [buildAnnouncementContainer(content, !(await isEnglishOnly(member)))]
-  });
+  await sendV2Container(interaction.channel, container);
   await interaction.editReply({ content: t(lang, 'commands.annonce.success') });
 
   await logAnnouncement(interaction.client, {
@@ -125,17 +109,7 @@ export default {
 
     await message.delete().catch(() => null);
 
-    const sentMessage = await sendV2Container(message.channel, buildAnnouncementContainer(content, translateDisabled));
-    registerPanelRefresh({
-      key: `annonce:${message.channelId}:${message.author.id}:${Date.now()}`,
-      guildId: message.guildId,
-      channelId: message.channelId,
-      messageIds: sentMessage?.id,
-      memberId: message.author.id,
-      panelType: 'annonce',
-      payload: { content },
-      buildComponents: async member => [buildAnnouncementContainer(content, !(await isEnglishOnly(member)))]
-    });
+    await sendV2Container(message.channel, buildAnnouncementContainer(content, translateDisabled));
 
     await logAnnouncement(message.client, {
       title: 'Annonce publiee',

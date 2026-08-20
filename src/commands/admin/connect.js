@@ -9,7 +9,6 @@ import {
 } from 'discord.js';
 import { isEnglishOnly } from '../../utils/language.js';
 import { sendV2Container, appendSeparatorComponent } from '../../utils/v2Helper.js';
-import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
 import config from '../../config/config.js';
 
 const CONNECT_LINK = 'https://cfx.re/join/qqqqqzv';
@@ -79,11 +78,6 @@ function buildConnectPanel(lang, translateDisabled = false) {
   return container;
 }
 
-registerPanelRefreshBuilder('connect', async ({ member }) => {
-  const translateDisabled = !(await isEnglishOnly(member));
-  return [buildConnectPanel('fr', translateDisabled)];
-});
-
 export default {
   data: new SlashCommandBuilder()
     .setName('connect')
@@ -98,23 +92,6 @@ export default {
       flags: MessageFlags.IsComponentsV2
     });
 
-    const replyMessage = await interaction.fetchReply().catch(() => null);
-    if (replyMessage) {
-      registerPanelRefresh({
-        key: `connect:${replyMessage.id}`,
-        guildId: interaction.guildId,
-        channelId: interaction.channelId,
-        messageIds: replyMessage.id,
-        memberId: interaction.user.id,
-        refreshOnMemberUpdate: true,
-      panelType: 'connect',
-      payload: {},
-      buildComponents: async member => {
-          const refreshedTranslateDisabled = !(await isEnglishOnly(member));
-          return [buildConnectPanel('fr', refreshedTranslateDisabled)];
-        }
-      });
-    }
   },
 
   async executePrefix(message, args, lang) {
@@ -122,25 +99,6 @@ export default {
 
     const translateDisabled = !(await isEnglishOnly(message.member));
     const container = buildConnectPanel('fr', translateDisabled);
-    const sentMessage = await sendV2Container(message.channel, container);
-
-    if (!sentMessage?.id) {
-      return;
-    }
-
-    registerPanelRefresh({
-      key: `connect:${sentMessage.id}`,
-      guildId: message.guildId,
-      channelId: message.channelId,
-      messageIds: sentMessage.id,
-      memberId: message.author.id,
-      refreshOnMemberUpdate: true,
-      panelType: 'connect',
-      payload: {},
-      buildComponents: async member => {
-        const refreshedTranslateDisabled = !(await isEnglishOnly(member));
-        return [buildConnectPanel('fr', refreshedTranslateDisabled)];
-      }
-    });
+    await sendV2Container(message.channel, container);
   }
 };

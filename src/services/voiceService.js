@@ -77,6 +77,39 @@ function getConnectOverwriteState(channel, everyoneRoleId) {
   return null;
 }
 
+function getPersistedVoiceOwner(channel) {
+  return [...channel.permissionOverwrites.cache.values()].find(overwrite => {
+    if (channel.guild.roles.cache.has(overwrite.id)) return false;
+    return overwrite.allow.has(PermissionFlagsBits.MoveMembers);
+  })?.id || null;
+}
+
+function rebuildVoiceRecord(channel, ownerId, languageTag, generatorChannel) {
+  const everyoneId = channel.guild.roles.everyone.id;
+  const isPrivate = getConnectOverwriteState(channel, everyoneId) === false;
+  const whitelist = new Set();
+  const blacklist = new Set();
+
+  for (const overwrite of channel.permissionOverwrites.cache.values()) {
+    if (overwrite.id === ownerId || channel.guild.roles.cache.has(overwrite.id)) continue;
+    if (overwrite.allow.has(PermissionFlagsBits.Connect)) whitelist.add(overwrite.id);
+    if (overwrite.deny.has(PermissionFlagsBits.Connect)) blacklist.add(overwrite.id);
+  }
+
+  return {
+    channelId: channel.id,
+    ownerId,
+    languageTag,
+    isPrivate,
+    whitelist,
+    blacklist,
+    baseEveryoneConnect: generatorChannel
+      ? getConnectOverwriteState(generatorChannel, everyoneId)
+      : null,
+    panelMessageId: null
+  };
+}
+
 function buildVoiceControlPanel(record) {
   const copy = getVoiceCopy(record);
   const status = record.isPrivate ? copy.private : copy.public;
@@ -382,6 +415,58 @@ function scheduleStaffWaitAlert(newState) {
   }, STAFF_WAIT_DELAY_MS);
 }
 
+export async function initializeVoiceState(client) {
+  dynamicChannels.clear();
+  dynamicChannelOwners.clear();
+  dynamicChannelRecords.clear();
+
+  for (const record of staffWaitTimers.values()) {
+    clearStaffWaitTimer(record);
+    clearStaffWaitReminder(record);
+  }
+  staffWaitTimers.clear();
+
+  for (const guild of client.guilds.cache.values()) {
+    await guild.channels.fetch().catch(() => null);
+
+    const generators = [...GENERATOR_CHANNEL_IDS]
+      .map(channelId => guild.channels.cache.get(channelId))
+      .filter(Boolean);
+    const generatorParentIds = new Set(generators.map(channel => channel.parentId).filter(Boolean));
+
+    for (const channel of guild.channels.cache.values()) {
+      if (channel.type !== ChannelType.GuildVoice || GENERATOR_CHANNEL_IDS.has(channel.id)) continue;
+      if (!generatorParentIds.has(channel.parentId)) continue;
+
+      const languageMatch = channel.name.match(/\[(FR|ENG)\]$/);
+      if (!languageMatch) continue;
+
+      const ownerId = getPersistedVoiceOwner(channel);
+      if (!ownerId) continue;
+
+      if ((channel.members?.size ?? 0) === 0) {
+        await channel.delete('Nettoyage d’un salon vocal temporaire vide après redémarrage').catch(() => null);
+        continue;
+      }
+
+      const languageTag = languageMatch[1];
+      const generator = generators.find(candidate => GENERATOR_CHANNEL_LANG.get(candidate.id) === languageTag) || null;
+      const record = rebuildVoiceRecord(channel, ownerId, languageTag, generator);
+      dynamicChannels.add(channel.id);
+      dynamicChannelOwners.set(channel.id, ownerId);
+      dynamicChannelRecords.set(channel.id, record);
+    }
+
+    for (const channelId of STAFF_WAIT_CHANNEL_IDS) {
+      const waitChannel = guild.channels.cache.get(channelId);
+      if (!waitChannel?.isVoiceBased()) continue;
+      for (const member of waitChannel.members.values()) {
+        scheduleStaffWaitAlert(member.voice);
+      }
+    }
+  }
+}
+
 /**
  * Gère la création d'un salon vocal dynamique si le membre rejoint le salon déclencheur
  */
@@ -484,6 +569,9 @@ export async function handleVoiceButton(interaction) {
   if (!record) {
     await replyEphemeral(interaction, error);
     return true;
+  }
+  if (!record.panelMessageId && interaction.message?.id) {
+    record.panelMessageId = interaction.message.id;
   }
 
   const copy = getVoiceCopy(record);
@@ -735,6 +823,7 @@ export function handleStaffWaitVoiceState(oldState, newState) {
 }
 
 export default {
+  initializeVoiceState,
   handleJoinGenerator,
   handleLeaveDynamic,
   handleStaffWaitVoiceState,

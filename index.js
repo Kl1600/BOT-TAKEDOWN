@@ -1,6 +1,8 @@
 ﻿import fs from 'fs';
 import { execSync } from 'child_process';
 
+let runtimeLogger = null;
+
 function dependenciesReady() {
   return fs.existsSync('./node_modules/discord.js/package.json')
     && fs.existsSync('./node_modules/dotenv/package.json')
@@ -53,6 +55,7 @@ async function bootstrap() {
   const { loadCommands } = await import('./src/handlers/commandHandler.js');
   const { loadEvents } = await import('./src/handlers/eventHandler.js');
   const logger = await import('./src/utils/logger.js');
+  runtimeLogger = logger;
 
   process.on('unhandledRejection', (reason) => {
     logger.error('Rejet de promesse non géré:', reason);
@@ -60,6 +63,7 @@ async function bootstrap() {
 
   process.on('uncaughtException', (err) => {
     logger.error('Exception non interceptée:', err);
+    setTimeout(() => process.exit(1), 1500);
   });
 
   if (!config.token || config.token === 'YOUR_DISCORD_BOT_TOKEN_HERE') {
@@ -101,6 +105,10 @@ async function bootstrap() {
 }
 
 bootstrap().catch((err) => {
-  console.error('[BOOT] Erreur fatale au démarrage:', err);
+  if (runtimeLogger) {
+    runtimeLogger.error('Erreur fatale au démarrage:', err);
+  } else {
+    console.error('[BOOT] Erreur fatale au démarrage:', err);
+  }
   process.exit(1);
 });

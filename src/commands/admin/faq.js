@@ -10,13 +10,7 @@ import {
 import { getLanguage, hasFrenchRole, isEnglishOnly, t } from '../../utils/language.js';
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
 import { appendSeparatorComponent, sendV2Container } from '../../utils/v2Helper.js';
-import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
 import config from '../../config/config.js';
-
-registerPanelRefreshBuilder('faq', async ({ member }) => {
-  const lang = await getLanguage(member);
-  return buildFaqContainers(lang, member);
-});
 
 const FAQ_ITEMS = [
   {
@@ -303,43 +297,13 @@ export default {
   async executeSlash(interaction, lang) {
     if (!await checkPermissions(interaction, interaction.member)) return;
     const containers = await buildFaqContainers(lang, interaction.member);
-    const sentMessageIds = await sendFaqContainers(interaction, containers, true);
-    if (sentMessageIds.length > 0) {
-      registerPanelRefresh({
-        key: `faq:${sentMessageIds[0]}`,
-        guildId: interaction.guildId,
-        channelId: interaction.channelId,
-        messageIds: sentMessageIds,
-        memberId: interaction.user.id,
-        refreshOnMemberUpdate: true,
-        panelType: 'faq',
-        buildComponents: async member => {
-          const refreshedLang = await getLanguage(member);
-          return buildFaqContainers(refreshedLang, member);
-        }
-      });
-    }
+    await sendFaqContainers(interaction, containers, true);
   },
 
   async executePrefix(message, args, lang) {
     if (!await checkPermissions(message, message.member)) return;
     await message.delete().catch(() => null);
     const containers = await buildFaqContainers(lang, message.member);
-    const sentMessageIds = await sendFaqContainers(message, containers, false);
-    if (sentMessageIds.length > 0) {
-      registerPanelRefresh({
-        key: `faq:${sentMessageIds[0]}`,
-        guildId: message.guildId,
-        channelId: message.channelId,
-        messageIds: sentMessageIds,
-        memberId: message.author.id,
-        refreshOnMemberUpdate: true,
-        panelType: 'faq',
-        buildComponents: async member => {
-          const refreshedLang = await getLanguage(member);
-          return buildFaqContainers(refreshedLang, member);
-        }
-      });
-    }
+    await sendFaqContainers(message, containers, false);
   }
 };

@@ -89,7 +89,7 @@ async function ensureBetaFeedbackAccess(guild) {
     ViewChannel: true,
     SendMessages: true,
     ReadMessageHistory: true
-  }).catch(err => logger.warn(`Impossible de configurer l'accès beta: ${err?.message || err}`));
+  }).catch(err => logger.error(`Impossible de configurer l'accès beta:`, err));
 }
 
 async function grantBetaRole(userId, client) {
@@ -171,5 +171,4 @@ export default {
   handleBetaAccessButton,
   ensureBetaAccess
 };
-
 

@@ -15,7 +15,7 @@ export default {
     if (autoroleId) {
       const role = member.guild.roles.cache.get(autoroleId) || await member.guild.roles.fetch(autoroleId).catch(() => null);
       if (role) {
-        await member.roles.add(role).catch(err => logger.warn(`Failed to assign autorole ${autoroleId} to ${member.user.tag}: ${err.message}`));
+        await member.roles.add(role).catch(err => logger.error(`Failed to assign autorole ${autoroleId} to ${member.user.tag}:`, err));
       }
     }
 

@@ -82,7 +82,7 @@ async function fetchInviteSnapshot(guild) {
     inviteCaches.set(guild.id, snapshot);
     return snapshot;
   } catch (err) {
-    logger.warn(`Impossible de récupérer les invites du serveur ${guild.id}: ${err?.message || err}`);
+    logger.error(`Impossible de récupérer les invites du serveur ${guild.id}:`, err);
     return null;
   }
 }
@@ -105,7 +105,7 @@ async function resolveUsedInvite(guild) {
   try {
     currentInvites = await guild.invites.fetch();
   } catch (err) {
-    logger.warn(`Impossible de comparer les invites du serveur ${guild.id}: ${err?.message || err}`);
+    logger.error(`Impossible de comparer les invites du serveur ${guild.id}:`, err);
     return null;
   }
 
@@ -291,7 +291,7 @@ export async function handleGuildMemberInviteJoin(member, client) {
     inviteCode: usedInvite.code,
     joinedAt,
     leftAt: null
-  }).catch(err => logger.warn(`Impossible d'enregistrer le parrainage de ${member.id}: ${err?.message || err}`));
+  }).catch(err => logger.error(`Impossible d'enregistrer le parrainage de ${member.id}:`, err));
 
   await logInviteJoin(client, {
     guild: member.guild,

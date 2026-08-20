@@ -53,7 +53,7 @@ async function autoDeleteUsageResponse(context, response) {
         await response.delete().catch(() => null);
       }
     } catch (err) {
-      logger.warn(`Impossible de supprimer le message d'utilisation: ${err?.message || err}`);
+      logger.error(`Impossible de supprimer le message d'utilisation:`, err);
     }
   }, 8000);
 }
@@ -71,7 +71,7 @@ async function autoDeletePermissionResponse(context, response) {
         await response.delete().catch(() => null);
       }
     } catch (err) {
-      logger.warn(`Impossible de supprimer le message de permission: ${err?.message || err}`);
+      logger.error(`Impossible de supprimer le message de permission:`, err);
     }
   }, 1000);
 }
@@ -228,7 +228,7 @@ async function processTempBanRecord(client, record) {
   }
 
   await guild.members.unban(record.user_id, `[tempban] ${record.reason || 'Tempban expir?? '}`).catch(err => {
-    logger.warn(`Impossible de lever le tempban ${record.user_id} sur ${record.guild_id}: ${err?.message || err}`);
+    logger.error(`Impossible de lever le tempban ${record.user_id} sur ${record.guild_id}:`, err);
   });
 
   await dbService.deleteTempBan(record.guild_id, record.user_id).catch(() => null);
@@ -244,7 +244,7 @@ async function scheduleTempBanRecord(client, record) {
   const delay = Math.max(0, (Number(record.unban_at) * 1000) - Date.now());
   tempBanTimers.set(key, setTimeout(() => {
     processTempBanRecord(client, record).catch(err => {
-      logger.warn(`Erreur tempban ${key}: ${err?.message || err}`);
+      logger.error(`Erreur tempban ${key}:`, err);
     });
   }, delay));
 
@@ -254,7 +254,7 @@ async function scheduleTempBanRecord(client, record) {
 export async function registerTempBan(client, record) {
   if (!client) return false;
   await dbService.upsertTempBan(record).catch(err => {
-    logger.warn(`Impossible d'enregistrer le tempban ${record?.userId || 'unknown'}: ${err?.message || err}`);
+    logger.error(`Impossible d'enregistrer le tempban ${record?.userId || 'unknown'}:`, err);
   });
   return scheduleTempBanRecord(client, {
     guild_id: record.guildId,
@@ -286,7 +286,7 @@ export async function startTempBanScheduler(client) {
   await sweep().catch(() => null);
   tempBanSweepTimer = setInterval(() => {
     sweep().catch(err => {
-      logger.warn(`Erreur vérification tempban: ${err?.message || err}`);
+      logger.error(`Erreur vérification tempban:`, err);
     });
   }, 60 * 1000);
 }
@@ -536,15 +536,6 @@ export async function executeUnlock({ channel, mod, raison, client }) {
 export async function executeTicketClose({ channel, mod, raison, client }) {
   const ticket = await dbService.getTicket(channel.id);
   if (!ticket) throw new Error('Ce salon n\'est pas un ticket.');
-  if (ticket.status === 'closed') throw new Error('Ce ticket est déjà fermé.');
-
-  await dbService.closeTicket(channel.id, mod.id);
-
-  // Retire l'accès au créateur
-  await channel.permissionOverwrites.edit(ticket.creator_id, {
-    ViewChannel: false
-  }).catch(() => null);
-
   await channel.send({
     content: 'Fermeture du ticket dans 3 secondes.'
   }).catch(() => null);
@@ -571,11 +562,14 @@ export async function executeTicketClose({ channel, mod, raison, client }) {
         }).catch(() => null);
       }
     } catch (error) {
-      console.error('Failed to generate or send ticket transcript:', error);
+      logger.error('Échec de la génération ou de l’envoi du transcript du ticket:', error);
     }
 
+    await dbService.deleteTicket(channel.id).catch(err => {
+      logger.error(`Impossible de supprimer le ticket ${channel.id} de la base:`, err);
+    });
     await channel.delete().catch(err => {
-      console.error('Failed to delete ticket channel:', err);
+      logger.error(`Impossible de supprimer le salon du ticket ${channel.id}:`, err);
     });
   }, 3000);
 }
@@ -620,4 +614,3 @@ export default {
   executeBan, executeUnban, executeKick, executeMute, executeUnmute,
   executeLock, executeUnlock, executeTicketClose, executeTicketRename
 };
-

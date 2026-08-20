@@ -10,7 +10,6 @@
     "not_in_ticket": "-# This action must be performed inside a ticket.",
     "ticket_already_closed": "-# This ticket is already closed.",
     "french_cannot_translate": "-# Translation unavailable for French role holders.",
-    "already_claimed": "-# This ticket is already claimed.",
     "english_only_translate": "-# Translation is reserved for members who only have the English role.",
     "translation_not_allowed": "-# This panel cannot be translated.",
     "translate_reply_only": "-# Use this command by replying to a message.",
@@ -66,21 +65,14 @@
     },
     "buttons": {
       "close": "Close",
-      "reopen": "Reopen",
       "delete": "Delete",
-      "transcript": "Transcript",
-      "claim": "Claim"
+      "transcript": "Transcript"
     },
     "status": {
       "open_title": "Open (Unassigned)",
       "status_label": "Status",
       "creator_label": "Creator",
-      "closed": "The ticket has been closed.",
-      "closed_panel": "### TICKET CLOSED\nThis ticket has been closed by a staff member. The channel is no longer accessible to the user.\n\n**Management actions**\nSelect one of the options below to manage this channel.",
-      "reopened": "### TICKET REOPENED\nThe ticket has been reopened by a staff member. The user has access to the channel again.",
-      "deleting": "### DELETION\nThe channel will be deleted in 5 seconds.",
-      "claimed": "### CLAIMED\nThe ticket has been claimed.",
-      "claimed_panel": "Claimed by {staff}."
+      "deleting": "### DELETION\nThe channel will be deleted in 5 seconds."
     },
     "logs": {
       "open_title": "Ticket opened",

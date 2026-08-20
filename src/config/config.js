@@ -69,7 +69,8 @@ export default {
     logs: process.env.CHANNEL_LOGS || '',
     staffapply: process.env.CHANNEL_STAFFAPPLY || '',
     inviteLeaderboard: process.env.CHANNEL_INVITE_LEADERBOARD || '',
-    betaFeedback: '1520470579956682824'
+    betaFeedback: '1520470579956682824',
+    errors: process.env.CHANNEL_ERRORS || '1540054517113028698'
   },
 
   ticketRoutingRoles: {
@@ -114,11 +115,8 @@ export default {
     categoryId: process.env.TICKET_CATEGORY_ID || '1484977225190215720',
     categoryFrId: process.env.TICKET_CATEGORY_FR_ID || process.env.TICKET_CATEGORY_ID_FR || null,
     categoryEnId: process.env.TICKET_CATEGORY_EN_ID || process.env.TICKET_CATEGORY_ID_EN || null,
-    claimedCategoryId: process.env.TICKET_CLAIMED_CATEGORY_ID || null,
-    closedCategoryId: process.env.TICKET_CLOSED_CATEGORY_ID || null,
     supportRoleId: process.env.TICKET_SUPPORT_ROLE_ID || '1484977187718172874',
-    maxOpenTickets: parseInt(process.env.TICKET_MAX_OPEN || '1', 10),
-    autoDeleteDays: parseInt(process.env.TICKET_AUTO_DELETE_DAYS || '0', 10)
+    maxOpenTickets: parseInt(process.env.TICKET_MAX_OPEN || '1', 10)
   },
 
   // Guide
@@ -140,11 +138,6 @@ export default {
     pingRole:        process.env.ROLE_STREAM_NOTIFY      || '1520500366926413895'
   },
 
-  // Rôles de notification
-  notifications: {
-    patchNotes: process.env.ROLE_PATCHNOTES || '1520116888879890593'
-  },
-
   // Statut du bot
   // Types disponibles : Playing, Watching, Listening, Competing
   status: {
@@ -156,8 +149,6 @@ export default {
     presence: normalizePresence(process.env.BOT_PRESENCE, 'dnd')
   }
 };
-
-
 
 
 

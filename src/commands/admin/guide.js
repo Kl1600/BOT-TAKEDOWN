@@ -13,16 +13,9 @@ import {
 import { t, isEnglishOnly } from '../../utils/language.js';
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
 import { appendSeparatorComponent, splitContentBySeparator, sendV2Container } from '../../utils/v2Helper.js';
-import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
 import config from '../../config/config.js';
 
 const translateHint = '-# 🇬🇧 Click below to translate to English.';
-
-registerPanelRefreshBuilder('guide', async ({ member }) => {
-  const translateDisabled = !(await isEnglishOnly(member));
-  const content = t('fr', 'commands.guide.content', getGuideReplacements());
-  return [buildGuidePanel(content, translateDisabled)];
-});
 
 const getGuideReplacements = () => ({
   presentation: config.guide.channels.presentation,
@@ -73,22 +66,6 @@ export default {
     const translateDisabled = !(await isEnglishOnly(interaction.member));
 
     await interaction.reply({ components: [buildGuidePanel(content, translateDisabled)], flags: MessageFlags.IsComponentsV2 });
-    const replyMessage = await interaction.fetchReply().catch(() => null);
-    if (replyMessage) {
-      registerPanelRefresh({
-        key: `guide:${replyMessage.id}`,
-        guildId: interaction.guildId,
-        channelId: interaction.channelId,
-        messageIds: replyMessage.id,
-        memberId: interaction.user.id,
-        panelType: 'guide',
-        payload: {},
-      buildComponents: async member => {
-          const refreshedContent = t('fr', 'commands.guide.content', getGuideReplacements());
-          return [buildGuidePanel(refreshedContent, !(await isEnglishOnly(member)))];
-        }
-      });
-    }
   },
 
   async executePrefix(message, args, lang) {
@@ -99,19 +76,6 @@ export default {
     const content = t('fr', 'commands.guide.content', getGuideReplacements());
     const translateDisabled = !(await isEnglishOnly(message.member));
 
-    const sentMessage = await sendV2Container(message.channel, buildGuidePanel(content, translateDisabled));
-    registerPanelRefresh({
-      key: `guide:${sentMessage?.id || message.channelId}`,
-      guildId: message.guildId,
-      channelId: message.channelId,
-      messageIds: sentMessage?.id,
-      memberId: message.author.id,
-      panelType: 'guide',
-      payload: {},
-      buildComponents: async member => {
-        const refreshedContent = t('fr', 'commands.guide.content', getGuideReplacements());
-        return [buildGuidePanel(refreshedContent, !(await isEnglishOnly(member)))];
-      }
-    });
+    await sendV2Container(message.channel, buildGuidePanel(content, translateDisabled));
   }
 };

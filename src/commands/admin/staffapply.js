@@ -2,39 +2,9 @@ import { SlashCommandBuilder, ContainerBuilder, TextDisplayBuilder, ButtonBuilde
 import { t, isEnglishOnly } from '../../utils/language.js';
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
 import { sendV2Container } from '../../utils/v2Helper.js';
-import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
 import config from '../../config/config.js';
 
 const translateHint = '-# 🇬🇧 Click below to translate to English.';
-
-registerPanelRefreshBuilder('staffapply', async ({ member }) => {
-  const translateDisabled = !(await isEnglishOnly(member));
-  const panelLang = 'fr';
-
-  const title = t(panelLang, 'commands.staffapply.panel.title');
-  const desc = t(panelLang, 'commands.staffapply.panel.description');
-
-  const text = new TextDisplayBuilder().setContent(
-    `### ${title}\n\n${desc}\n\n-# Répondez aux sélecteurs, puis lancez l'évaluation en plusieurs étapes.\n\n${translateHint}`
-  );
-
-  const applyBtn = new ButtonBuilder()
-    .setCustomId('staffapply_open')
-    .setLabel(t(panelLang, 'commands.staffapply.panel.button'))
-    .setStyle(ButtonStyle.Secondary);
-
-  const translateBtn = new ButtonBuilder()
-    .setCustomId('msg_translate_staffapply')
-    .setLabel('🇬🇧 Translate')
-    .setStyle(ButtonStyle.Secondary);
-
-  return [
-    new ContainerBuilder()
-      .setAccentColor(config.colors.primary)
-      .addTextDisplayComponents(text)
-      .addActionRowComponents(new ActionRowBuilder().addComponents(applyBtn, translateBtn))
-  ];
-});
 
 export default {
   data: new SlashCommandBuilder()
@@ -82,41 +52,6 @@ export default {
       return;
     }
 
-    registerPanelRefresh({
-      key: `staffapply:${sentMessage.id}:${interaction.user.id}`,
-      guildId: interaction.guildId,
-      channelId: interaction.channelId,
-      messageIds: sentMessage.id,
-      memberId: interaction.user.id,
-      refreshOnMemberUpdate: true,
-      panelType: 'staffapply',
-      buildComponents: async member => {
-        const refreshedTranslateDisabled = !(await isEnglishOnly(member));
-        const refreshedTranslateBtn = new ButtonBuilder()
-          .setCustomId('msg_translate_staffapply')
-          .setLabel('🇬🇧 Translate')
-          .setStyle(ButtonStyle.Secondary);
-
-        return [
-          new ContainerBuilder()
-            .setAccentColor(config.colors.primary)
-            .addTextDisplayComponents(
-              new TextDisplayBuilder().setContent(
-                `### ${t('fr', 'commands.staffapply.panel.title')}\n\n${t('fr', 'commands.staffapply.panel.description')}\n\n-# Répondez aux sélecteurs, puis lancez l'évaluation en plusieurs étapes.\n\n${translateHint}`
-              )
-            )
-            .addActionRowComponents(
-              new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                  .setCustomId('staffapply_open')
-                  .setLabel(t('fr', 'commands.staffapply.panel.button'))
-                  .setStyle(ButtonStyle.Secondary),
-                refreshedTranslateBtn
-              )
-            )
-        ];
-      }
-    });
     await interaction.deleteReply().catch(() => null);
   },
 
@@ -157,43 +92,7 @@ export default {
       return;
     }
 
-    registerPanelRefresh({
-      key: `staffapply:${sentMessage.id}:${message.author.id}`,
-      guildId: message.guildId,
-      channelId: message.channelId,
-      messageIds: sentMessage.id,
-      memberId: message.author.id,
-      refreshOnMemberUpdate: true,
-      panelType: 'staffapply',
-      buildComponents: async member => {
-        const refreshedTranslateDisabled = !(await isEnglishOnly(member));
-        const refreshedTranslateBtn = new ButtonBuilder()
-          .setCustomId('msg_translate_staffapply')
-          .setLabel('🇬🇧 Translate')
-          .setStyle(ButtonStyle.Secondary);
-
-        return [
-          new ContainerBuilder()
-            .setAccentColor(config.colors.primary)
-            .addTextDisplayComponents(
-              new TextDisplayBuilder().setContent(
-                `### ${t('fr', 'commands.staffapply.panel.title')}\n\n${t('fr', 'commands.staffapply.panel.description')}\n\n-# Répondez aux sélecteurs, puis lancez l'évaluation en plusieurs étapes.\n\n${translateHint}`
-              )
-            )
-            .addActionRowComponents(
-              new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                  .setCustomId('staffapply_open')
-                  .setLabel(t('fr', 'commands.staffapply.panel.button'))
-                  .setStyle(ButtonStyle.Secondary),
-                refreshedTranslateBtn
-              )
-            )
-        ];
-      }
-    });
   }
 };
-
 
 

@@ -8,6 +8,36 @@ import { appendSeparatorComponent } from './v2Helper.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const logDir = join(__dirname, '../../logs');
 const logFile = join(logDir, 'bot.log');
+let discordClient = null;
+let errorSendQueue = Promise.resolve();
+
+export function setDiscordClient(client) {
+  discordClient = client || null;
+}
+
+async function sendErrorToDiscord(errMsg) {
+  const channelId = config.channels.errors;
+  if (!discordClient?.isReady?.() || !channelId) return;
+
+  const channel = discordClient.channels.cache.get(channelId)
+    || await discordClient.channels.fetch(channelId).catch(() => null);
+  if (!channel?.isTextBased()) return;
+
+  const safeError = String(errMsg || 'Erreur inconnue')
+    .replace(/```/g, "'''")
+    .slice(0, 3700);
+  const container = new ContainerBuilder()
+    .setAccentColor(config.colors.error)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(`### Erreur du bot\n\n\`\`\`\n${safeError}\n\`\`\``)
+    );
+
+  await channel.send({
+    components: [container],
+    flags: MessageFlags.IsComponentsV2,
+    allowedMentions: { parse: [] }
+  });
+}
 
 function ensureLogDirectory() {
   try {
@@ -79,6 +109,12 @@ export function error(message, err = null) {
   const formatted = `[ERROR] ${errMsg}`;
   console.error(formatted);
   writeToFile('error', errMsg);
+  errorSendQueue = errorSendQueue
+    .catch(() => null)
+    .then(() => sendErrorToDiscord(errMsg))
+    .catch(sendErr => {
+      console.error('[ERROR] Impossible d’envoyer l’erreur sur Discord:', sendErr?.message || sendErr);
+    });
 }
 
 // Log un événement dans le salon Discord configuré sous forme de Container V2
@@ -125,5 +161,6 @@ export default {
   warn,
   debug,
   error,
+  setDiscordClient,
   discordLog
 };

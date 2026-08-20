@@ -3,7 +3,6 @@ import { handleComponentInteraction } from '../../handlers/componentHandler.js';
 import { handleTicketCategorySelect, handleTicketModalSubmit } from '../../services/ticketService.js';
 import { handleStaffApplySelectMenu, handleStaffApplyModalSubmit } from '../../services/recruitmentService.js';
 import { handleStreamerLiveModalSubmit } from '../../services/streamerService.js';
-import { handlePollModalSubmit, handlePollSetupRoleSelect, handlePollSetupChannelSelect } from '../../services/pollService.js';
 import { handleCandidattSelect } from '../../commands/admin/candidatt.js';
 import { logCommand } from '../../services/logService.js';
 import { MessageFlags } from 'discord.js';
@@ -28,7 +27,6 @@ const BUTTON_MODAL_PREFIXES = [
   'staffapply_open',
   'staffapply_start',
   'staffapply_continue_',
-  'poll_open_modal_',
   'voice_limit_'
 ];
 const AUTO_ACK_DELAY_MS = 1200;
@@ -277,10 +275,6 @@ export default {
           await handleStaffApplySelectMenu(interaction);
         } else if (interaction.customId.startsWith('ticket_category_')) {
           await handleTicketCategorySelect(interaction);
-        } else if (interaction.customId.startsWith('poll_role_select_')) {
-          await handlePollSetupRoleSelect(interaction);
-        } else if (interaction.customId.startsWith('poll_channel_select_')) {
-          await handlePollSetupChannelSelect(interaction);
         } else if (interaction.customId === 'candidatt_select') {
           await handleCandidattSelect(interaction);
         } else if (interaction.customId.startsWith('voice_')) {
@@ -405,14 +399,6 @@ export default {
           await handleDmUserModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal dm user:', err);
-          await replyInteractionFailure(interaction, 'fr', err);
-        }
-      } else if (interaction.customId.startsWith('poll_modal_create_')) {
-        try {
-          const lang = await getLanguage(interaction.member);
-          await handlePollModalSubmit(interaction, lang);
-        } catch (err) {
-          logger.error('Erreur modal sondage:', err);
           await replyInteractionFailure(interaction, 'fr', err);
         }
       }

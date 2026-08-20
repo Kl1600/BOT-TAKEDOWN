@@ -3,7 +3,6 @@ import {
   handleTicketLangClick,
   handleTicketCategorySelect,
   handleTicketClose,
-  handleTicketReopen,
   handleTicketTranscript,
   handleTicketDelete
 } from '../services/ticketService.js';
@@ -13,7 +12,6 @@ import { handleFaqButton } from '../commands/admin/faq.js';
 import { handleCandidattBack, handleCandidattRefresh } from '../commands/admin/candidatt.js';
 import { handleStreamerGoLive } from '../services/streamerService.js';
 import { handleRolePanelButton } from '../services/rolePanelService.js';
-import { handlePollOpen, handlePollVote, handlePollSetupRoleSelect, handlePollSetupChannelSelect } from '../services/pollService.js';
 import { handleInviteProfileButton } from '../services/inviteService.js';
 import { handleBetaAccessButton } from '../services/betaService.js';
 import { handleBanListButton } from '../commands/admin/banlist.js';
@@ -38,10 +36,6 @@ export async function handleComponentInteraction(interaction) {
   }
   if (customId.startsWith('staffapply_continue_')) {
     await handleStaffApplyContinue(interaction);
-    return;
-  }
-  if (customId.startsWith('poll_open_modal_')) {
-    await handlePollOpen(interaction);
     return;
   }
   if (customId.startsWith('faq_')) {
@@ -91,10 +85,6 @@ export async function handleComponentInteraction(interaction) {
   if (await handleRolePanelButton(interaction)) {
     return;
   }
-  if (await handlePollVote(interaction)) {
-    return;
-  }
-
   if (customId.startsWith('ticket_category_')) {
     await handleTicketCategorySelect(interaction);
     return;
@@ -110,9 +100,6 @@ export async function handleComponentInteraction(interaction) {
       break;
     case 'ticket_close':
       await handleTicketClose(interaction);
-      break;
-    case 'ticket_reopen':
-      await handleTicketReopen(interaction);
       break;
     case 'ticket_transcript':
       await handleTicketTranscript(interaction);

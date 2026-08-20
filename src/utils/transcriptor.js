@@ -1,5 +1,18 @@
 import { AttachmentBuilder } from 'discord.js';
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function sanitizeFileName(value) {
+  return String(value ?? 'ticket').replace(/[^a-zA-Z0-9._-]/g, '-').slice(0, 80) || 'ticket';
+}
+
 /**
  * Fetch all messages from a channel, sorted from oldest to newest
  * 
@@ -38,6 +51,8 @@ async function fetchAllMessages(channel) {
 export async function generateTranscript(channel, format = 'html') {
   const messages = await fetchAllMessages(channel);
   const channelName = channel.name;
+  const safeChannelName = escapeHtml(channelName);
+  const transcriptFileName = sanitizeFileName(channelName);
 
   if (format === 'txt') {
     let txt = `TRANSCRIPT - TICKET #${channelName.toUpperCase()}\n`;
@@ -51,7 +66,7 @@ export async function generateTranscript(channel, format = 'html') {
       txt += `[${time}] ${author}:\n${content}\n\n`;
     }
 
-    return new AttachmentBuilder(Buffer.from(txt, 'utf-8'), { name: `transcript-${channelName}.txt` });
+    return new AttachmentBuilder(Buffer.from(txt, 'utf-8'), { name: `transcript-${transcriptFileName}.txt` });
   }
 
   // HTML format
@@ -59,7 +74,7 @@ export async function generateTranscript(channel, format = 'html') {
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Transcription - ${channelName}</title>
+  <title>Transcription - ${safeChannelName}</title>
   <style>
     body {
       background-color: #121212;
@@ -138,19 +153,16 @@ export async function generateTranscript(channel, format = 'html') {
 </head>
 <body>
   <div class="header">
-    <h1>Transcription de ticket: ${channelName}</h1>
+    <h1>Transcription de ticket: ${safeChannelName}</h1>
     <p>Généré le ${new Date().toLocaleString()}</p>
   </div>
   <div class="message-container">
   `;
 
   for (const msg of messages) {
-    const time = msg.createdAt.toLocaleString();
-    const author = `${msg.author.tag}`;
-    const escapedContent = (msg.content || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+    const time = escapeHtml(msg.createdAt.toLocaleString());
+    const author = escapeHtml(msg.author?.tag || 'Utilisateur inconnu');
+    const escapedContent = escapeHtml(msg.content || '');
 
     html += `
     <div class="message">
@@ -164,7 +176,7 @@ export async function generateTranscript(channel, format = 'html') {
       for (const attachment of msg.attachments.values()) {
         html += `
         <div class="attachment">
-          Fichier: <a href="${attachment.url}" target="_blank">${attachment.name}</a> (${(attachment.size / 1024).toFixed(1)} KB)
+          Fichier: <a href="${escapeHtml(attachment.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(attachment.name || 'fichier')}</a> (${(attachment.size / 1024).toFixed(1)} KB)
         </div>`;
       }
     }
@@ -177,7 +189,7 @@ export async function generateTranscript(channel, format = 'html') {
 </body>
 </html>`;
 
-  return new AttachmentBuilder(Buffer.from(html, 'utf-8'), { name: `transcript-${channelName}.html` });
+  return new AttachmentBuilder(Buffer.from(html, 'utf-8'), { name: `transcript-${transcriptFileName}.html` });
 }
 
 export default {

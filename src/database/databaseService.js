@@ -11,9 +11,7 @@ export async function initDb() {
       creator_id TEXT NOT NULL,
       ticket_number INTEGER NOT NULL,
       status TEXT NOT NULL DEFAULT 'open',
-      created_at INTEGER NOT NULL,
-      closed_at INTEGER,
-      closed_by TEXT
+      created_at INTEGER NOT NULL
     )
   `);
 
@@ -66,16 +64,6 @@ export async function initDb() {
     // Column already exists, ignore
   }
   try {
-    await db.run('ALTER TABLE tickets ADD COLUMN claimed_by TEXT');
-  } catch (err) {
-    // Column already exists, ignore
-  }
-  try {
-    await db.run('ALTER TABLE tickets ADD COLUMN claimed_at INTEGER');
-  } catch (err) {
-    // Column already exists, ignore
-  }
-  try {
     await db.run('ALTER TABLE tickets ADD COLUMN reason TEXT');
   } catch (err) {
     // Column already exists, ignore
@@ -85,17 +73,6 @@ export async function initDb() {
   } catch (err) {
     // Column already exists, ignore
   }
-  try {
-    await db.run('ALTER TABLE guild_xp_profiles ADD COLUMN total_takedown_seconds INTEGER NOT NULL DEFAULT 0');
-  } catch (err) {
-    // Column already exists, ignore
-  }
-  try {
-    await db.run('ALTER TABLE guild_xp_profiles ADD COLUMN takedown_seconds_since_reward INTEGER NOT NULL DEFAULT 0');
-  } catch (err) {
-    // Column already exists, ignore
-  }
-
   // 6. Staff Applications table
   await db.run(`
     CREATE TABLE IF NOT EXISTS staff_applications (
@@ -210,24 +187,24 @@ export async function initDb() {
       messages_since_reward INTEGER NOT NULL DEFAULT 0,
       total_voice_seconds INTEGER NOT NULL DEFAULT 0,
       voice_seconds_since_reward INTEGER NOT NULL DEFAULT 0,
+      total_takedown_seconds INTEGER NOT NULL DEFAULT 0,
+      takedown_seconds_since_reward INTEGER NOT NULL DEFAULT 0,
       updated_at INTEGER NOT NULL,
       PRIMARY KEY (guild_id, user_id)
     )
   `);
 
-  await db.run(`
-    CREATE TABLE IF NOT EXISTS panel_refresh_records (
-      key TEXT PRIMARY KEY,
-      guild_id TEXT NOT NULL,
-      channel_id TEXT NOT NULL,
-      message_ids TEXT NOT NULL,
-      member_id TEXT,
-      refresh_on_member_update INTEGER NOT NULL DEFAULT 0,
-      panel_type TEXT,
-      payload TEXT,
-      updated_at INTEGER NOT NULL
-    )
-  `);
+  // Migration non destructive des anciennes bases : ajoute uniquement les colonnes manquantes.
+  try {
+    await db.run('ALTER TABLE guild_xp_profiles ADD COLUMN total_takedown_seconds INTEGER NOT NULL DEFAULT 0');
+  } catch (err) {
+    // Column already exists, ignore
+  }
+  try {
+    await db.run('ALTER TABLE guild_xp_profiles ADD COLUMN takedown_seconds_since_reward INTEGER NOT NULL DEFAULT 0');
+  } catch (err) {
+    // Column already exists, ignore
+  }
 
   // 7. Staff Actions table (warn, note, promote, demote, kick)
   await db.run(`
@@ -286,38 +263,8 @@ export async function assignTicketNumber(channelId, ticketNumber) {
   );
 }
 
-export async function closeTicket(channelId, closedBy) {
-  const now = Math.floor(Date.now() / 1000);
-  return db.run(
-    'UPDATE tickets SET status = ?, closed_at = ?, closed_by = ? WHERE channel_id = ?',
-    ['closed', now, closedBy, channelId]
-  );
-}
-
-export async function claimTicket(channelId, claimedBy) {
-  const now = Math.floor(Date.now() / 1000);
-  return db.run(
-    'UPDATE tickets SET status = ?, claimed_by = ?, claimed_at = ? WHERE channel_id = ?',
-    ['claimed', claimedBy, now, channelId]
-  );
-}
-
-export async function reopenTicket(channelId) {
-  return db.run(
-    'UPDATE tickets SET status = ?, closed_at = NULL, closed_by = NULL, claimed_by = NULL, claimed_at = NULL WHERE channel_id = ? ',
-    ['open', channelId]
-  );
-}
-
 export async function deleteTicket(channelId) {
   return db.run('DELETE FROM tickets WHERE channel_id = ? ', [channelId]);
-}
-
-export async function getExpiredClosedTickets(olderThanUnix) {
-  return db.query(
-    'SELECT * FROM tickets WHERE status = ? AND closed_at < ?',
-    ['closed', olderThanUnix]
-  );
 }
 
 export async function getTicket(channelId) {
@@ -326,8 +273,8 @@ export async function getTicket(channelId) {
 
 export async function getUserActiveTicket(creatorId) {
   return db.get(
-    'SELECT * FROM tickets WHERE creator_id = ? AND status IN (?, ?)',
-    [creatorId, 'open', 'claimed']
+    'SELECT * FROM tickets WHERE creator_id = ? AND status = ?',
+    [creatorId, 'open']
   );
 }
 
@@ -871,48 +818,6 @@ export async function getXpRank(guildId, userId) {
   return Number(row.rank);
 }
 
-/* ========================================================================== 
-   PANEL REFRESH OPERATIONS
-   ========================================================================== */
-
-export async function upsertPanelRefreshRecord(record) {
-  const now = Math.floor(Date.now() / 1000);
-  return db.run(
-    `INSERT INTO panel_refresh_records (
-       key, guild_id, channel_id, message_ids, member_id,
-       refresh_on_member_update, panel_type, payload, updated_at
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(key) DO UPDATE SET
-       guild_id = excluded.guild_id,
-       channel_id = excluded.channel_id,
-       message_ids = excluded.message_ids,
-       member_id = excluded.member_id,
-       refresh_on_member_update = excluded.refresh_on_member_update,
-       panel_type = excluded.panel_type,
-       payload = excluded.payload,
-       updated_at = excluded.updated_at`,
-    [
-      record.key,
-      record.guildId,
-      record.channelId,
-      JSON.stringify(record.messageIds || []),
-      record.memberId || null,
-      record.refreshOnMemberUpdate ? 1 : 0,
-      record.panelType || null,
-      record.payload != null ? JSON.stringify(record.payload) : null,
-      now
-    ]
-  );
-}
-
-export async function deletePanelRefreshRecord(key) {
-  return db.run('DELETE FROM panel_refresh_records WHERE key = ?', [key]);
-}
-
-export async function getPanelRefreshRecords() {
-  return db.query('SELECT * FROM panel_refresh_records', []);
-}
-
 /* ==========================================================================
    STAFF ACTIONS OPERATIONS
    ========================================================================== */
@@ -991,13 +896,9 @@ export default {
   createTicket,
   reserveNextTicketNumber,
   assignTicketNumber,
-  closeTicket,
-  claimTicket,
-  reopenTicket,
   deleteTicket,
   getTicket,
   getUserActiveTicket,
-  getExpiredClosedTickets,
   addLog,
   setUserLanguage,
   getUserLanguage,
@@ -1050,9 +951,6 @@ export default {
   saveXpProfile,
   getXpLeaderboard,
   getXpRank,
-  upsertPanelRefreshRecord,
-  deletePanelRefreshRecord,
-  getPanelRefreshRecords,
   addStaffAction,
   getStaffActions,
   getAllStaffActions,

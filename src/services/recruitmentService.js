@@ -17,6 +17,7 @@ import { sendV2Container } from '../utils/v2Helper.js';
 import config from '../config/config.js';
 import { getLanguage, t } from '../utils/language.js';
 import dbService from '../database/dbProxy.js';
+import * as logger from '../utils/logger.js';
 
 const STAFF_APPLY_COOLDOWN_SECONDS = 7 * 24 * 60 * 60;
 const STAFF_APPLY_CONTACT_PARENT_ID = '1531313845635907697';
@@ -884,7 +885,7 @@ export async function handleStaffApplyContact(interaction, applicationId) {
     parent: category ? category.id : null,
     permissionOverwrites
   }).catch(err => {
-    console.error('Failed to create recruitment channel:', err);
+    logger.error('Impossible de créer le salon de recrutement:', err);
     return null;
   });
 
@@ -985,4 +986,3 @@ export default {
 };
 
 export { getCopy as getRecruitmentCopy, buildReviewContainer, safeParseApplicationData };
-

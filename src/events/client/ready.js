@@ -3,6 +3,7 @@ import { initializeInviteTracking } from '../../services/inviteService.js';
 import { ensureBetaAccess } from '../../services/betaService.js';
 import { initializeXpTracking, startXpMaintenance } from '../../services/xpService.js';
 import { startTempBanScheduler } from '../../services/moderationService.js';
+import { initializeVoiceState } from '../../services/voiceService.js';
 import { consumeRestartPending } from '../../services/restartService.js';
 import dbService from '../../database/dbProxy.js';
 import config from '../../config/config.js';
@@ -12,23 +13,38 @@ export default {
   name: 'clientReady',
   once: true,
   async execute(client) {
+    logger.setDiscordClient(client);
     console.log('\n  BOT TAKEDOWN LANCEE\n');
 
     try {
       await dbService.initDb();
     } catch (err) {
-      logger.warn(`Base de données indisponible au démarrage: ${err?.message || err}`);
+      logger.error('Base de données indisponible au démarrage:', err);
     }
 
-    await client.guilds.fetch().catch(() => null);
-    await initializeInviteTracking(client).catch(() => null);
-    await initializeXpTracking(client).catch(() => null);
+    await client.guilds.fetch().catch(err => {
+      logger.error('Impossible de récupérer les serveurs au démarrage:', err);
+      return null;
+    });
+    await initializeInviteTracking(client).catch(err => {
+      logger.error('Impossible d’initialiser le suivi des invitations:', err);
+    });
+    await initializeXpTracking(client).catch(err => {
+      logger.error('Impossible d’initialiser le suivi XP:', err);
+    });
+    await initializeVoiceState(client).catch(err => {
+      logger.error('Impossible de restaurer les salons vocaux temporaires:', err);
+    });
     for (const guild of client.guilds.cache.values()) {
-      await ensureBetaAccess(guild).catch(() => null);
+      await ensureBetaAccess(guild).catch(err => {
+        logger.error(`Impossible de vérifier l’accès bêta sur le serveur ${guild.id}:`, err);
+      });
     }
 
     startXpMaintenance(client);
-    startTempBanScheduler(client).catch(() => null);
+    startTempBanScheduler(client).catch(err => {
+      logger.error('Impossible de démarrer le planificateur des bannissements temporaires:', err);
+    });
 
     client.user.setPresence({
       activities: [{
@@ -44,7 +60,7 @@ export default {
         Routes.webhookMessage(pendingRestart.applicationId || client.user.id, pendingRestart.token, '@original'),
         { body: { content: '✅ Bot redémarré avec succès.' } }
       ).catch(err => {
-        logger.warn(`Impossible de mettre à jour la réponse de restart slash: ${err?.message || err}`);
+        logger.error('Impossible de mettre à jour la réponse de restart slash:', err);
       });
     } else if (pendingRestart?.channelId && pendingRestart?.messageId) {
       const channel = await client.channels.fetch(pendingRestart.channelId).catch(() => null);
@@ -52,7 +68,7 @@ export default {
         const message = await channel.messages.fetch(pendingRestart.messageId).catch(() => null);
         if (message) {
           await message.edit({ content: '✅ Bot redémarré avec succès.' }).catch(err => {
-            logger.warn(`Impossible de mettre à jour le message de restart: ${err?.message || err}`);
+            logger.error('Impossible de mettre à jour le message de restart:', err);
           });
         }
       }

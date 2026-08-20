@@ -9,10 +9,8 @@ import {
   Routes
 } from 'discord.js';
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
-import { isEnglishOnly } from '../../utils/language.js';
 import config from '../../config/config.js';
 import { registerModesTranslationGroup } from '../../services/modesService.js';
-import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
 
 function createModeContainer(title, lines) {
   return new ContainerBuilder()
@@ -182,12 +180,6 @@ function buildModesContainers() {
   ];
 }
 
-registerPanelRefreshBuilder('modes', async ({ member }) => {
-  const batches = chunkContainers(buildModesContainers(), 3);
-  await addTranslateButtonToLastContainer(batches[batches.length - 1], member);
-  return batches;
-});
-
 function chunkContainers(containers, size = 3) {
   const chunks = [];
   for (let index = 0; index < containers.length; index += size) {
@@ -234,19 +226,6 @@ async function sendModes(target, member, isSlash = false) {
       }
     }
     registerModesTranslationGroup(sentMessageIds[sentMessageIds.length - 1], sentMessageIds);
-    registerPanelRefresh({
-      key: `modes:${sentMessageIds[sentMessageIds.length - 1]}`,
-      guildId: target.guildId,
-      channelId: target.channelId,
-      messageIds: sentMessageIds,
-      memberId: member?.id || null,
-      panelType: 'modes',
-      buildComponents: async member => {
-        const refreshedBatches = chunkContainers(buildModesContainers(), 3);
-        await addTranslateButtonToLastContainer(refreshedBatches[refreshedBatches.length - 1], member);
-        return refreshedBatches;
-      }
-    });
     return;
   }
 
@@ -263,19 +242,6 @@ async function sendModes(target, member, isSlash = false) {
   }
 
   registerModesTranslationGroup(sentMessageIds[sentMessageIds.length - 1], sentMessageIds);
-  registerPanelRefresh({
-    key: `modes:${sentMessageIds[sentMessageIds.length - 1]}`,
-    guildId: target.guildId,
-    channelId: target.id,
-    messageIds: sentMessageIds,
-    memberId: member?.id || null,
-    panelType: 'modes',
-    buildComponents: async member => {
-      const refreshedBatches = chunkContainers(buildModesContainers(), 3);
-      await addTranslateButtonToLastContainer(refreshedBatches[refreshedBatches.length - 1], member);
-      return refreshedBatches;
-    }
-  });
 }
 
 export default {
@@ -294,4 +260,3 @@ export default {
     await sendModes(message.channel, message.member, false);
   }
 };
-

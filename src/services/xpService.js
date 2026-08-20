@@ -115,7 +115,7 @@ async function ensureXpProfile(guildId, userId) {
       return existing;
     }
   } catch (err) {
-    logger.warn(`Impossible de lire le profil XP ${guildId}/${userId}: ${err?.message || err}`);
+    logger.error(`Impossible de lire le profil XP ${guildId}/${userId}:`, err);
     return null;
   }
 
@@ -464,5 +464,4 @@ export default {
   startXpMaintenance,
   refreshXpSessions
 };
-
 

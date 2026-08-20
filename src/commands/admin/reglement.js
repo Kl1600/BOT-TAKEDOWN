@@ -10,12 +10,9 @@ import {
 } from 'discord.js';
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
 import { isEnglishOnly } from '../../utils/language.js';
-import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
 import config from '../../config/config.js';
 
 const translateHint = '-# 🇬🇧 Click below to translate to English.';
-
-registerPanelRefreshBuilder('reglement', async ({ member }) => buildReglementContainers(!(await isEnglishOnly(member))));
 
 function createRuleContainer(title, lines, withTranslateButton = false, translateDisabled = false) {
   const text = new TextDisplayBuilder().setContent(
@@ -172,19 +169,6 @@ export default {
       components: buildReglementContainers(translateDisabled),
       flags: MessageFlags.IsComponentsV2
     });
-    const replyMessage = await interaction.fetchReply().catch(() => null);
-    if (replyMessage) {
-      registerPanelRefresh({
-        key: `reglement:${replyMessage.id}`,
-        guildId: interaction.guildId,
-        channelId: interaction.channelId,
-        messageIds: replyMessage.id,
-        memberId: interaction.user.id,
-        refreshOnMemberUpdate: true,
-        panelType: 'reglement',
-        buildComponents: async member => buildReglementContainers(!(await isEnglishOnly(member)))
-      });
-    }
   },
 
   async executePrefix(message) {
@@ -192,16 +176,6 @@ export default {
     const translateDisabled = !(await isEnglishOnly(message.member));
 
     await message.delete().catch(() => null);
-    const sentMessage = await sendReglement(message.channel, translateDisabled);
-    registerPanelRefresh({
-      key: `reglement:${sentMessage?.id || message.channelId}`,
-      guildId: message.guildId,
-      channelId: message.channelId,
-      messageIds: sentMessage?.id,
-      memberId: message.author.id,
-      refreshOnMemberUpdate: true,
-      panelType: 'reglement',
-      buildComponents: async member => buildReglementContainers(!(await isEnglishOnly(member)))
-    });
+    await sendReglement(message.channel, translateDisabled);
   }
 };

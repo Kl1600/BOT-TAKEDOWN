@@ -1,15 +1,7 @@
 import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { isStaffOrAdmin, prefixReply, replyErr } from '../../services/moderationService.js';
-import { sendBetaAccessPanel, buildBetaAccessPanelContainer } from '../../services/betaService.js';
+import { sendBetaAccessPanel } from '../../services/betaService.js';
 import { isEnglishOnly } from '../../utils/language.js';
-import { registerPanelRefresh, registerPanelRefreshBuilder } from '../../services/panelRefreshService.js';
-
-registerPanelRefreshBuilder('beta', async ({ member }) => [
-  buildBetaAccessPanelContainer(
-    'fr',
-    !(await isEnglishOnly(member))
-  )
-]);
 
 export const data = new SlashCommandBuilder()
   .setName('accesbeta')
@@ -23,22 +15,7 @@ export async function executeSlash(interaction) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const translateDisabled = !(await isEnglishOnly(interaction.member));
-  const sentMessage = await sendBetaAccessPanel(interaction.channel, 'fr', translateDisabled);
-  registerPanelRefresh({
-    key: `beta:${sentMessage?.id || interaction.channelId}:${interaction.user.id}`,
-    guildId: interaction.guildId,
-    channelId: interaction.channelId,
-    messageIds: sentMessage?.id,
-    memberId: interaction.user.id,
-    refreshOnMemberUpdate: true,
-    panelType: 'beta',
-    buildComponents: async member => [
-      buildBetaAccessPanelContainer(
-        'fr',
-        !(await isEnglishOnly(member))
-      )
-    ]
-  });
+  await sendBetaAccessPanel(interaction.channel, 'fr', translateDisabled);
   await interaction.deleteReply().catch(() => null);
 }
 
@@ -49,22 +26,7 @@ export async function executePrefix(message) {
 
   await message.delete().catch(() => null);
   const translateDisabled = !(await isEnglishOnly(message.member));
-  const sentMessage = await sendBetaAccessPanel(message.channel, 'fr', translateDisabled);
-  registerPanelRefresh({
-    key: `beta:${sentMessage?.id || message.channelId}:${message.author.id}`,
-    guildId: message.guildId,
-    channelId: message.channelId,
-    messageIds: sentMessage?.id,
-    memberId: message.author.id,
-    refreshOnMemberUpdate: true,
-    panelType: 'beta',
-    buildComponents: async member => [
-      buildBetaAccessPanelContainer(
-        'fr',
-        !(await isEnglishOnly(member))
-      )
-    ]
-  });
+  await sendBetaAccessPanel(message.channel, 'fr', translateDisabled);
 }
 
 export default { data, executeSlash, executePrefix };

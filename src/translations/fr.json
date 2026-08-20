@@ -10,7 +10,6 @@
     "not_in_ticket": "-# Cette action doit être effectuée dans un ticket.",
     "ticket_already_closed": "-# Ce ticket est déjà fermé.",
     "french_cannot_translate": "-# Traduction indisponible pour le rôle français.",
-    "already_claimed": "-# Ce ticket est déjà pris en charge.",
     "english_only_translate": "-# La traduction est réservée aux membres ayant uniquement le rôle anglais.",
     "translation_not_allowed": "-# Ce panneau ne peut pas être traduit.",
     "translate_reply_only": "-# Utilisez cette commande en réponse à un message.",
@@ -66,21 +65,14 @@
     },
     "buttons": {
       "close": "Fermer",
-      "reopen": "Réouvrir",
       "delete": "Supprimer",
-      "transcript": "Transcript",
-      "claim": "Claim"
+      "transcript": "Transcript"
     },
     "status": {
       "open_title": "Ouvert (Non attribué)",
       "status_label": "Statut",
       "creator_label": "Créateur",
-      "closed": "Le ticket a été fermé.",
-      "closed_panel": "### TICKET FERMÉ\nCe ticket a été fermé par un membre du staff. Le salon n'est plus accessible pour l'utilisateur.\n\n**Actions de gestion**\nSélectionnez l'une des options ci-dessous pour gérer ce salon.",
-      "reopened": "### TICKET RÉOUVERT\nLe ticket a été rouvert par un membre du staff. L'utilisateur a de nouveau accès au salon.",
-      "deleting": "### SUPPRESSION\nLe salon sera supprimé dans 5 secondes.",
-      "claimed": "### PRISE EN CHARGE\nLe ticket est maintenant attribué.",
-      "claimed_panel": "Pris en charge par {staff}."
+      "deleting": "### SUPPRESSION\nLe salon sera supprimé dans 5 secondes."
     },
     "logs": {
       "open_title": "Ticket ouvert",

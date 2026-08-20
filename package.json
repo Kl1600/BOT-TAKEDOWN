@@ -4,6 +4,9 @@
   "description": "Bot Discord officielle de Takedown",
   "main": "index.js",
   "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "scripts": {
     "start": "node index.js",
     "dev": "node index.js --debug",

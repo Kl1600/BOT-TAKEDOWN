@@ -8,6 +8,7 @@ import { generateTranscript } from '../utils/transcriptor.js';
 import * as logger from '../utils/logger.js';
 
 const BOT_OWNER_ID = '1481543558715408426';
+const closingTicketIds = new Set();
 
 function canOpenMultipleTickets(userId) {
   return String(userId) === BOT_OWNER_ID;
@@ -251,7 +252,7 @@ async function createTicketForUser(interaction, selectedLang, selectedCategoryId
     parent: ticketParentCategoryId,
     permissionOverwrites
   }).catch(err => {
-    console.error('Failed to create ticket channel:', err);
+    logger.error('Impossible de créer le salon du ticket:', err);
     return null;
   });
 
@@ -261,7 +262,15 @@ async function createTicketForUser(interaction, selectedLang, selectedCategoryId
     }).catch(() => null);
   }
 
-  await dbService.createTicket(channel.id, user.id, ticketNumber, reason);
+  try {
+    await dbService.createTicket(channel.id, user.id, ticketNumber, reason);
+  } catch (err) {
+    logger.error(`Impossible d'enregistrer le ticket ${channel.id} dans la base:`, err);
+    await channel.delete('Échec de l’enregistrement du ticket').catch(() => null);
+    return interaction.editReply({
+      content: t(selectedLang, 'errors.ticket_creation_failed')
+    }).catch(() => null);
+  }
 
   const creatorLabel = t(ticketMenuLang, 'tickets.status.creator_label');
   const reasonLabel = t(ticketMenuLang, 'tickets.reason');
@@ -331,19 +340,24 @@ export async function handleTicketClose(interaction) {
     });
   }
 
-  if (ticket.status === 'closed') {
+  if (closingTicketIds.has(channel.id)) {
     return interaction.reply({
       content: t(lang, 'errors.ticket_already_closed'),
       flags: MessageFlags.Ephemeral
     });
   }
 
-  await dbService.closeTicket(channel.id, user.id);
+  closingTicketIds.add(channel.id);
   const creatorId = ticket.creator_id;
 
-  await interaction.reply({
-    content: 'Fermeture du ticket dans 3 secondes.',
-  });
+  try {
+    await interaction.reply({
+      content: 'Fermeture du ticket dans 3 secondes.'
+    });
+  } catch (err) {
+    closingTicketIds.delete(channel.id);
+    throw err;
+  }
 
   // Logs
   await dbService.addLog('TICKET_CLOSE', user.id, `Closed ticket ${channel.name}`, channel.id);
@@ -370,65 +384,17 @@ export async function handleTicketClose(interaction) {
         }).catch(() => null);
       }
     } catch (error) {
-      console.error('Failed to generate or send ticket transcript:', error);
+      logger.error('Échec de la génération ou de l’envoi du transcript du ticket:', error);
     }
 
+    await dbService.deleteTicket(channel.id).catch(err => {
+      logger.error(`Impossible de supprimer le ticket ${channel.id} de la base:`, err);
+    });
     await channel.delete().catch(err => {
-      console.error('Failed to delete ticket channel:', err);
+      logger.error(`Impossible de supprimer le salon du ticket ${channel.id}:`, err);
     });
+    closingTicketIds.delete(channel.id);
   }, 3000);
-}
-
-/**
- * Handle reopening of a closed ticket
- */
-export async function handleTicketReopen(interaction) {
-  const channel = interaction.channel;
-  const user = interaction.user;
-  const lang = await getLanguage(interaction.member);
-
-  const ticket = await dbService.getTicket(channel.id);
-  if (!ticket) {
-    return interaction.reply({
-      content: t(lang, 'errors.ticket_not_found'),
-      flags: MessageFlags.Ephemeral
-    });
-  }
-
-  // Update DB
-  await dbService.reopenTicket(channel.id);
-
-  // Restore creator write and read access
-  const creatorId = ticket.creator_id;
-  await channel.permissionOverwrites.edit(creatorId, {
-    ViewChannel: true,
-    SendMessages: true,
-    ReadMessageHistory: true
-  }).catch(() => null);
-
-  // Delete control message
-  await interaction.message.delete().catch(() => null);
-
-  // Send reopening notification with a Close button at the bottom
-  const reopenedText = new TextDisplayBuilder().setContent(t(lang, 'tickets.status.reopened'));
-  const closeBtn = new ButtonBuilder()
-    .setCustomId('ticket_close')
-    .setLabel(t(lang, 'tickets.buttons.close'))
-    .setStyle(ButtonStyle.Secondary);
-  const row = new ActionRowBuilder().addComponents(closeBtn);
-
-  const container = new ContainerBuilder()
-    .setAccentColor(config.colors.primary)
-    .addTextDisplayComponents(reopenedText)
-    .addActionRowComponents(row);
-
-  await interaction.reply({
-    components: [container],
-    flags: MessageFlags.IsComponentsV2
-  });
-
-  // Audit Logs
-  await dbService.addLog('TICKET_REOPEN', user.id, `Reopened ticket ${channel.name}`, channel.id);
 }
 
 /**
@@ -508,13 +474,10 @@ export async function handleTicketDelete(interaction) {
   // Deletion timeout (5 seconds warning)
   setTimeout(() => {
     channel.delete().catch(err => {
-      console.error('Failed to delete ticket channel:', err);
+      logger.error(`Impossible de supprimer le salon du ticket ${channel.id}:`, err);
     });
   }, 5000);
 }
-
-
-
 
 
 

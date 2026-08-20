@@ -4,6 +4,11 @@ let databaseModulePromise = null;
 let databaseModuleFailure = null;
 let warnedAboutFallback = false;
 
+const CRITICAL_DATABASE_METHODS = new Set([
+  'reserveNextTicketNumber',
+  'createTicket'
+]);
+
 function getDatabaseModule() {
   if (databaseModuleFailure) {
     return Promise.reject(databaseModuleFailure);
@@ -18,11 +23,11 @@ function getDatabaseModule() {
 }
 
 function fallbackValue(property) {
-  if (property === 'get' || property === 'getUserLanguage' || property === 'getStreamerStatus' || property === 'getPendingApplication' || property === 'getPendingApplications' || property === 'getApplication' || property === 'getStaffApplyCooldown' || property === 'getStreamerApplyCooldown' || property === 'getPendingStreamerApplication' || property === 'getPendingStreamerApplications' || property === 'getStreamerApplication' || property === 'getGuildAntiLinkState' || property === 'getGuildAntiLinkWhitelist' || property === 'getGuildAntiLinkBlacklist' || property === 'isGuildAntiLinkWhitelisted' || property === 'isGuildAntiLinkBlacklisted' || property === 'getTicket' || property === 'getUserActiveTicket' || property === 'getInviteReferral' || property === 'getInviteReferralsByInviter' || property === 'getInviteLeaderboard' || property === 'getInviteRank' || property === 'getBetaWelcomeQueue' || property === 'getPendingBetaWelcomes' || property === 'getXpProfile' || property === 'getXpLeaderboard' || property === 'getXpRank' || property === 'getPanelRefreshRecords') {
+  if (property === 'get' || property === 'getUserLanguage' || property === 'getStreamerStatus' || property === 'getPendingApplication' || property === 'getApplication' || property === 'getStaffApplyCooldown' || property === 'getStreamerApplyCooldown' || property === 'getPendingStreamerApplication' || property === 'getStreamerApplication' || property === 'getGuildAntiLinkState' || property === 'isGuildAntiLinkWhitelisted' || property === 'isGuildAntiLinkBlacklisted' || property === 'getTicket' || property === 'getUserActiveTicket' || property === 'getInviteReferral' || property === 'getInviteRank' || property === 'getBetaWelcomeQueue' || property === 'getXpProfile' || property === 'getXpRank') {
     return null;
   }
 
-  if (property === 'query' || property === 'getAllStaffActions' || property === 'getAllStreamerStatuses' || property === 'getExpiredClosedTickets') {
+  if (property === 'query' || property === 'getPendingApplications' || property === 'getPendingStreamerApplications' || property === 'getGuildAntiLinkWhitelist' || property === 'getGuildAntiLinkBlacklist' || property === 'getInviteReferralsByInviter' || property === 'getInviteLeaderboard' || property === 'getPendingBetaWelcomes' || property === 'getXpLeaderboard' || property === 'getAllStaffActions' || property === 'getAllStreamerStatuses' || property === 'getTempBans' || property === 'getDueTempBans') {
     return [];
   }
 
@@ -49,7 +54,10 @@ const dbService = new Proxy({}, {
           const errorMessage = err instanceof Error
             ? err.message
             : (err && typeof err.message === 'string' ? err.message : String(err ?? 'Erreur inconnue'));
-          logger.warn(`Base de données indisponible, mode dégradé activé: ${errorMessage}`);
+          logger.error(`Base de données indisponible, mode dégradé activé: ${errorMessage}`);
+        }
+        if (CRITICAL_DATABASE_METHODS.has(String(property))) {
+          throw err;
         }
         return fallbackValue(String(property));
       }
