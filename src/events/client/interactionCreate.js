@@ -17,6 +17,7 @@ import { handleKickUserModalSubmit } from '../../commands/admin/kickUser.js';
 import { handleMuteUserModalSubmit } from '../../commands/admin/muteUser.js';
 import { handleDmUserModalSubmit } from '../../commands/admin/dmUser.js';
 import { handleVoiceUserSelect, handleVoiceModalSubmit } from '../../services/voiceService.js';
+import { handleRolePanelModalSubmit } from '../../services/rolePanelService.js';
 
 const SLASH_MODAL_COMMANDS = new Set(['en', 'annonce', 'patchnote']);
 const SLASH_EPHEMERAL_COMMANDS = new Set(['help', 'restart', 'sync', 'clear', 'categorie']);
@@ -27,6 +28,7 @@ const BUTTON_MODAL_PREFIXES = [
   'staffapply_open',
   'staffapply_start',
   'staffapply_continue_',
+  'rolepanel_choose_',
   'voice_limit_'
 ];
 const AUTO_ACK_DELAY_MS = 1200;
@@ -304,6 +306,13 @@ export default {
           await handleVoiceModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal limite vocal:', err);
+          await replyInteractionFailure(interaction, 'fr', err);
+        }
+      } else if (interaction.customId.startsWith('rolepanel_modal_')) {
+        try {
+          await handleRolePanelModalSubmit(interaction);
+        } catch (err) {
+          logger.error('Erreur modal panelrol:', err);
           await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId.startsWith('annonce_modal')) {
