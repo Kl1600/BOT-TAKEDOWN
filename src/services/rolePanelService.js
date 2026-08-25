@@ -60,6 +60,18 @@ const ROLE_PANEL_COPY = {
   }
 };
 
+const STAFF_ROLE_PANEL_COPY = {
+  modalTitle: 'Choisissez vos rôles staff',
+  modalLabel: 'Notifications staff à recevoir',
+  modalDescription: 'Cochez les notifications staff que vous souhaitez recevoir.',
+  success: 'Vos rôles de notification staff ont été mis à jour.',
+  error: 'Impossible de modifier vos rôles de notification staff.',
+  options: {
+    rolepanel_staff_bda: ['Notif BDA', 'Alertes lorsqu’un membre attend une prise en charge staff'],
+    rolepanel_staff_ticket: ['Notif Ticket', 'Notifications lors de l’ouverture d’un ticket']
+  }
+};
+
 async function fetchCurrentMember(interaction) {
   return interaction.guild.members.fetch(interaction.user.id, { force: true })
     .catch(() => interaction.member);
@@ -90,6 +102,36 @@ function buildRoleSelectionModal(member, lang) {
         type: ComponentType.Label,
         label: copy.modalLabel,
         description: copy.modalDescription,
+        component: checkboxGroup.toJSON()
+      }
+    ]
+  });
+}
+
+function buildStaffRoleSelectionModal(member) {
+  const checkboxGroup = new CheckboxGroupBuilder()
+    .setCustomId('rolepanel_staff_notifications')
+    .setRequired(false)
+    .setMinValues(0)
+    .setMaxValues(STAFF_ROLE_BUTTONS.length)
+    .setOptions(STAFF_ROLE_BUTTONS.map(button => {
+      const [label, description] = STAFF_ROLE_PANEL_COPY.options[button.customId];
+      return {
+        label,
+        description,
+        value: button.customId,
+        default: member.roles.cache.has(button.roleId)
+      };
+    }));
+
+  return new ModalBuilder({
+    custom_id: 'rolepanel_modal_staff',
+    title: STAFF_ROLE_PANEL_COPY.modalTitle,
+    components: [
+      {
+        type: ComponentType.Label,
+        label: STAFF_ROLE_PANEL_COPY.modalLabel,
+        description: STAFF_ROLE_PANEL_COPY.modalDescription,
         component: checkboxGroup.toJSON()
       }
     ]
@@ -135,28 +177,21 @@ export async function sendStaffRolePanel(interaction) {
   }
 
   const text = new TextDisplayBuilder().setContent(
-    `### Role Staff\n\nVoici les différents rôles disponibles, cliquez pour vous ajoutez ou retirez le role.`
+    `### NOTIFICATION STAFF\n\n` +
+    `**FR** - Clique sur le bouton pour recevoir ou retirer les rôles correspondants.`
   );
 
-  const rows = [];
-  for (let i = 0; i < STAFF_ROLE_BUTTONS.length; i += 5) {
-    const chunk = STAFF_ROLE_BUTTONS.slice(i, i + 5);
-    const row = new ActionRowBuilder();
-    for (const button of chunk) {
-      row.addComponents(
-        new ButtonBuilder()
-          .setCustomId(button.customId)
-          .setLabel(button.label)
-          .setStyle(ButtonStyle.Secondary)
-      );
-    }
-    rows.push(row);
-  }
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('rolepanel_choose_staff')
+      .setLabel('Choisir')
+      .setStyle(ButtonStyle.Secondary)
+  );
 
   const container = new ContainerBuilder()
     .setAccentColor(config.colors.primary)
     .addTextDisplayComponents(text)
-    .addActionRowComponents(...rows);
+    .addActionRowComponents(row);
 
   await sendV2Container(interaction.channel, container);
   if (typeof interaction.deleteReply === 'function') {
@@ -165,6 +200,17 @@ export async function sendStaffRolePanel(interaction) {
 }
 
 export async function handleRolePanelButton(interaction) {
+  if (interaction.customId === 'rolepanel_choose_staff') {
+    if (!interaction.guild || !interaction.member) {
+      await interaction.reply({ content: '-# Cette action doit être utilisée dans un serveur.', flags: MessageFlags.Ephemeral });
+      return true;
+    }
+
+    const member = await fetchCurrentMember(interaction);
+    await interaction.showModal(buildStaffRoleSelectionModal(member));
+    return true;
+  }
+
   const languageMatch = interaction.customId.match(/^rolepanel_choose_(fr|en)$/);
   if (languageMatch) {
     if (!interaction.guild || !interaction.member) {
@@ -230,6 +276,35 @@ export async function handleRolePanelButton(interaction) {
 }
 
 export async function handleRolePanelModalSubmit(interaction) {
+  if (interaction.customId === 'rolepanel_modal_staff') {
+    if (!interaction.guild || !interaction.member) {
+      await interaction.reply({ content: '-# Cette action doit être utilisée dans un serveur.', flags: MessageFlags.Ephemeral });
+      return true;
+    }
+
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const member = await fetchCurrentMember(interaction);
+    const selectedValues = new Set(interaction.fields.getCheckboxGroup('rolepanel_staff_notifications'));
+    const selectedRoles = STAFF_ROLE_BUTTONS.filter(button => selectedValues.has(button.customId));
+    const rolesToAdd = selectedRoles
+      .filter(button => !member.roles.cache.has(button.roleId))
+      .map(button => button.roleId);
+    const rolesToRemove = STAFF_ROLE_BUTTONS
+      .filter(button => !selectedValues.has(button.customId) && member.roles.cache.has(button.roleId))
+      .map(button => button.roleId);
+
+    try {
+      if (rolesToAdd.length > 0) await member.roles.add(rolesToAdd);
+      if (rolesToRemove.length > 0) await member.roles.remove(rolesToRemove);
+      await interaction.editReply({ content: `-# ${STAFF_ROLE_PANEL_COPY.success}` });
+    } catch (err) {
+      logger.error(`Impossible de mettre à jour les rôles de notification staff de ${interaction.user.id}:`, err);
+      await interaction.editReply({ content: `-# ${STAFF_ROLE_PANEL_COPY.error}` }).catch(() => null);
+    }
+
+    return true;
+  }
+
   const modalMatch = interaction.customId.match(/^rolepanel_modal_(fr|en)$/);
   if (!modalMatch) return false;
 
