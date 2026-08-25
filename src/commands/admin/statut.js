@@ -1,7 +1,8 @@
-import { SlashCommandBuilder, ActivityType, MessageFlags } from 'discord.js';
+import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import config from '../../config/config.js';
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
 import { replyErr, replyOk, prefixReply, replyUsage } from '../../services/moderationService.js';
+import { applyConfiguredStatus } from '../../services/statusService.js';
 
 const ACTIVITY_LABELS = {
   playing: 'Playing',
@@ -48,13 +49,7 @@ function applyBotStatus(client, { text, activityType, presence }) {
   config.status.type = activityType;
   config.status.presence = presence;
 
-  client.user.setPresence({
-    activities: [{
-      name: cleanText,
-      type: ActivityType[activityType] ?? ActivityType.Watching
-    }],
-    status: presence
-  });
+  applyConfiguredStatus(client);
 
   return {
     text: cleanText,

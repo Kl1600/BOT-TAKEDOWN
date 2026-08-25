@@ -1,10 +1,11 @@
-﻿import { ActivityType, REST, Routes } from 'discord.js';
+﻿import { REST, Routes } from 'discord.js';
 import { initializeInviteTracking } from '../../services/inviteService.js';
 import { ensureBetaAccess } from '../../services/betaService.js';
 import { initializeXpTracking, startXpMaintenance } from '../../services/xpService.js';
 import { startTempBanScheduler } from '../../services/moderationService.js';
 import { initializeVoiceState } from '../../services/voiceService.js';
 import { consumeRestartPending } from '../../services/restartService.js';
+import { startStatusMaintenance } from '../../services/statusService.js';
 import dbService from '../../database/dbProxy.js';
 import config from '../../config/config.js';
 import * as logger from '../../utils/logger.js';
@@ -15,6 +16,7 @@ export default {
   async execute(client) {
     logger.setDiscordClient(client);
     console.log('\n  BOT TAKEDOWN LANCEE\n');
+    startStatusMaintenance(client);
 
     try {
       await dbService.initDb();
@@ -44,14 +46,6 @@ export default {
     startXpMaintenance(client);
     startTempBanScheduler(client).catch(err => {
       logger.error('Impossible de démarrer le planificateur des bannissements temporaires:', err);
-    });
-
-    client.user.setPresence({
-      activities: [{
-        name: config.status.text,
-        type: ActivityType[config.status.type] ?? ActivityType.Watching
-      }],
-      status: config.status.presence
     });
 
     const pendingRestart = await consumeRestartPending().catch(() => null);
