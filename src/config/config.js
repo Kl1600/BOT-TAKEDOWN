@@ -107,7 +107,8 @@ export default {
   // Rôles de notification
   notifications: {
     patchNotes: process.env.ROLE_PATCHNOTES || '1520116888879890593',
-    ticket: process.env.ROLE_NOTIF_TICKET || '1533059907958608023'
+    ticket: process.env.ROLE_NOTIF_TICKET || '1533059907958608023',
+    errorUser: process.env.ERROR_PING_USER_ID || '1481543558715408426'
   },
 
   // Système de tickets
@@ -149,6 +150,5 @@ export default {
     presence: normalizePresence(process.env.BOT_PRESENCE, 'dnd')
   }
 };
-
 
 

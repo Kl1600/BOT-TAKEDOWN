@@ -32,11 +32,27 @@ async function sendErrorToDiscord(errMsg) {
       new TextDisplayBuilder().setContent(`### Erreur du bot\n\n\`\`\`\n${safeError}\n\`\`\``)
     );
 
-  await channel.send({
-    components: [container],
-    flags: MessageFlags.IsComponentsV2,
-    allowedMentions: { parse: [] }
-  });
+  const errorUserId = config.notifications.errorUser;
+  const pingMessage = errorUserId
+    ? await channel.send({
+        content: `<@${errorUserId}>`,
+        allowedMentions: {
+          parse: [],
+          users: [errorUserId]
+        }
+      })
+    : null;
+
+  try {
+    await channel.send({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+      allowedMentions: { parse: [] }
+    });
+  } catch (err) {
+    await pingMessage?.delete().catch(() => null);
+    throw err;
+  }
 }
 
 function ensureLogDirectory() {
