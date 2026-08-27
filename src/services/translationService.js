@@ -300,6 +300,8 @@ async function translateModesStack(interaction) {
 }
 
 export async function handleMessageTranslate(interaction) {
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
   const member = interaction.member;
   const lang = await getLanguage(member);
   const allowedPanelTypes = new Set(['annonce', 'patchnote', 'ticket', 'reglement', 'guide', 'staffapply', 'beta', 'modes', 'connect']);
@@ -309,10 +311,7 @@ export async function handleMessageTranslate(interaction) {
 
   if (!canTranslateToEnglish) {
     const errorMsg = t(lang, 'errors.translation_not_allowed');
-    return interaction.reply({
-      content: errorMsg,
-      flags: MessageFlags.Ephemeral
-    });
+    return interaction.editReply({ content: errorMsg });
   }
 
   const sourceTranslateId = interaction.customId || '';
@@ -320,17 +319,12 @@ export async function handleMessageTranslate(interaction) {
 
   if (!allowedPanelTypes.has(explicitType)) {
     const errorMsg = t(lang, 'errors.translation_not_allowed');
-    return interaction.reply({
-      content: errorMsg,
-      flags: MessageFlags.Ephemeral
-    });
+    return interaction.editReply({ content: errorMsg });
   }
 
   const hasEmbeds = Array.isArray(interaction.message?.embeds) && interaction.message.embeds.length > 0;
 
   if (explicitType === 'annonce' || explicitType === 'patchnote') {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
     let translatedComponents = await getStoredPanelTranslation(interaction.message?.id, explicitType);
     if (!translatedComponents) {
       translatedComponents = await translateStructuredStack(interaction);
@@ -341,7 +335,6 @@ export async function handleMessageTranslate(interaction) {
   }
 
   if (explicitType === 'reglement' || explicitType === 'guide') {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const translatedComponents = explicitType === 'guide'
       ? await translateGuideStack(interaction)
       : await translateStructuredStack(interaction);
@@ -349,7 +342,6 @@ export async function handleMessageTranslate(interaction) {
   }
 
   if (explicitType === 'modes') {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const translatedMessages = await translateModesStack(interaction);
 
     if (translatedMessages.length === 0) {
@@ -375,7 +367,6 @@ export async function handleMessageTranslate(interaction) {
   }
 
   if (hasEmbeds) {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const translatedEmbeds = [];
     for (const embed of interaction.message.embeds) {
       translatedEmbeds.push(await translateEmbedData(embed, 'fr', 'en'));
@@ -385,7 +376,6 @@ export async function handleMessageTranslate(interaction) {
     });
   }
 
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const originalComponents = Array.isArray(interaction.message?.components) ? interaction.message.components : [];
   if (originalComponents.length > 0) {
     const translatedComponents = await translateStructuredStack(interaction);

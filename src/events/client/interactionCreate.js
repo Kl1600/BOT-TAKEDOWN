@@ -29,7 +29,8 @@ const BUTTON_MODAL_PREFIXES = [
   'staffapply_start',
   'staffapply_continue_',
   'rolepanel_choose_',
-  'voice_limit_'
+  'voice_limit_',
+  'msg_translate'
 ];
 const AUTO_ACK_DELAY_MS = 1200;
 
