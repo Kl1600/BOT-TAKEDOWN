@@ -51,6 +51,16 @@ export async function initDb() {
     )
   `);
 
+  // Traductions préparées des annonces et patch notes.
+  await db.run(`
+    CREATE TABLE IF NOT EXISTS panel_translations (
+      message_id TEXT PRIMARY KEY,
+      panel_type TEXT NOT NULL,
+      components_json TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    )
+  `);
+
   await db.run(`
     CREATE TABLE IF NOT EXISTS ticket_counters (
       user_id TEXT PRIMARY KEY,
@@ -891,6 +901,30 @@ export async function promoteExpiredStreamerTests(nowUnix = Math.floor(Date.now(
   );
 }
 
+/* ==========================================================================
+   PANEL TRANSLATIONS OPERATIONS
+   ========================================================================== */
+
+export async function savePanelTranslation(messageId, panelType, componentsJson) {
+  const now = Math.floor(Date.now() / 1000);
+  return db.run(
+    `INSERT INTO panel_translations (message_id, panel_type, components_json, created_at)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(message_id) DO UPDATE SET
+       panel_type = excluded.panel_type,
+       components_json = excluded.components_json,
+       created_at = excluded.created_at`,
+    [messageId, panelType, componentsJson, now]
+  );
+}
+
+export async function getPanelTranslation(messageId) {
+  return db.get(
+    'SELECT message_id, panel_type, components_json FROM panel_translations WHERE message_id = ?',
+    [messageId]
+  );
+}
+
 export default {
   initDb,
   createTicket,
@@ -959,5 +993,7 @@ export default {
   clearStreamerStatus,
   getStreamerStatus,
   getAllStreamerStatuses,
-  promoteExpiredStreamerTests
+  promoteExpiredStreamerTests,
+  savePanelTranslation,
+  getPanelTranslation
 };

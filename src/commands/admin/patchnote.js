@@ -14,6 +14,7 @@ import { t, isEnglishOnly } from '../../utils/language.js';
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
 import { logAnnouncement } from '../../services/logService.js';
 import { appendSeparatorComponent, splitContentBySeparator, sendV2Container } from '../../utils/v2Helper.js';
+import { preparePanelTranslation, storePanelTranslation } from '../../services/translationService.js';
 import config from '../../config/config.js';
 
 const translateHint = '-# 🇬🇧 Click below to translate to English.';
@@ -52,12 +53,16 @@ export async function handlePatchNoteModalSubmit(interaction, lang) {
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
+  const container = buildPatchnoteContainer(content, translateDisabled);
+  const translatedComponents = await preparePanelTranslation([container]);
+
   const shouldPing = interaction.customId === 'patchnote_modal_ping';
   if (shouldPing) {
     await interaction.channel.send({ content: `<@&${config.notifications.patchNotes}>` }).catch(() => null);
   }
 
-  await sendV2Container(interaction.channel, buildPatchnoteContainer(content, translateDisabled));
+  const patchnoteMessage = await sendV2Container(interaction.channel, container);
+  await storePanelTranslation(patchnoteMessage?.id, 'patchnote', translatedComponents);
   await interaction.editReply({ content: t(lang, 'commands.patchnote.success') });
 
   await logAnnouncement(interaction.client, {
@@ -116,8 +121,12 @@ export default {
       return;
     }
 
+    const container = buildPatchnoteContainer(content, translateDisabled);
+    const translatedComponents = await preparePanelTranslation([container]);
+
     await message.delete().catch(() => null);
-    await sendV2Container(message.channel, buildPatchnoteContainer(content, translateDisabled));
+    const patchnoteMessage = await sendV2Container(message.channel, container);
+    await storePanelTranslation(patchnoteMessage?.id, 'patchnote', translatedComponents);
 
     await logAnnouncement(message.client, {
       title: 'Patch note publiee',

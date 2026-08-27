@@ -21,7 +21,7 @@ function wait(ms) {
 function isTransientGatewayError(err) {
   const message = String(err?.message || err || '');
   return /Unexpected server response:\s*503/i.test(message)
-    || /ECONNRESET|ETIMEDOUT|EAI_AGAIN|socket hang up/i.test(message);
+    || /ECONNRESET|ETIMEDOUT|EAI_AGAIN|socket hang up|Opening handshake has timed out/i.test(message);
 }
 
 async function loginWithRetry(client, token, maxAttempts = 5) {
@@ -57,15 +57,6 @@ async function bootstrap() {
   const logger = await import('./src/utils/logger.js');
   runtimeLogger = logger;
 
-  process.on('unhandledRejection', (reason) => {
-    logger.error('Rejet de promesse non géré:', reason);
-  });
-
-  process.on('uncaughtException', (err) => {
-    logger.error('Exception non interceptée:', err);
-    setTimeout(() => process.exit(1), 1500);
-  });
-
   if (!config.token || config.token === 'YOUR_DISCORD_BOT_TOKEN_HERE') {
     logger.error('Token manquant. Veuillez configurer le fichier .env.');
     process.exit(1);
@@ -84,6 +75,38 @@ async function bootstrap() {
       GatewayIntentBits.GuildPresences
     ]
   });
+  let hasLoggedIn = false;
+  let gatewayRecovery = null;
+
+  process.on('unhandledRejection', (reason) => {
+    logger.error('Rejet de promesse non géré:', reason);
+  });
+
+  process.on('uncaughtException', (err) => {
+    logger.error('Exception non interceptée:', err);
+
+    if (!hasLoggedIn || !isTransientGatewayError(err)) {
+      setTimeout(() => process.exit(1), 1500);
+      return;
+    }
+
+    if (gatewayRecovery) return;
+
+    logger.warn('Connexion au gateway Discord interrompue. Tentative de reconnexion automatique.');
+    gatewayRecovery = (async () => {
+      try {
+        await client.destroy();
+        await wait(2000);
+        await loginWithRetry(client, config.token);
+        logger.info('Reconnexion automatique au gateway Discord réussie.');
+      } catch (reconnectErr) {
+        logger.error('Échec de la reconnexion automatique au gateway Discord:', reconnectErr);
+        setTimeout(() => process.exit(1), 1500);
+      } finally {
+        gatewayRecovery = null;
+      }
+    })();
+  });
 
   logger.info('Lancement du bot Course-Poursuite...');
   if (config.debug) {
@@ -95,6 +118,7 @@ async function bootstrap() {
 
   try {
     await loginWithRetry(client, config.token);
+    hasLoggedIn = true;
   } catch (err) {
     const errorMessage = isTransientGatewayError(err)
       ? 'Échec de la connexion au gateway Discord après plusieurs tentatives.'

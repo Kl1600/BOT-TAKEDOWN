@@ -14,6 +14,7 @@ import { t, isEnglishOnly } from '../../utils/language.js';
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
 import { logAnnouncement } from '../../services/logService.js';
 import { appendSeparatorComponent, splitContentBySeparator, sendV2Container } from '../../utils/v2Helper.js';
+import { preparePanelTranslation, storePanelTranslation } from '../../services/translationService.js';
 import config from '../../config/config.js';
 
 const translateHint = '-# 🇬🇧 Click below to translate to English.';
@@ -50,13 +51,15 @@ export async function handleAnnonceModalSubmit(interaction, lang) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const container = buildAnnouncementContainer(content, translateDisabled);
+  const translatedComponents = await preparePanelTranslation([container]);
 
   const shouldPing = interaction.customId === 'annonce_modal_ping';
   if (shouldPing) {
     await interaction.channel.send({ content: '@everyone' }).catch(() => null);
   }
 
-  await sendV2Container(interaction.channel, container);
+  const announcementMessage = await sendV2Container(interaction.channel, container);
+  await storePanelTranslation(announcementMessage?.id, 'annonce', translatedComponents);
   await interaction.editReply({ content: t(lang, 'commands.annonce.success') });
 
   await logAnnouncement(interaction.client, {
@@ -109,7 +112,10 @@ export default {
 
     await message.delete().catch(() => null);
 
-    await sendV2Container(message.channel, buildAnnouncementContainer(content, translateDisabled));
+    const container = buildAnnouncementContainer(content, translateDisabled);
+    const translatedComponents = await preparePanelTranslation([container]);
+    const announcementMessage = await sendV2Container(message.channel, container);
+    await storePanelTranslation(announcementMessage?.id, 'annonce', translatedComponents);
 
     await logAnnouncement(message.client, {
       title: 'Annonce publiee',

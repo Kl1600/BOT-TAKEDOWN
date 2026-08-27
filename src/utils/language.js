@@ -3,6 +3,7 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import config from '../config/config.js';
 import dbService from '../database/dbProxy.js';
+import * as logger from './logger.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -20,11 +21,44 @@ const translations = {
 };
 
 const TRANSLATION_TIMEOUT_MS = 10_000;
+const TRANSLATION_MAX_ATTEMPTS = 3;
+
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isRetryableTranslationStatus(status) {
+  return status === 408 || status === 425 || status === 429 || status >= 500;
+}
 
 async function fetchTranslation(url) {
-  return fetch(url, {
-    signal: AbortSignal.timeout(TRANSLATION_TIMEOUT_MS)
-  });
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= TRANSLATION_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(TRANSLATION_TIMEOUT_MS)
+      });
+
+      if (response.ok) return response;
+
+      const responseError = new Error(`Le service de traduction a répondu avec le statut HTTP ${response.status}.`);
+      if (!isRetryableTranslationStatus(response.status)) {
+        responseError.retryable = false;
+        throw responseError;
+      }
+      lastError = responseError;
+    } catch (err) {
+      if (err?.retryable === false) throw err;
+      lastError = err;
+    }
+
+    if (attempt < TRANSLATION_MAX_ATTEMPTS) {
+      await wait(attempt * 1000);
+    }
+  }
+
+  throw lastError || new Error('Le service de traduction est indisponible.');
 }
 
 const TRANSLATION_GLOSSARY = {
@@ -312,16 +346,16 @@ export async function translateText(text, fromLang = 'fr', toLang = 'en') {
   try {
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURIComponent(text)}`;
     const response = await fetchTranslation(url);
-    if (!response.ok) return preserveSourceCasing(text, applyTranslationFixes(text, text, fromLang, toLang));
 
     const data = await response.json();
     if (data && data[0]) {
       const translated = data[0].map(item => item[0]).join('');
       return preserveSourceCasing(text, applyTranslationFixes(text, translated, fromLang, toLang));
     }
-    return preserveSourceCasing(text, applyTranslationFixes(text, text, fromLang, toLang));
-  } catch {
-    return preserveSourceCasing(text, applyTranslationFixes(text, text, fromLang, toLang));
+    throw new Error('Le service de traduction a renvoyé une réponse invalide.');
+  } catch (err) {
+    logger.error(`Échec de la traduction ${fromLang} vers ${toLang} après ${TRANSLATION_MAX_ATTEMPTS} tentatives:`, err);
+    throw new Error('Le service de traduction est temporairement indisponible.', { cause: err });
   }
 }
 

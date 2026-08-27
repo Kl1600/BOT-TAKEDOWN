@@ -2,7 +2,10 @@ import { ContainerBuilder, TextDisplayBuilder, MessageFlags, Routes } from 'disc
 import { getLanguage, t, translateText } from '../utils/language.js';
 import { editV2InteractionReply } from '../utils/v2Helper.js';
 import { resolveModesTranslationGroup } from './modesService.js';
+import dbService from '../database/dbProxy.js';
 import config from '../config/config.js';
+
+const storedPanelTranslations = new Map();
 
 function extractText(component) {
   let text = '';
@@ -125,6 +128,52 @@ async function translateComponentTree(component, translateContent = translateTex
   return translated;
 }
 
+export async function preparePanelTranslation(components) {
+  const translatedComponents = [];
+  for (const component of Array.isArray(components) ? components : []) {
+    translatedComponents.push(await translateComponentTree(component));
+  }
+  return translatedComponents;
+}
+
+export async function storePanelTranslation(messageId, panelType, components) {
+  if (!messageId || !['annonce', 'patchnote'].includes(panelType) || !Array.isArray(components)) return;
+
+  const normalizedComponents = normalizeComponentData(components);
+  storedPanelTranslations.set(messageId, {
+    panelType,
+    components: normalizedComponents
+  });
+
+  await dbService.savePanelTranslation(
+    messageId,
+    panelType,
+    JSON.stringify(normalizedComponents)
+  );
+}
+
+async function getStoredPanelTranslation(messageId, panelType) {
+  if (!messageId) return null;
+
+  const cached = storedPanelTranslations.get(messageId);
+  if (cached?.panelType === panelType) {
+    return normalizeComponentData(cached.components);
+  }
+
+  const record = await dbService.getPanelTranslation(messageId);
+  if (!record || record.panel_type !== panelType) return null;
+
+  try {
+    const components = JSON.parse(record.components_json);
+    if (!Array.isArray(components) || components.length === 0) return null;
+
+    storedPanelTranslations.set(messageId, { panelType, components });
+    return normalizeComponentData(components);
+  } catch {
+    return null;
+  }
+}
+
 function normalizeEmbedData(embed) {
   if (!embed) return null;
   if (typeof embed.toJSON === 'function') {
@@ -183,6 +232,18 @@ async function translateStructuredStack(interaction, translateContent = translat
     translatedComponents.push(await translateComponentTree(component, translateContent));
   }
   return translatedComponents;
+}
+
+async function replyWithTranslatedComponents(interaction, translatedComponents) {
+  return interaction.client.rest.patch(
+    Routes.webhookMessage(interaction.applicationId, interaction.token, '@original'),
+    {
+      body: {
+        components: translatedComponents,
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
+      }
+    }
+  );
 }
 
 function getGuideEnglishSections() {
@@ -267,20 +328,24 @@ export async function handleMessageTranslate(interaction) {
 
   const hasEmbeds = Array.isArray(interaction.message?.embeds) && interaction.message.embeds.length > 0;
 
+  if (explicitType === 'annonce' || explicitType === 'patchnote') {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    let translatedComponents = await getStoredPanelTranslation(interaction.message?.id, explicitType);
+    if (!translatedComponents) {
+      translatedComponents = await translateStructuredStack(interaction);
+      await storePanelTranslation(interaction.message?.id, explicitType, translatedComponents);
+    }
+
+    return replyWithTranslatedComponents(interaction, translatedComponents);
+  }
+
   if (explicitType === 'reglement' || explicitType === 'guide') {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const translatedComponents = explicitType === 'guide'
       ? await translateGuideStack(interaction)
       : await translateStructuredStack(interaction);
-    return await interaction.client.rest.patch(
-      Routes.webhookMessage(interaction.applicationId, interaction.token, '@original'),
-      {
-        body: {
-          components: translatedComponents,
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
-        }
-      }
-    );
+    return replyWithTranslatedComponents(interaction, translatedComponents);
   }
 
   if (explicitType === 'modes') {
@@ -324,15 +389,7 @@ export async function handleMessageTranslate(interaction) {
   const originalComponents = Array.isArray(interaction.message?.components) ? interaction.message.components : [];
   if (originalComponents.length > 0) {
     const translatedComponents = await translateStructuredStack(interaction);
-    return interaction.client.rest.patch(
-      Routes.webhookMessage(interaction.applicationId, interaction.token, '@original'),
-      {
-        body: {
-          components: translatedComponents,
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
-        }
-      }
-    );
+    return replyWithTranslatedComponents(interaction, translatedComponents);
   }
 
   const rawText = extractRenderableText(interaction.message);
