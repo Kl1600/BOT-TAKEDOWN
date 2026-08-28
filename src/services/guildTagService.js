@@ -4,7 +4,11 @@ import dbService from '../database/dbProxy.js';
 import * as logger from '../utils/logger.js';
 
 const memberSyncQueues = new Map();
+const TAG_SCAN_INTERVAL_MS = 60 * 1000;
 let trackedGuildId = null;
+let tagScanTimer = null;
+let tagScanInProgress = false;
+let maintenanceFailureLogged = false;
 
 function getPrimaryGuildData(user) {
   const primaryGuild = user?.primaryGuild ?? user?.primary_guild ?? null;
@@ -135,6 +139,43 @@ export async function removeGuildTagMember(member) {
   await dbService.deleteGuildTagState(member.guild.id, member.id);
 }
 
+async function scanGuildTagMembers(client) {
+  if (tagScanInProgress) return null;
+  tagScanInProgress = true;
+
+  try {
+    const context = await resolveTrackingContext(client);
+    if (!context) return null;
+
+    const members = await context.guild.members.fetch();
+    for (const member of members.values()) {
+      await syncGuildTagMember(member, member.user);
+    }
+
+    return members.size;
+  } finally {
+    tagScanInProgress = false;
+  }
+}
+
+function startGuildTagMaintenance(client) {
+  if (tagScanTimer) clearInterval(tagScanTimer);
+
+  tagScanTimer = setInterval(() => {
+    void scanGuildTagMembers(client)
+      .then(result => {
+        if (result !== null) maintenanceFailureLogged = false;
+      })
+      .catch(err => {
+        if (!maintenanceFailureLogged) {
+          maintenanceFailureLogged = true;
+          logger.error('Impossible d’actualiser le suivi des tags serveur:', err);
+        }
+      });
+  }, TAG_SCAN_INTERVAL_MS);
+  tagScanTimer.unref?.();
+}
+
 export async function initializeGuildTagTracking(client) {
   const context = await resolveTrackingContext(client);
   if (!context) {
@@ -142,12 +183,10 @@ export async function initializeGuildTagTracking(client) {
     return;
   }
 
-  const members = await context.guild.members.fetch();
-  for (const member of members.values()) {
-    await syncGuildTagMember(member, member.user);
-  }
+  const memberCount = await scanGuildTagMembers(client);
+  startGuildTagMaintenance(client);
 
-  logger.info(`Suivi des tags serveur initialisé pour ${members.size} membres.`);
+  logger.info(`Suivi des tags serveur initialisé pour ${memberCount || 0} membres.`);
 }
 
 export async function hasGuildTagAccess(guildId, userId) {
