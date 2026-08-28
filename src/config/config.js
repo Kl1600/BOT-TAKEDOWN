@@ -70,7 +70,8 @@ export default {
     staffapply: process.env.CHANNEL_STAFFAPPLY || '',
     inviteLeaderboard: process.env.CHANNEL_INVITE_LEADERBOARD || '',
     betaFeedback: '1520470579956682824',
-    errors: process.env.CHANNEL_ERRORS || '1540054517113028698'
+    errors: process.env.CHANNEL_ERRORS || '1540054517113028698',
+    guildTagLogs: process.env.CHANNEL_GUILD_TAG_LOGS || '1542944520361091123'
   },
 
   ticketRoutingRoles: {
@@ -150,5 +151,4 @@ export default {
     presence: normalizePresence(process.env.BOT_PRESENCE, 'dnd')
   }
 };
-
 

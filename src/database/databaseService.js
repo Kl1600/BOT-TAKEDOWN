@@ -61,6 +61,19 @@ export async function initDb() {
     )
   `);
 
+  // État du tag de serveur affiché par chaque membre.
+  await db.run(`
+    CREATE TABLE IF NOT EXISTS guild_tag_states (
+      guild_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      has_tag INTEGER NOT NULL DEFAULT 0,
+      tag TEXT,
+      identity_guild_id TEXT,
+      updated_at INTEGER NOT NULL,
+      PRIMARY KEY (guild_id, user_id)
+    )
+  `);
+
   await db.run(`
     CREATE TABLE IF NOT EXISTS ticket_counters (
       user_id TEXT PRIMARY KEY,
@@ -925,6 +938,38 @@ export async function getPanelTranslation(messageId) {
   );
 }
 
+/* ==========================================================================
+   GUILD TAG OPERATIONS
+   ========================================================================== */
+
+export async function upsertGuildTagState(guildId, userId, hasTag, tag = null, identityGuildId = null) {
+  const now = Math.floor(Date.now() / 1000);
+  return db.run(
+    `INSERT INTO guild_tag_states (guild_id, user_id, has_tag, tag, identity_guild_id, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(guild_id, user_id) DO UPDATE SET
+       has_tag = excluded.has_tag,
+       tag = excluded.tag,
+       identity_guild_id = excluded.identity_guild_id,
+       updated_at = excluded.updated_at`,
+    [guildId, userId, hasTag ? 1 : 0, tag, identityGuildId, now]
+  );
+}
+
+export async function getGuildTagState(guildId, userId) {
+  return db.get(
+    'SELECT guild_id, user_id, has_tag, tag, identity_guild_id, updated_at FROM guild_tag_states WHERE guild_id = ? AND user_id = ?',
+    [guildId, userId]
+  );
+}
+
+export async function deleteGuildTagState(guildId, userId) {
+  return db.run(
+    'DELETE FROM guild_tag_states WHERE guild_id = ? AND user_id = ?',
+    [guildId, userId]
+  );
+}
+
 export default {
   initDb,
   createTicket,
@@ -995,5 +1040,8 @@ export default {
   getAllStreamerStatuses,
   promoteExpiredStreamerTests,
   savePanelTranslation,
-  getPanelTranslation
+  getPanelTranslation,
+  upsertGuildTagState,
+  getGuildTagState,
+  deleteGuildTagState
 };

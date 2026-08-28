@@ -6,6 +6,7 @@ import { startTempBanScheduler } from '../../services/moderationService.js';
 import { initializeVoiceState } from '../../services/voiceService.js';
 import { consumeRestartPending } from '../../services/restartService.js';
 import { startStatusMaintenance } from '../../services/statusService.js';
+import { initializeGuildTagTracking } from '../../services/guildTagService.js';
 import dbService from '../../database/dbProxy.js';
 import config from '../../config/config.js';
 import * as logger from '../../utils/logger.js';
@@ -27,6 +28,9 @@ export default {
     await client.guilds.fetch().catch(err => {
       logger.error('Impossible de récupérer les serveurs au démarrage:', err);
       return null;
+    });
+    await initializeGuildTagTracking(client).catch(err => {
+      logger.error('Impossible d’initialiser le suivi des tags serveur:', err);
     });
     await initializeInviteTracking(client).catch(err => {
       logger.error('Impossible d’initialiser le suivi des invitations:', err);

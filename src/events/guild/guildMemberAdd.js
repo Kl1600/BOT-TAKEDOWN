@@ -6,6 +6,7 @@ import { sendV2Container } from '../../utils/v2Helper.js';
 import dbService from '../../database/dbProxy.js';
 import { handleGuildMemberInviteJoin } from '../../services/inviteService.js';
 import { ensureBetaAccess } from '../../services/betaService.js';
+import { syncGuildTagMember } from '../../services/guildTagService.js';
 
 export default {
   name: 'guildMemberAdd',
@@ -21,6 +22,9 @@ export default {
 
     await handleGuildMemberInviteJoin(member, client).catch(() => null);
     await ensureBetaAccess(member.guild).catch(() => null);
+    await syncGuildTagMember(member, member.user).catch(err => {
+      logger.error(`Impossible de vérifier le tag serveur de ${member.id}:`, err);
+    });
 
     const welcomeEnabled = await dbService.getServerParam('welcome_enabled').catch(() => null);
     if (welcomeEnabled !== null && welcomeEnabled !== undefined && !['true', '1', 'yes', 'on', 'enabled'].includes(String(welcomeEnabled).toLowerCase())) {
