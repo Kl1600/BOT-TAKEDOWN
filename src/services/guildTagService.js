@@ -4,7 +4,7 @@ import dbService from '../database/dbProxy.js';
 import * as logger from '../utils/logger.js';
 
 const memberSyncQueues = new Map();
-const TAG_SCAN_INTERVAL_MS = 60 * 1000;
+const TAG_SCAN_INTERVAL_MS = 35 * 1000;
 let trackedGuildId = null;
 let tagScanTimer = null;
 let tagScanInProgress = false;
@@ -132,6 +132,18 @@ export function syncGuildTagMember(member, user = member?.user) {
   });
 }
 
+export async function syncGuildTagUser(client, user) {
+  if (!client || !user?.id || user.bot) return false;
+
+  const context = await resolveTrackingContext(client);
+  if (!context) return false;
+
+  const member = context.guild.members.cache.get(user.id);
+  if (!member) return false;
+
+  return syncGuildTagMember(member, user);
+}
+
 export async function removeGuildTagMember(member) {
   if (!member?.id || !member.guild?.id) return;
   if (trackedGuildId && member.guild.id !== trackedGuildId) return;
@@ -197,6 +209,7 @@ export async function hasGuildTagAccess(guildId, userId) {
 export default {
   initializeGuildTagTracking,
   syncGuildTagMember,
+  syncGuildTagUser,
   removeGuildTagMember,
   hasGuildTagAccess
 };
