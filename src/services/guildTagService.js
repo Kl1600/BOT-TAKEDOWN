@@ -48,12 +48,10 @@ async function resolveTrackingContext(client) {
 
 async function sendGuildTagLog(channel, member, state, action) {
   const titles = {
-    detected: 'TAG SERVEUR DÉTECTÉ',
     added: 'TAG SERVEUR AJOUTÉ',
     removed: 'TAG SERVEUR RETIRÉ'
   };
   const descriptions = {
-    detected: 'Le membre possède déjà le tag du serveur.',
     added: 'Le membre vient d’ajouter le tag du serveur.',
     removed: 'Le membre vient de retirer le tag du serveur.'
   };
@@ -80,7 +78,7 @@ async function sendGuildTagLog(channel, member, state, action) {
   });
 }
 
-async function syncMemberTagState(member, user, { logInitialPresence = true } = {}) {
+async function syncMemberTagState(member, user) {
   if (!member || member.user?.bot) return false;
 
   const context = await resolveTrackingContext(member.client);
@@ -101,9 +99,6 @@ async function syncMemberTagState(member, user, { logInitialPresence = true } = 
   if (previousHasTag === state.hasTag) return state.hasTag;
 
   if (previousHasTag === null) {
-    if (state.hasTag && logInitialPresence) {
-      await sendGuildTagLog(context.channel, member, state, 'detected');
-    }
     return state.hasTag;
   }
 
@@ -116,14 +111,14 @@ async function syncMemberTagState(member, user, { logInitialPresence = true } = 
   return state.hasTag;
 }
 
-export function syncGuildTagMember(member, user = member?.user, options = {}) {
+export function syncGuildTagMember(member, user = member?.user) {
   if (!member?.id) return Promise.resolve(false);
 
   const queueKey = `${member.guild?.id || 'unknown'}:${member.id}`;
   const previousQueue = memberSyncQueues.get(queueKey) || Promise.resolve();
   const nextQueue = previousQueue
     .catch(() => null)
-    .then(() => syncMemberTagState(member, user, options));
+    .then(() => syncMemberTagState(member, user));
 
   memberSyncQueues.set(queueKey, nextQueue);
   return nextQueue.finally(() => {
@@ -149,7 +144,7 @@ export async function initializeGuildTagTracking(client) {
 
   const members = await context.guild.members.fetch();
   for (const member of members.values()) {
-    await syncGuildTagMember(member, member.user, { logInitialPresence: true });
+    await syncGuildTagMember(member, member.user);
   }
 
   logger.info(`Suivi des tags serveur initialisé pour ${members.size} membres.`);
