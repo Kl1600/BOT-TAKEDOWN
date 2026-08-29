@@ -36,7 +36,7 @@
     },
     "crew": {
       "description": "Display Crew creation information",
-      "content": "### CREW CREATION\n\nWant to create your own Crew on TAKEDOWN and represent your team on the server?\n\nCreating a Crew is completely free and can be done simply through a ticket.\n\nseparator\n### REQUIREMENTS\n\nTo create your Crew, you must:\n\n- Have at least 3 members\n- Have a minimum level of activity on the server\n- Have a serious and reasonably prepared Crew project\n\nseparator\n### HOW TO CREATE YOUR CREW\n\n**1. Prepare a presentation of your Crew**\n\nYou are free to present your Crew in any format you want. Just remember to include the main information:\n\n- Crew name\n- Crew visual identity\n- Founder\n- Co-Founder(s)\n- Members\n- A short presentation of the Crew\n\n**2. Open a ticket**\n\nGo to <#1509613220019572940>, create a ticket, and select the Crew category.\n\n**3. Send your presentation**\n\nOnce the ticket is open, send your presentation. The staff will review your request and get back to you.\n\nCreating a Crew is completely free. Gather your team, prepare your project, and make your mark on TAKEDOWN."
+      "content": "### CREW CREATION\n\nCreate your Crew on TAKEDOWN for free through a ticket.\n\nseparator\n### REQUIREMENTS\n\n- Have at least 3 members\n- Be active on the server\n- Have a serious and prepared project\n\nseparator\n### PROCESS\n\n**1.** Prepare a short presentation with the Crew name, identity, founders, and members.\n\n**2.** Open a ticket in <#1509613220019572940> and select the Crew category.\n\n**3.** Send your presentation and wait for the staff's response."
     },
     "ticket": {
       "description": "Send the ticket panel",
