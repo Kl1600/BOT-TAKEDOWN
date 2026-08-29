@@ -111,6 +111,7 @@ export async function handleComponentInteraction(interaction) {
     case 'msg_translate_annonce':
     case 'msg_translate_patchnote':
     case 'msg_translate_guide':
+    case 'msg_translate_crew':
     case 'msg_translate_modes':
     case 'msg_translate_ticket':
     case 'msg_translate_reglement':

@@ -62,6 +62,10 @@ function buildHelpContainer(prefix) {
       `> \`/guide\` — Afficher le guide du serveur`
     ],
     [
+      `### Crew`,
+      `> \`/crew\` \`${p}crew\` — Afficher les informations de création d’un Crew`
+    ],
+    [
       `### Connexion`,
       `> \`/connect\` — Afficher le panneau de connexion au serveur`
     ],

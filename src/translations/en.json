@@ -34,6 +34,10 @@
       "description": "Display the server guide",
       "content": "### WELCOME TO TAKEDOWN\n\nTakedown is a FiveM server focused on **high-speed chases** and competitive game modes. Every member has a place in a world driven by speed, strategy, and adrenaline.\n\nOur community is built around immersion, team play, and a unique atmosphere with events, tournaments, and mutual support.\n\nseparator\n### GET STARTED\n> <#1520743657425211392> — Join the connection channel to get the direct link and server address.\n> <#{rules}> — Read the rules **before** taking part.\n\nseparator\n### STAY INFORMED\n> <#{announcements}> — Official announcements.\n> <#1519999182663061525> — Updates and patch notes.\n> <#1527375640817307758> — Server status and live information.\n\nseparator\n### NEED HELP?\n> <#{support}> — Open a ticket for any question or report.\n\nseparator\nHave a good ride on Takedown."
     },
+    "crew": {
+      "description": "Display Crew creation information",
+      "content": "### CREW CREATION\n\nWant to create your own Crew on TAKEDOWN and represent your team on the server?\n\nCreating a Crew is completely free and can be done simply through a ticket.\n\nseparator\n### REQUIREMENTS\n\nTo create your Crew, you must:\n\n- Have at least 3 members\n- Have a minimum level of activity on the server\n- Have a serious and reasonably prepared Crew project\n\nseparator\n### HOW TO CREATE YOUR CREW\n\n**1. Prepare a presentation of your Crew**\n\nYou are free to present your Crew in any format you want. Just remember to include the main information:\n\n- Crew name\n- Crew visual identity\n- Founder\n- Co-Founder(s)\n- Members\n- A short presentation of the Crew\n\n**2. Open a ticket**\n\nGo to <#1509613220019572940>, create a ticket, and select the Crew category.\n\n**3. Send your presentation**\n\nOnce the ticket is open, send your presentation. The staff will review your request and get back to you.\n\nCreating a Crew is completely free. Gather your team, prepare your project, and make your mark on TAKEDOWN."
+    },
     "ticket": {
       "description": "Send the ticket panel",
       "panel": {

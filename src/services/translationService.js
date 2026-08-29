@@ -275,6 +275,26 @@ async function translateGuideStack(interaction) {
   });
 }
 
+function getCrewEnglishSections() {
+  return String(t('en', 'commands.crew.content'))
+    .split(/^\s*separator\s*$/gmi)
+    .map(section => section.trim())
+    .filter(Boolean);
+}
+
+async function translateCrewStack(interaction) {
+  const englishSections = getCrewEnglishSections();
+  let sectionIndex = 0;
+
+  return translateStructuredStack(interaction, async content => {
+    if (isFooterText(content)) return content;
+    if (hasTranslateHint(content)) return '';
+    const translatedSection = englishSections[sectionIndex];
+    sectionIndex += 1;
+    return translatedSection ?? await translateTextDisplayContent(content);
+  });
+}
+
 async function translateModesStack(interaction) {
   const messageIds = await resolveModesTranslationGroup(interaction.message);
   const translatedContainersByMessage = [];
@@ -304,7 +324,7 @@ export async function handleMessageTranslate(interaction) {
 
   const member = interaction.member;
   const lang = await getLanguage(member);
-  const allowedPanelTypes = new Set(['annonce', 'patchnote', 'ticket', 'reglement', 'guide', 'staffapply', 'beta', 'modes', 'connect']);
+  const allowedPanelTypes = new Set(['annonce', 'patchnote', 'ticket', 'reglement', 'guide', 'crew', 'staffapply', 'beta', 'modes', 'connect']);
   const hasEnglishRole = Boolean(member?.roles?.cache?.has(config.roles.en));
   const hasFrenchRole = Boolean(member?.roles?.cache?.has(config.roles.fr));
   const canTranslateToEnglish = hasEnglishRole && !hasFrenchRole;
@@ -334,10 +354,12 @@ export async function handleMessageTranslate(interaction) {
     return replyWithTranslatedComponents(interaction, translatedComponents);
   }
 
-  if (explicitType === 'reglement' || explicitType === 'guide') {
+  if (explicitType === 'reglement' || explicitType === 'guide' || explicitType === 'crew') {
     const translatedComponents = explicitType === 'guide'
       ? await translateGuideStack(interaction)
-      : await translateStructuredStack(interaction);
+      : explicitType === 'crew'
+        ? await translateCrewStack(interaction)
+        : await translateStructuredStack(interaction);
     return replyWithTranslatedComponents(interaction, translatedComponents);
   }
 
