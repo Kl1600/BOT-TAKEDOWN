@@ -5,10 +5,40 @@ import * as logger from '../utils/logger.js';
 
 const memberSyncQueues = new Map();
 const TAG_SCAN_INTERVAL_MS = 35 * 1000;
+const TAG_FULL_FETCH_RETRY_DELAY_MS = 5 * 60 * 1000;
 let trackedGuildId = null;
 let tagScanTimer = null;
 let tagScanInProgress = false;
 let maintenanceFailureLogged = false;
+let nextFullMemberFetchAt = 0;
+let memberFetchTimeoutLogged = false;
+
+function isGuildMembersTimeout(error) {
+  return error?.code === 'GuildMembersTimeout'
+    || error?.message === "Members didn't arrive in time.";
+}
+
+async function fetchGuildTagMembers(guild) {
+  if (Date.now() < nextFullMemberFetchAt) {
+    return guild.members.cache;
+  }
+
+  try {
+    const members = await guild.members.fetch();
+    nextFullMemberFetchAt = 0;
+    memberFetchTimeoutLogged = false;
+    return members;
+  } catch (error) {
+    if (!isGuildMembersTimeout(error)) throw error;
+
+    nextFullMemberFetchAt = Date.now() + TAG_FULL_FETCH_RETRY_DELAY_MS;
+    if (!memberFetchTimeoutLogged) {
+      memberFetchTimeoutLogged = true;
+      logger.warn('Chargement complet des membres trop long, suivi des tags poursuivi avec le cache Discord.');
+    }
+    return guild.members.cache;
+  }
+}
 
 function getPrimaryGuildData(user) {
   const primaryGuild = user?.primaryGuild ?? user?.primary_guild ?? null;
@@ -159,7 +189,7 @@ async function scanGuildTagMembers(client) {
     const context = await resolveTrackingContext(client);
     if (!context) return null;
 
-    const members = await context.guild.members.fetch();
+    const members = await fetchGuildTagMembers(context.guild);
     for (const member of members.values()) {
       await syncGuildTagMember(member, member.user);
     }
