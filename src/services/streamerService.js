@@ -110,10 +110,6 @@ export async function handleStreamerLiveModalSubmit(interaction) {
 
   const streamer = interaction.user;
   const descLine = streamDesc ? `\n> *${streamDesc}*` : '';
-  const watchBtn = new ButtonBuilder()
-    .setLabel('Regarder le live')
-    .setStyle(ButtonStyle.Link)
-    .setURL(streamLink);
 
   const container = new ContainerBuilder()
     .setAccentColor(0xED4245)
@@ -126,10 +122,9 @@ export async function handleStreamerLiveModalSubmit(interaction) {
   appendSeparatorComponent(container);
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `🔗 Lien du stream : ${streamLink}\n🖼️ Affiche du stream : ${streamLink}\n\n-# Rejoins maintenant et soutiens le stream !`
+      `${streamLink}\n\n-# Rejoins maintenant et soutiens le stream !`
     )
   );
-  container.addActionRowComponents(new ActionRowBuilder().addComponents(watchBtn));
 
   if (pingRoleId) {
     await announceChannel.send({ content: `<@&${pingRoleId}>` }).catch(() => null);
