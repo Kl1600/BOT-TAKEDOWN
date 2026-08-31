@@ -31,6 +31,7 @@ function slugifyChannelName(input) {
 export const TICKET_CATEGORY_OPTIONS = {
   fr: [
     { label: 'Support/Autres', value: '1527610387703271484' },
+    { label: 'Bug', value: '1543924397444829294' },
     { label: 'Partenariats', value: '1527610362164281414' },
     { label: 'Tournois/Events', value: '1527610448315154522' },
     { label: 'Crew', value: '1533877304520871976' },
@@ -39,6 +40,7 @@ export const TICKET_CATEGORY_OPTIONS = {
   ],
   en: [
     { label: 'Support/Other', value: '1527610402509164716' },
+    { label: 'Bug', value: '1543924471843393597' },
     { label: 'Partner', value: '1527610421891305502' },
     { label: 'Tournament/Event', value: '1527610434964820109' },
     { label: 'Crew', value: '1533877082277281792' },
@@ -478,7 +480,6 @@ export async function handleTicketDelete(interaction) {
     });
   }, 5000);
 }
-
 
 
 
