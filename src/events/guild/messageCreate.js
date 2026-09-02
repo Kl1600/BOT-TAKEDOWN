@@ -4,6 +4,7 @@ import * as logger from '../../utils/logger.js';
 import { handleStaffApplyChatMessage } from '../../services/recruitmentService.js';
 import { handleAntiLinkMessage } from '../../services/antiLinkService.js';
 import { handleAntiImageMessage } from '../../services/antiImageService.js';
+import { handleAntiMassMentionMessage } from '../../services/antiMassMentionService.js';
 import { logCommand } from '../../services/logService.js';
 import { logDm } from '../../services/logService.js';
 import { handleXpMessage } from '../../services/xpService.js';
@@ -12,6 +13,10 @@ export default {
   name: 'messageCreate',
   once: false,
   async execute(message, client) {
+    if (await handleAntiMassMentionMessage(message)) {
+      return;
+    }
+
     if (await handleStaffApplyChatMessage(message)) {
       return;
     }

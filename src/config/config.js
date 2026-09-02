@@ -57,6 +57,7 @@ export default {
   // Identifiants de rôles
   roles: {
     admin: process.env.ROLE_ADMIN || '1519759444479836342',
+    permBot: process.env.ROLE_PERM_BOT || process.env.ROLE_ADMIN || '1519759444479836342',
     fr: process.env.ROLE_FR || '1519750090498244670',
     en: process.env.ROLE_EN || '1519750127323975793',
     staff: process.env.ROLE_STAFF || '1484977186933838097', // ID du rôle équipe staff
@@ -151,4 +152,3 @@ export default {
     presence: normalizePresence(process.env.BOT_PRESENCE, 'dnd')
   }
 };
-
