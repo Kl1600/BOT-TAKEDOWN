@@ -36,7 +36,7 @@
     },
     "crew": {
       "description": "Afficher les informations de création d'un Crew",
-      "content": "### CRÉATION DE CREW\n\nCréez gratuitement votre Crew sur TAKEDOWN depuis un ticket.\n\nseparator\n### CONDITIONS\n\n- Être au minimum 3 membres\n- Être actif sur le serveur\n- Avoir un projet sérieux et préparé\n\nseparator\n### DÉMARCHE\n\n**1.** Préparez une courte présentation avec le nom, l'identité, les fondateurs et les membres du Crew.\n\n**2.** Ouvrez un ticket dans <#1509613220019572940> et sélectionnez la catégorie Crew.\n\n**3.** Envoyez votre présentation et attendez le retour du staff."
+      "content": "### CRÉATION DE CREW\n\nCréez votre Crew directement en jeu sur TAKEDOWN.\n\nLa création est entièrement gratuite, sans condition et ne nécessite aucun ticket.\n\nRassemblez votre équipe, choisissez votre identité et lancez votre Crew en jeu."
     },
     "ticket": {
       "description": "Envoyer le panneau de ticket",

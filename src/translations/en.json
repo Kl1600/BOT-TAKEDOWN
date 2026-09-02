@@ -36,7 +36,7 @@
     },
     "crew": {
       "description": "Display Crew creation information",
-      "content": "### CREW CREATION\n\nCreate your Crew on TAKEDOWN for free through a ticket.\n\nseparator\n### REQUIREMENTS\n\n- Have at least 3 members\n- Be active on the server\n- Have a serious and prepared project\n\nseparator\n### PROCESS\n\n**1.** Prepare a short presentation with the Crew name, identity, founders, and members.\n\n**2.** Open a ticket in <#1509613220019572940> and select the Crew category.\n\n**3.** Send your presentation and wait for the staff's response."
+      "content": "### CREW CREATION\n\nCreate your Crew directly in-game on TAKEDOWN.\n\nCrew creation is completely free, has no requirements, and does not require a ticket.\n\nGather your team, choose your identity, and launch your Crew in-game."
     },
     "ticket": {
       "description": "Send the ticket panel",
