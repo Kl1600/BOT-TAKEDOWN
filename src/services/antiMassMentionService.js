@@ -24,7 +24,7 @@ export async function handleAntiMassMentionMessage(message) {
   if (!deleted) return true;
 
   await message.channel.send({
-    content: '-# Seul le rôle Perm Bot peut utiliser @everyone ou @here.',
+    content: '-# Vous n’avez pas les permissions suffisantes.',
     allowedMentions: { parse: [] }
   }).then(warning => {
     setTimeout(() => warning.delete().catch(() => null), 5000);
