@@ -451,6 +451,11 @@ export async function initializeVoiceState(client) {
 
       const languageTag = languageMatch[1];
       const generator = generators.find(candidate => GENERATOR_CHANNEL_LANG.get(candidate.id) === languageTag) || null;
+      await channel.permissionOverwrites.edit(ownerId, {
+        Stream: true
+      }).catch(err => {
+        logger.error(`Impossible d'autoriser le stream dans le salon vocal ${channel.id}:`, err);
+      });
       const record = rebuildVoiceRecord(channel, ownerId, languageTag, generator);
       dynamicChannels.add(channel.id);
       dynamicChannelOwners.set(channel.id, ownerId);
@@ -493,6 +498,7 @@ export async function handleJoinGenerator(newState) {
             PermissionFlagsBits.ViewChannel,
             PermissionFlagsBits.Connect,
             PermissionFlagsBits.Speak,
+            PermissionFlagsBits.Stream,
             PermissionFlagsBits.MoveMembers,
             PermissionFlagsBits.MuteMembers,
             PermissionFlagsBits.DeafenMembers
@@ -697,6 +703,7 @@ export async function handleVoiceUserSelect(interaction) {
       ViewChannel: record.isPrivate ? true : null,
       Connect: record.isPrivate ? true : null,
       Speak: record.isPrivate ? true : null,
+      Stream: null,
       MoveMembers: null,
       MuteMembers: null,
       DeafenMembers: null
@@ -705,6 +712,7 @@ export async function handleVoiceUserSelect(interaction) {
       ViewChannel: true,
       Connect: true,
       Speak: true,
+      Stream: true,
       MoveMembers: true,
       MuteMembers: true,
       DeafenMembers: true
