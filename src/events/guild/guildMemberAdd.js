@@ -7,11 +7,16 @@ import dbService from '../../database/dbProxy.js';
 import { handleGuildMemberInviteJoin } from '../../services/inviteService.js';
 import { ensureBetaAccess } from '../../services/betaService.js';
 import { syncGuildTagMember } from '../../services/guildTagService.js';
+import { updateMemberCountChannel } from '../../services/memberCountService.js';
 
 export default {
   name: 'guildMemberAdd',
   once: false,
   async execute(member, client) {
+    void updateMemberCountChannel(client).catch(err => {
+      logger.error('Impossible d’actualiser le compteur après l’arrivée d’un membre:', err);
+    });
+
     const autoroleId = config.roles.autorole || '1509613216114671661';
     if (autoroleId) {
       const role = member.guild.roles.cache.get(autoroleId) || await member.guild.roles.fetch(autoroleId).catch(() => null);

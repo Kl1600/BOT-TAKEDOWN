@@ -72,7 +72,8 @@ export default {
     inviteLeaderboard: process.env.CHANNEL_INVITE_LEADERBOARD || '',
     betaFeedback: '1520470579956682824',
     errors: process.env.CHANNEL_ERRORS || '1540054517113028698',
-    guildTagLogs: process.env.CHANNEL_GUILD_TAG_LOGS || '1542944520361091123'
+    guildTagLogs: process.env.CHANNEL_GUILD_TAG_LOGS || '1542944520361091123',
+    memberCount: process.env.CHANNEL_MEMBER_COUNT || '1545137311183015957'
   },
 
   ticketRoutingRoles: {
