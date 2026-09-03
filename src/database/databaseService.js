@@ -963,6 +963,14 @@ export async function getGuildTagState(guildId, userId) {
   );
 }
 
+export async function countGuildTagMembers(guildId) {
+  const row = await db.get(
+    'SELECT COUNT(*) AS total FROM guild_tag_states WHERE guild_id = ? AND has_tag = 1',
+    [guildId]
+  );
+  return Number(row?.total) || 0;
+}
+
 export async function deleteGuildTagState(guildId, userId) {
   return db.run(
     'DELETE FROM guild_tag_states WHERE guild_id = ? AND user_id = ?',
@@ -1043,5 +1051,6 @@ export default {
   getPanelTranslation,
   upsertGuildTagState,
   getGuildTagState,
+  countGuildTagMembers,
   deleteGuildTagState
 };

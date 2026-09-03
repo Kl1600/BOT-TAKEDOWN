@@ -23,6 +23,10 @@ function getDatabaseModule() {
 }
 
 function fallbackValue(property) {
+  if (property === 'countGuildTagMembers') {
+    return 0;
+  }
+
   if (property === 'get' || property === 'getUserLanguage' || property === 'getStreamerStatus' || property === 'getPendingApplication' || property === 'getApplication' || property === 'getStaffApplyCooldown' || property === 'getStreamerApplyCooldown' || property === 'getPendingStreamerApplication' || property === 'getStreamerApplication' || property === 'getGuildAntiLinkState' || property === 'isGuildAntiLinkWhitelisted' || property === 'isGuildAntiLinkBlacklisted' || property === 'getTicket' || property === 'getUserActiveTicket' || property === 'getInviteReferral' || property === 'getInviteRank' || property === 'getBetaWelcomeQueue' || property === 'getXpProfile' || property === 'getXpRank') {
     return null;
   }

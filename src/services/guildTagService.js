@@ -91,6 +91,7 @@ async function sendGuildTagLog(channel, member, state, action) {
   };
 
   const tagValue = state.tag || 'Aucun';
+  const totalTaggedMembers = await dbService.countGuildTagMembers(channel.guild.id);
   const container = new ContainerBuilder()
     .setAccentColor(action === 'removed' ? config.colors.error : config.colors.success)
     .addTextDisplayComponents(
@@ -101,7 +102,8 @@ async function sendGuildTagLog(channel, member, state, action) {
         '',
         `**Membre** : <@${member.id}> (\`${member.user.username}\`)`,
         `**Identifiant** : \`${member.id}\``,
-        `**Tag** : \`${tagValue}\``
+        `**Tag** : \`${tagValue}\``,
+        `**Total de membres avec le tag** : \`${totalTaggedMembers}\``
       ].join('\n'))
     );
 
