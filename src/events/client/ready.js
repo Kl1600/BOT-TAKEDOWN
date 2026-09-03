@@ -11,6 +11,25 @@ import dbService from '../../database/dbProxy.js';
 import config from '../../config/config.js';
 import * as logger from '../../utils/logger.js';
 
+const RESTART_SUCCESS_MESSAGE = '✅ Bot redémarré avec succès.';
+
+function isUnknownWebhookError(error) {
+  return Number(error?.code ?? error?.rawError?.code) === 10015;
+}
+
+async function sendRestartSuccessInChannel(client, channelId) {
+  if (!channelId) return false;
+
+  const channel = client.channels.cache.get(channelId)
+    || await client.channels.fetch(channelId).catch(() => null);
+  if (!channel?.isTextBased()) return false;
+
+  return channel.send({
+    content: RESTART_SUCCESS_MESSAGE,
+    allowedMentions: { parse: [] }
+  }).then(() => true).catch(() => false);
+}
+
 export default {
   name: 'clientReady',
   once: true,
@@ -56,8 +75,12 @@ export default {
     if (pendingRestart?.mode === 'slash' && pendingRestart?.token) {
       await client.rest.patch(
         Routes.webhookMessage(pendingRestart.applicationId || client.user.id, pendingRestart.token, '@original'),
-        { body: { content: '✅ Bot redémarré avec succès.' } }
+        { body: { content: RESTART_SUCCESS_MESSAGE } }
       ).catch(err => {
+        if (isUnknownWebhookError(err)) {
+          void sendRestartSuccessInChannel(client, pendingRestart.channelId);
+          return;
+        }
         logger.error('Impossible de mettre à jour la réponse de restart slash:', err);
       });
     } else if (pendingRestart?.channelId && pendingRestart?.messageId) {
@@ -65,7 +88,7 @@ export default {
       if (channel?.isTextBased()) {
         const message = await channel.messages.fetch(pendingRestart.messageId).catch(() => null);
         if (message) {
-          await message.edit({ content: '✅ Bot redémarré avec succès.' }).catch(err => {
+          await message.edit({ content: RESTART_SUCCESS_MESSAGE }).catch(err => {
             logger.error('Impossible de mettre à jour le message de restart:', err);
           });
         }

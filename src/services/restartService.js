@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const restartStatePath = join(__dirname, '../../logs/restart-state.json');
+const RESTART_STATE_MAX_AGE_MS = 14 * 60 * 1000;
 
 export async function markRestartPending(payload) {
   await fs.mkdir(join(__dirname, '../../logs'), { recursive: true }).catch(() => null);
@@ -20,7 +21,12 @@ export async function consumeRestartPending() {
   await fs.unlink(restartStatePath).catch(() => null);
 
   try {
-    return JSON.parse(raw);
+    const state = JSON.parse(raw);
+    const createdAt = Number(state?.createdAt);
+    if (!Number.isFinite(createdAt) || Date.now() - createdAt > RESTART_STATE_MAX_AGE_MS) {
+      return null;
+    }
+    return state;
   } catch {
     return null;
   }
