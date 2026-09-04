@@ -16,6 +16,10 @@ import * as logger from '../utils/logger.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+function isUnknownChannelError(error) {
+  return Number(error?.code ?? error?.rawError?.code) === 10003;
+}
+
 export function isStaffOrAdmin(member) {
   return (
     member.roles.cache.has(config.roles.admin)
@@ -569,7 +573,9 @@ export async function executeTicketClose({ channel, mod, raison, client }) {
       logger.error(`Impossible de supprimer le ticket ${channel.id} de la base:`, err);
     });
     await channel.delete().catch(err => {
-      logger.error(`Impossible de supprimer le salon du ticket ${channel.id}:`, err);
+      if (!isUnknownChannelError(err)) {
+        logger.error(`Impossible de supprimer le salon du ticket ${channel.id}:`, err);
+      }
     });
   }, 3000);
 }

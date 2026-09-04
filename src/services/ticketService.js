@@ -10,6 +10,10 @@ import * as logger from '../utils/logger.js';
 const BOT_OWNER_ID = '1481543558715408426';
 const closingTicketIds = new Set();
 
+function isUnknownChannelError(error) {
+  return Number(error?.code ?? error?.rawError?.code) === 10003;
+}
+
 function canOpenMultipleTickets(userId) {
   return String(userId) === BOT_OWNER_ID;
 }
@@ -393,7 +397,9 @@ export async function handleTicketClose(interaction) {
       logger.error(`Impossible de supprimer le ticket ${channel.id} de la base:`, err);
     });
     await channel.delete().catch(err => {
-      logger.error(`Impossible de supprimer le salon du ticket ${channel.id}:`, err);
+      if (!isUnknownChannelError(err)) {
+        logger.error(`Impossible de supprimer le salon du ticket ${channel.id}:`, err);
+      }
     });
     closingTicketIds.delete(channel.id);
   }, 3000);
@@ -476,11 +482,12 @@ export async function handleTicketDelete(interaction) {
   // Deletion timeout (5 seconds warning)
   setTimeout(() => {
     channel.delete().catch(err => {
-      logger.error(`Impossible de supprimer le salon du ticket ${channel.id}:`, err);
+      if (!isUnknownChannelError(err)) {
+        logger.error(`Impossible de supprimer le salon du ticket ${channel.id}:`, err);
+      }
     });
   }, 5000);
 }
-
 
 
 
