@@ -22,6 +22,13 @@ const translations = {
 
 const TRANSLATION_TIMEOUT_MS = 10_000;
 const TRANSLATION_MAX_ATTEMPTS = 3;
+const TRANSLATION_MIN_INTERVAL_MS = 750;
+const TRANSLATION_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+const TRANSLATION_CACHE_MAX_ENTRIES = 500;
+const translationCache = new Map();
+const inFlightTranslations = new Map();
+let translationRequestQueue = Promise.resolve();
+let nextTranslationRequestAt = 0;
 
 function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -31,18 +38,62 @@ function isRetryableTranslationStatus(status) {
   return status === 408 || status === 425 || status === 429 || status >= 500;
 }
 
-async function fetchTranslation(url) {
-  let lastError = null;
+function getRetryAfterMs(response, attempt) {
+  const retryAfter = response.headers.get('retry-after');
+  const retryAfterSeconds = Number(retryAfter);
+  if (Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0) {
+    return Math.min(retryAfterSeconds * 1000, 60_000);
+  }
 
-  for (let attempt = 1; attempt <= TRANSLATION_MAX_ATTEMPTS; attempt += 1) {
+  const retryAfterDate = Date.parse(retryAfter || '');
+  if (Number.isFinite(retryAfterDate)) {
+    return Math.min(Math.max(retryAfterDate - Date.now(), 1000), 60_000);
+  }
+
+  return attempt * 5000;
+}
+
+function queueTranslationRequest(url, attempt) {
+  const request = translationRequestQueue.then(async () => {
+    const remainingDelay = Math.max(0, nextTranslationRequestAt - Date.now());
+    if (remainingDelay > 0) await wait(remainingDelay);
+
     try {
       const response = await fetch(url, {
         signal: AbortSignal.timeout(TRANSLATION_TIMEOUT_MS)
       });
 
+      if (response.status === 429) {
+        nextTranslationRequestAt = Math.max(
+          nextTranslationRequestAt,
+          Date.now() + getRetryAfterMs(response, attempt)
+        );
+      }
+      return response;
+    } finally {
+      nextTranslationRequestAt = Math.max(
+        nextTranslationRequestAt,
+        Date.now() + TRANSLATION_MIN_INTERVAL_MS
+      );
+    }
+  });
+
+  translationRequestQueue = request.catch(() => null);
+  return request;
+}
+
+async function fetchTranslation(url) {
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= TRANSLATION_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      const response = await queueTranslationRequest(url, attempt);
+
       if (response.ok) return response;
+      await response.body?.cancel().catch(() => null);
 
       const responseError = new Error(`Le service de traduction a répondu avec le statut HTTP ${response.status}.`);
+      responseError.status = response.status;
       if (!isRetryableTranslationStatus(response.status)) {
         responseError.retryable = false;
         throw responseError;
@@ -54,11 +105,31 @@ async function fetchTranslation(url) {
     }
 
     if (attempt < TRANSLATION_MAX_ATTEMPTS) {
-      await wait(attempt * 1000);
+      if (lastError?.status !== 429) {
+        await wait(attempt * 1000);
+      }
     }
   }
 
   throw lastError || new Error('Le service de traduction est indisponible.');
+}
+
+function getCachedTranslation(cacheKey) {
+  const cached = translationCache.get(cacheKey);
+  if (!cached) return null;
+  if (Date.now() - cached.createdAt > TRANSLATION_CACHE_TTL_MS) {
+    translationCache.delete(cacheKey);
+    return null;
+  }
+  return cached.value;
+}
+
+function cacheTranslation(cacheKey, value) {
+  if (translationCache.size >= TRANSLATION_CACHE_MAX_ENTRIES) {
+    const oldestKey = translationCache.keys().next().value;
+    if (oldestKey !== undefined) translationCache.delete(oldestKey);
+  }
+  translationCache.set(cacheKey, { value, createdAt: Date.now() });
 }
 
 const TRANSLATION_GLOSSARY = {
@@ -343,19 +414,48 @@ function preserveSourceCasing(sourceText, translatedText) {
 
 export async function translateText(text, fromLang = 'fr', toLang = 'en') {
   if (!text) return '';
-  try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURIComponent(text)}`;
-    const response = await fetchTranslation(url);
+  const sourceText = String(text);
+  const cacheKey = `${fromLang}:${toLang}:${sourceText}`;
+  const cachedTranslation = getCachedTranslation(cacheKey);
+  if (cachedTranslation !== null) return cachedTranslation;
 
-    const data = await response.json();
-    if (data && data[0]) {
-      const translated = data[0].map(item => item[0]).join('');
-      return preserveSourceCasing(text, applyTranslationFixes(text, translated, fromLang, toLang));
+  const pendingTranslation = inFlightTranslations.get(cacheKey);
+  if (pendingTranslation) return pendingTranslation;
+
+  const translationPromise = (async () => {
+    try {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURIComponent(sourceText)}`;
+      const response = await fetchTranslation(url);
+
+      const data = await response.json();
+      if (data && data[0]) {
+        const translated = data[0].map(item => item[0]).join('');
+        const result = preserveSourceCasing(
+          sourceText,
+          applyTranslationFixes(sourceText, translated, fromLang, toLang)
+        );
+        cacheTranslation(cacheKey, result);
+        return result;
+      }
+      throw new Error('Le service de traduction a renvoyé une réponse invalide.');
+    } catch (err) {
+      const logMessage = `Échec de la traduction ${fromLang} vers ${toLang} après ${TRANSLATION_MAX_ATTEMPTS} tentatives:`;
+      if (err?.status === 429) {
+        logger.warn(`${logMessage} limite temporaire atteinte.`);
+      } else {
+        logger.error(logMessage, err);
+      }
+      throw new Error('Le service de traduction est temporairement indisponible.', { cause: err });
     }
-    throw new Error('Le service de traduction a renvoyé une réponse invalide.');
-  } catch (err) {
-    logger.error(`Échec de la traduction ${fromLang} vers ${toLang} après ${TRANSLATION_MAX_ATTEMPTS} tentatives:`, err);
-    throw new Error('Le service de traduction est temporairement indisponible.', { cause: err });
+  })();
+
+  inFlightTranslations.set(cacheKey, translationPromise);
+  try {
+    return await translationPromise;
+  } finally {
+    if (inFlightTranslations.get(cacheKey) === translationPromise) {
+      inFlightTranslations.delete(cacheKey);
+    }
   }
 }
 
