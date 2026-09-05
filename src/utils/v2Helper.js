@@ -38,7 +38,7 @@ export function applyV2FooterPatch() {
 
   const originalToJSON = ContainerBuilder.prototype.toJSON;
   ContainerBuilder.prototype.toJSON = function patchedToJSON(...args) {
-    if (!this.__takedownFooterAdded) {
+    if (!this.__takedownFooterAdded && !this.__takedownSkipFooter) {
       const footerComponent = buildFooterComponent();
       if (footerComponent instanceof SectionBuilder) {
         this.addSectionComponents(footerComponent);
@@ -58,6 +58,15 @@ export function applyV2FooterPatch() {
 }
 
 applyV2FooterPatch();
+
+export function skipV2Footer(container) {
+  Object.defineProperty(container, '__takedownSkipFooter', {
+    value: true,
+    enumerable: false,
+    configurable: true
+  });
+  return container;
+}
 
 export function createErrorContainer(content) {
   const text = new TextDisplayBuilder().setContent(content);

@@ -9,6 +9,7 @@ import {
   TextDisplayBuilder
 } from 'discord.js';
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
+import { skipV2Footer } from '../../utils/v2Helper.js';
 import config from '../../config/config.js';
 
 const REGLEMENT_CP_FRENCH_SECTIONS = [
@@ -216,24 +217,29 @@ The **Takedown** staff reserves the right to apply an appropriate sanction based
 ];
 
 function buildReglementCpBatches(sections, withTranslateButton = false) {
-  const container = new ContainerBuilder()
-    .setAccentColor(config.colors.primary)
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(sections.join('\n\n'))
-    );
+  const containers = sections.map((section, index) => {
+    const isLastSection = index === sections.length - 1;
+    const container = new ContainerBuilder()
+      .setAccentColor(config.colors.primary)
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(section));
 
-  if (withTranslateButton) {
-    container.addActionRowComponents(
-      new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('msg_translate_reglementcp')
-          .setLabel('🇬🇧 Translate')
-          .setStyle(ButtonStyle.Secondary)
-      )
-    );
-  }
+    if (!isLastSection) skipV2Footer(container);
 
-  return [[container]];
+    if (isLastSection && withTranslateButton) {
+      container.addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId('msg_translate_reglementcp')
+            .setLabel('🇬🇧 Translate')
+            .setStyle(ButtonStyle.Secondary)
+        )
+      );
+    }
+
+    return container;
+  });
+
+  return [containers];
 }
 
 function buildReglementCpFrenchBatches() {
