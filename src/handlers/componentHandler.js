@@ -115,6 +115,7 @@ export async function handleComponentInteraction(interaction) {
     case 'msg_translate_modes':
     case 'msg_translate_ticket':
     case 'msg_translate_reglement':
+    case 'msg_translate_reglementcp':
     case 'msg_translate_beta':
     case 'msg_translate_connect':
     case 'msg_translate_staffapply':
