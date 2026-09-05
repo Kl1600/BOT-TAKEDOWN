@@ -4,7 +4,7 @@ import { editV2InteractionReply } from '../utils/v2Helper.js';
 import { resolveModesTranslationGroup } from './modesService.js';
 import dbService from '../database/dbProxy.js';
 import config from '../config/config.js';
-import { REGLEMENT_CP_ENGLISH_SECTIONS } from '../commands/admin/reglementcp.js';
+import { buildReglementCpEnglishBatches } from '../commands/admin/reglementcp.js';
 
 const storedPanelTranslations = new Map();
 
@@ -296,17 +296,6 @@ async function translateCrewStack(interaction) {
   });
 }
 
-async function translateReglementCpStack(interaction) {
-  let sectionIndex = 0;
-
-  return translateStructuredStack(interaction, async content => {
-    if (isFooterText(content)) return content;
-    const translatedSection = REGLEMENT_CP_ENGLISH_SECTIONS[sectionIndex];
-    sectionIndex += 1;
-    return translatedSection ?? await translateTextDisplayContent(content);
-  });
-}
-
 async function translateModesStack(interaction) {
   const messageIds = await resolveModesTranslationGroup(interaction.message);
   const translatedContainersByMessage = [];
@@ -366,13 +355,27 @@ export async function handleMessageTranslate(interaction) {
     return replyWithTranslatedComponents(interaction, translatedComponents);
   }
 
-  if (explicitType === 'reglement' || explicitType === 'reglementcp' || explicitType === 'guide' || explicitType === 'crew') {
+  if (explicitType === 'reglementcp') {
+    const [firstBatch, ...remainingBatches] = buildReglementCpEnglishBatches();
+    await interaction.editReply({
+      components: firstBatch,
+      flags: MessageFlags.IsComponentsV2
+    });
+
+    for (const batch of remainingBatches) {
+      await interaction.followUp({
+        components: batch,
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
+      });
+    }
+    return;
+  }
+
+  if (explicitType === 'reglement' || explicitType === 'guide' || explicitType === 'crew') {
     const translatedComponents = explicitType === 'guide'
       ? await translateGuideStack(interaction)
       : explicitType === 'crew'
         ? await translateCrewStack(interaction)
-        : explicitType === 'reglementcp'
-          ? await translateReglementCpStack(interaction)
         : await translateStructuredStack(interaction);
     return replyWithTranslatedComponents(interaction, translatedComponents);
   }

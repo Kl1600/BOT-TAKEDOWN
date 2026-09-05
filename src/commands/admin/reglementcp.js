@@ -12,6 +12,7 @@ import { checkPermissions } from '../../middlewares/permissionCheck.js';
 import config from '../../config/config.js';
 
 const translateHint = '-# 🇬🇧 Click below to translate to English.';
+const SECTIONS_PER_MESSAGE = 4;
 
 const REGLEMENT_CP_FRENCH_SECTIONS = [
   `### RÈGLEMENT - COURSES POURSUITES
@@ -217,15 +218,25 @@ The **Takedown** staff reserves the right to apply an appropriate sanction based
   `**Participation in pursuits implies acceptance of and compliance with all these rules.**`
 ];
 
-function buildReglementCpContainers() {
-  return REGLEMENT_CP_FRENCH_SECTIONS.map((section, index) => {
-    const isLastSection = index === REGLEMENT_CP_FRENCH_SECTIONS.length - 1;
-    const content = isLastSection ? `${section}\n\n${translateHint}` : section;
+function splitContainersIntoBatches(containers) {
+  const batches = [];
+  for (let index = 0; index < containers.length; index += SECTIONS_PER_MESSAGE) {
+    batches.push(containers.slice(index, index + SECTIONS_PER_MESSAGE));
+  }
+  return batches;
+}
+
+function buildReglementCpBatches(sections, withTranslateButton = false) {
+  const containers = sections.map((section, index) => {
+    const isLastSection = index === sections.length - 1;
+    const content = isLastSection && withTranslateButton
+      ? `${section}\n\n${translateHint}`
+      : section;
     const container = new ContainerBuilder()
       .setAccentColor(config.colors.primary)
       .addTextDisplayComponents(new TextDisplayBuilder().setContent(content));
 
-    if (isLastSection) {
+    if (isLastSection && withTranslateButton) {
       container.addActionRowComponents(
         new ActionRowBuilder().addComponents(
           new ButtonBuilder()
@@ -238,16 +249,28 @@ function buildReglementCpContainers() {
 
     return container;
   });
+
+  return splitContainersIntoBatches(containers);
+}
+
+function buildReglementCpFrenchBatches() {
+  return buildReglementCpBatches(REGLEMENT_CP_FRENCH_SECTIONS, true);
+}
+
+export function buildReglementCpEnglishBatches() {
+  return buildReglementCpBatches(REGLEMENT_CP_ENGLISH_SECTIONS);
 }
 
 async function sendReglementCp(channel) {
-  const containers = buildReglementCpContainers();
-  await channel.client.rest.post(Routes.channelMessages(channel.id), {
-    body: {
-      components: containers.map(container => container.toJSON()),
-      flags: MessageFlags.IsComponentsV2
-    }
-  });
+  const batches = buildReglementCpFrenchBatches();
+  for (const containers of batches) {
+    await channel.client.rest.post(Routes.channelMessages(channel.id), {
+      body: {
+        components: containers.map(container => container.toJSON()),
+        flags: MessageFlags.IsComponentsV2
+      }
+    });
+  }
 }
 
 export default {
@@ -258,10 +281,18 @@ export default {
   async executeSlash(interaction) {
     if (!await checkPermissions(interaction, interaction.member)) return;
 
+    const [firstBatch, ...remainingBatches] = buildReglementCpFrenchBatches();
     await interaction.reply({
-      components: buildReglementCpContainers(),
+      components: firstBatch,
       flags: MessageFlags.IsComponentsV2
     });
+
+    for (const batch of remainingBatches) {
+      await interaction.followUp({
+        components: batch,
+        flags: MessageFlags.IsComponentsV2
+      });
+    }
   },
 
   async executePrefix(message) {
