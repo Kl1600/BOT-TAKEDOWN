@@ -9,12 +9,11 @@ import {
   Routes
 } from 'discord.js';
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
-import { isEnglishOnly } from '../../utils/language.js';
 import config from '../../config/config.js';
 
 const translateHint = '-# 🇬🇧 Click below to translate to English.';
 
-function createRuleContainer(title, lines, withTranslateButton = false, translateDisabled = false) {
+function createRuleContainer(title, lines, withTranslateButton = false) {
   const text = new TextDisplayBuilder().setContent(
     [`### ${title}`, '', ...lines, '', translateHint].join('\n')
   );
@@ -27,8 +26,7 @@ function createRuleContainer(title, lines, withTranslateButton = false, translat
     const translateButton = new ButtonBuilder()
       .setCustomId('msg_translate_reglement')
       .setLabel('🇬🇧 Translate')
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(Boolean(translateDisabled));
+      .setStyle(ButtonStyle.Secondary);
 
     container.addActionRowComponents(new ActionRowBuilder().addComponents(translateButton));
   }
@@ -36,7 +34,7 @@ function createRuleContainer(title, lines, withTranslateButton = false, translat
   return container;
 }
 
-function buildReglementContainers(translateDisabled = false) {
+function buildReglementContainers() {
   return [
     createRuleContainer('RÈGLEMENT DISCORD — TAKEDOWN', [
       'Bienvenue sur le serveur Discord officiel de TAKEDOWN !',
@@ -142,12 +140,12 @@ function buildReglementContainers(translateDisabled = false) {
       '> En jouant sur le serveur, vous vous engagez à respecter l’ensemble des règles en jeu.',
       '',
       'Merci de contribuer à faire de **TAKEDOWN** une communauté agréable pour tous.'
-    ], true, translateDisabled)
+    ], true)
   ];
 }
 
-async function sendReglement(channel, translateDisabled = false) {
-  const containers = buildReglementContainers(translateDisabled);
+async function sendReglement(channel) {
+  const containers = buildReglementContainers();
   await channel.client.rest.post(Routes.channelMessages(channel.id), {
     body: {
       components: containers.map(container => container.toJSON()),
@@ -163,19 +161,17 @@ export default {
 
   async executeSlash(interaction) {
     if (!await checkPermissions(interaction, interaction.member)) return;
-    const translateDisabled = !(await isEnglishOnly(interaction.member));
 
     await interaction.reply({
-      components: buildReglementContainers(translateDisabled),
+      components: buildReglementContainers(),
       flags: MessageFlags.IsComponentsV2
     });
   },
 
   async executePrefix(message) {
     if (!await checkPermissions(message, message.member)) return;
-    const translateDisabled = !(await isEnglishOnly(message.member));
 
     await message.delete().catch(() => null);
-    await sendReglement(message.channel, translateDisabled);
+    await sendReglement(message.channel);
   }
 };
