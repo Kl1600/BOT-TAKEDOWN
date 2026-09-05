@@ -336,18 +336,20 @@ export async function handleTicketModalSubmit(interaction) {
 export async function handleTicketClose(interaction) {
   const channel = interaction.channel;
   const user = interaction.user;
+  await interaction.deferUpdate();
+
   const lang = await getLanguage(interaction.member);
 
   const ticket = await dbService.getTicket(channel.id);
   if (!ticket) {
-    return interaction.reply({
+    return interaction.followUp({
       content: t(lang, 'errors.ticket_not_found'),
       flags: MessageFlags.Ephemeral
     });
   }
 
   if (closingTicketIds.has(channel.id)) {
-    return interaction.reply({
+    return interaction.followUp({
       content: t(lang, 'errors.ticket_already_closed'),
       flags: MessageFlags.Ephemeral
     });
@@ -357,7 +359,7 @@ export async function handleTicketClose(interaction) {
   const creatorId = ticket.creator_id;
 
   try {
-    await interaction.reply({
+    await interaction.followUp({
       content: 'Fermeture du ticket dans 3 secondes.'
     });
   } catch (err) {
@@ -488,7 +490,5 @@ export async function handleTicketDelete(interaction) {
     });
   }, 5000);
 }
-
-
 
 
