@@ -12,6 +12,8 @@ import { checkPermissions } from '../../middlewares/permissionCheck.js';
 import { skipV2Footer } from '../../utils/v2Helper.js';
 import config from '../../config/config.js';
 
+const translateHint = '-# 🇬🇧 Click below to translate to English.';
+
 const REGLEMENT_CP_FRENCH_SECTIONS = [
   `### RÈGLEMENT - COURSES POURSUITES
 
@@ -219,9 +221,13 @@ The **Takedown** staff reserves the right to apply an appropriate sanction based
 function buildReglementCpBatches(sections, withTranslateButton = false) {
   const containers = sections.map((section, index) => {
     const isLastSection = index === sections.length - 1;
+    const compactSection = section.replace(/^(###[^\n]+)\n\n/, '$1\n');
+    const content = isLastSection && withTranslateButton
+      ? `${compactSection}\n\n${translateHint}`
+      : compactSection;
     const container = new ContainerBuilder()
       .setAccentColor(config.colors.primary)
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(section));
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(content));
 
     if (!isLastSection) skipV2Footer(container);
 
