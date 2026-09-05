@@ -11,9 +11,6 @@ import {
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
 import config from '../../config/config.js';
 
-const translateHint = '-# 🇬🇧 Click below to translate to English.';
-const SECTIONS_PER_MESSAGE = 4;
-
 const REGLEMENT_CP_FRENCH_SECTIONS = [
   `### RÈGLEMENT - COURSES POURSUITES
 
@@ -218,39 +215,25 @@ The **Takedown** staff reserves the right to apply an appropriate sanction based
   `**Participation in pursuits implies acceptance of and compliance with all these rules.**`
 ];
 
-function splitContainersIntoBatches(containers) {
-  const batches = [];
-  for (let index = 0; index < containers.length; index += SECTIONS_PER_MESSAGE) {
-    batches.push(containers.slice(index, index + SECTIONS_PER_MESSAGE));
-  }
-  return batches;
-}
-
 function buildReglementCpBatches(sections, withTranslateButton = false) {
-  const containers = sections.map((section, index) => {
-    const isLastSection = index === sections.length - 1;
-    const content = isLastSection && withTranslateButton
-      ? `${section}\n\n${translateHint}`
-      : section;
-    const container = new ContainerBuilder()
-      .setAccentColor(config.colors.primary)
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(content));
+  const container = new ContainerBuilder()
+    .setAccentColor(config.colors.primary)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(sections.join('\n\n'))
+    );
 
-    if (isLastSection && withTranslateButton) {
-      container.addActionRowComponents(
-        new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId('msg_translate_reglementcp')
-            .setLabel('🇬🇧 Translate')
-            .setStyle(ButtonStyle.Secondary)
-        )
-      );
-    }
+  if (withTranslateButton) {
+    container.addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('msg_translate_reglementcp')
+          .setLabel('🇬🇧 Translate')
+          .setStyle(ButtonStyle.Secondary)
+      )
+    );
+  }
 
-    return container;
-  });
-
-  return splitContainersIntoBatches(containers);
+  return [[container]];
 }
 
 function buildReglementCpFrenchBatches() {
