@@ -5,6 +5,7 @@ import { resolveModesTranslationGroup } from './modesService.js';
 import dbService from '../database/dbProxy.js';
 import config from '../config/config.js';
 import { buildReglementCpEnglishBatches } from '../commands/admin/reglementcp.js';
+import { buildConnectPanel } from '../commands/admin/connect.js';
 
 const storedPanelTranslations = new Map();
 
@@ -369,6 +370,13 @@ export async function handleMessageTranslate(interaction) {
       });
     }
     return;
+  }
+
+  if (explicitType === 'connect') {
+    return interaction.editReply({
+      components: [buildConnectPanel('en', false)],
+      flags: MessageFlags.IsComponentsV2
+    });
   }
 
   if (explicitType === 'reglement' || explicitType === 'guide' || explicitType === 'crew') {

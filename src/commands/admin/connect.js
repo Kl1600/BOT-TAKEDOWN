@@ -7,7 +7,6 @@ import {
   ActionRowBuilder,
   MessageFlags
 } from 'discord.js';
-import { isEnglishOnly } from '../../utils/language.js';
 import { sendV2Container, appendSeparatorComponent } from '../../utils/v2Helper.js';
 import config from '../../config/config.js';
 
@@ -43,7 +42,7 @@ function buildConnectText(lang) {
   };
 }
 
-function buildConnectPanel(lang, translateDisabled = false) {
+export function buildConnectPanel(lang, withTranslateButton = true) {
   const copy = buildConnectText(lang);
 
   const container = new ContainerBuilder()
@@ -58,22 +57,28 @@ function buildConnectPanel(lang, translateDisabled = false) {
 
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `${copy.optionsTitle}\n\n${copy.firstStep}\n${copy.secondStep}\n\`\`\`connect play.takedown-fivem.com\`\`\`\n${copy.thirdStep}\n\n${translateHint}`
+      `${copy.optionsTitle}\n\n${copy.firstStep}\n${copy.secondStep}\n\`\`\`connect play.takedown-fivem.com\`\`\`\n${copy.thirdStep}` +
+      (withTranslateButton ? `\n\n${translateHint}` : '')
     )
   );
 
-  container.addActionRowComponents(
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setLabel(copy.connectLabel)
-        .setStyle(ButtonStyle.Link)
-        .setURL(CONNECT_LINK),
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setLabel(copy.connectLabel)
+      .setStyle(ButtonStyle.Link)
+      .setURL(CONNECT_LINK)
+  );
+
+  if (withTranslateButton) {
+    row.addComponents(
       new ButtonBuilder()
         .setCustomId('msg_translate_connect')
         .setLabel('🇬🇧 Translate')
         .setStyle(ButtonStyle.Secondary)
-    )
-  );
+    );
+  }
+
+  container.addActionRowComponents(row);
 
   return container;
 }
@@ -84,8 +89,7 @@ export default {
     .setDescription('Afficher le panneau de connexion au serveur'),
 
   async executeSlash(interaction, lang) {
-    const translateDisabled = !(await isEnglishOnly(interaction.member));
-    const container = buildConnectPanel('fr', translateDisabled);
+    const container = buildConnectPanel('fr');
 
     await interaction.reply({
       components: [container],
@@ -97,8 +101,7 @@ export default {
   async executePrefix(message, args, lang) {
     await message.delete().catch(() => null);
 
-    const translateDisabled = !(await isEnglishOnly(message.member));
-    const container = buildConnectPanel('fr', translateDisabled);
+    const container = buildConnectPanel('fr');
     await sendV2Container(message.channel, container);
   }
 };
