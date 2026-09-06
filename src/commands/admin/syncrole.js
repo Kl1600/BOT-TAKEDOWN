@@ -4,6 +4,40 @@ import * as logger from '../../utils/logger.js';
 
 const PLAYER_ROLE_ID = '1509613216114671661';
 const ROLE_ADD_BATCH_SIZE = 10;
+const MEMBER_FETCH_MAX_ATTEMPTS = 3;
+
+function wait(delayMs) {
+  return new Promise(resolve => setTimeout(resolve, delayMs));
+}
+
+function getMemberFetchRetryDelay(error) {
+  const message = String(error?.message || '');
+  if (error?.name !== 'GatewayRateLimitError' && !message.includes('opcode 8 was rate limited')) {
+    return null;
+  }
+
+  const match = message.match(/Retry after ([\d.]+) seconds/i);
+  const retryAfterSeconds = match ? Number(match[1]) : 10;
+  return Math.ceil(retryAfterSeconds * 1000) + 1000;
+}
+
+async function fetchAllGuildMembers(guild) {
+  for (let attempt = 1; attempt <= MEMBER_FETCH_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      return await guild.members.fetch();
+    } catch (error) {
+      const retryDelay = getMemberFetchRetryDelay(error);
+      if (retryDelay === null || attempt === MEMBER_FETCH_MAX_ATTEMPTS) throw error;
+
+      logger.warn(
+        `Récupération des membres limitée par Discord, nouvelle tentative dans ${Math.ceil(retryDelay / 1000)} secondes.`
+      );
+      await wait(retryDelay);
+    }
+  }
+
+  throw new Error('Impossible de récupérer les membres du serveur.');
+}
 
 async function synchronizePlayerRole(guild) {
   const role = guild.roles.cache.get(PLAYER_ROLE_ID)
@@ -17,7 +51,7 @@ async function synchronizePlayerRole(guild) {
     throw new Error('Le bot ne peut pas attribuer le rôle Joueur. Place son rôle au-dessus du rôle Joueur.');
   }
 
-  const members = await guild.members.fetch();
+  const members = await fetchAllGuildMembers(guild);
   const targets = [...members.values()].filter(member =>
     !member.user.bot && !member.roles.cache.has(PLAYER_ROLE_ID)
   );
