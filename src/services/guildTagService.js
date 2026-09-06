@@ -5,6 +5,7 @@ import * as logger from '../utils/logger.js';
 
 const memberSyncQueues = new Map();
 const TAG_SCAN_INTERVAL_MS = 35 * 1000;
+const TAG_FULL_FETCH_INTERVAL_MS = 5 * 60 * 1000;
 const TAG_FULL_FETCH_RETRY_DELAY_MS = 5 * 60 * 1000;
 let trackedGuildId = null;
 let tagScanTimer = null;
@@ -12,10 +13,22 @@ let tagScanInProgress = false;
 let maintenanceFailureLogged = false;
 let nextFullMemberFetchAt = 0;
 let memberFetchTimeoutLogged = false;
+let memberFetchRateLimitLogged = false;
 
 function isGuildMembersTimeout(error) {
   return error?.code === 'GuildMembersTimeout'
     || error?.message === "Members didn't arrive in time.";
+}
+
+function getGatewayRateLimitDelay(error) {
+  const message = String(error?.message || '');
+  if (error?.name !== 'GatewayRateLimitError' && !message.includes('opcode 8 was rate limited')) {
+    return null;
+  }
+
+  const match = message.match(/Retry after ([\d.]+) seconds/i);
+  const retryAfterSeconds = match ? Number(match[1]) : 10;
+  return Math.ceil(retryAfterSeconds * 1000) + 1000;
 }
 
 async function fetchGuildTagMembers(guild) {
@@ -25,10 +38,21 @@ async function fetchGuildTagMembers(guild) {
 
   try {
     const members = await guild.members.fetch();
-    nextFullMemberFetchAt = 0;
+    nextFullMemberFetchAt = Date.now() + TAG_FULL_FETCH_INTERVAL_MS;
     memberFetchTimeoutLogged = false;
+    memberFetchRateLimitLogged = false;
     return members;
   } catch (error) {
+    const rateLimitDelay = getGatewayRateLimitDelay(error);
+    if (rateLimitDelay !== null) {
+      nextFullMemberFetchAt = Date.now() + Math.max(rateLimitDelay, TAG_FULL_FETCH_RETRY_DELAY_MS);
+      if (!memberFetchRateLimitLogged) {
+        memberFetchRateLimitLogged = true;
+        logger.warn('Récupération complète des membres limitée par Discord, suivi des tags poursuivi avec le cache.');
+      }
+      return guild.members.cache;
+    }
+
     if (!isGuildMembersTimeout(error)) throw error;
 
     nextFullMemberFetchAt = Date.now() + TAG_FULL_FETCH_RETRY_DELAY_MS;
