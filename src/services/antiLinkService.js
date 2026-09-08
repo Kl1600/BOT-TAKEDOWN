@@ -3,8 +3,36 @@ import dbService from '../database/dbProxy.js';
 import { getLanguage } from '../utils/language.js';
 
 const DISCORD_LINK_REGEX = /(?:https?:\/\/)?(?:www\.)?(?:canary\.|ptb\.)?(?:discord\.gg|discord(?:app)?\.com\/invite|discord\.com\/invite)\/\S+/i;
+const DISCORD_LINK_OCCURRENCE_REGEX = /(?:https?:\/\/)?(?:www\.)?(?:canary\.|ptb\.)?(?:discord\.gg|discord(?:app)?\.com\/invite|discord\.com\/invite)\/(?=\S)/gi;
+const SINGLE_DISCORD_LINK_CHANNEL_ID = '1546931955512115240';
 
 const guildAntiLinkCache = new Map();
+
+function isSingleDiscordLinkChannel(message) {
+  return message.channelId === SINGLE_DISCORD_LINK_CHANNEL_ID
+    || message.channel?.parentId === SINGLE_DISCORD_LINK_CHANNEL_ID;
+}
+
+function countDiscordLinks(content) {
+  const matches = String(content || '').match(DISCORD_LINK_OCCURRENCE_REGEX);
+  return matches?.length || 0;
+}
+
+async function blockMultipleDiscordLinks(message) {
+  const lang = await getLanguage(message.member).catch(() => 'fr');
+  const warning = lang === 'en'
+    ? '-# Only one Discord link is allowed per message.'
+    : '-# Un seul lien Discord est autorisé par message.';
+
+  await message.delete().catch(() => null);
+  await message.channel.send({
+    content: `${warning} <@${message.author.id}>`,
+    allowedMentions: { users: [message.author.id] }
+  }).then(sent => {
+    setTimeout(() => sent.delete().catch(() => null), 5000);
+  }).catch(() => null);
+  return true;
+}
 
 function buildSnapshot(enabledRow, whitelistRows, blacklistRows) {
   return {
@@ -67,6 +95,11 @@ export async function handleAntiLinkMessage(message) {
   if (!message.guild || message.author.bot) return false;
   if (message.content.startsWith(config.prefix)) return false;
   if (!DISCORD_LINK_REGEX.test(message.content)) return false;
+
+  if (isSingleDiscordLinkChannel(message)) {
+    if (countDiscordLinks(message.content) <= 1) return false;
+    return blockMultipleDiscordLinks(message);
+  }
 
   const lang = await getLanguage(message.member).catch(() => 'fr');
   const snapshot = await getGuildAntiLinkSnapshot(message.guild.id).catch(() => null);
