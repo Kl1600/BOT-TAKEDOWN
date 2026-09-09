@@ -28,6 +28,7 @@ const BUTTON_MODAL_PREFIXES = [
   'staffapply_open',
   'staffapply_start',
   'staffapply_continue_',
+  'streamer_go_live',
   'rolepanel_choose_',
   'voice_limit_',
   'msg_translate'
