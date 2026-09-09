@@ -7,6 +7,7 @@ const memberSyncQueues = new Map();
 const TAG_SCAN_INTERVAL_MS = 35 * 1000;
 const TAG_FULL_FETCH_INTERVAL_MS = 5 * 60 * 1000;
 const TAG_FULL_FETCH_RETRY_DELAY_MS = 5 * 60 * 1000;
+const TAG_SCAN_YIELD_INTERVAL = 10;
 let trackedGuildId = null;
 let tagScanTimer = null;
 let tagScanInProgress = false;
@@ -29,6 +30,10 @@ function getGatewayRateLimitDelay(error) {
   const match = message.match(/Retry after ([\d.]+) seconds/i);
   const retryAfterSeconds = match ? Number(match[1]) : 10;
   return Math.ceil(retryAfterSeconds * 1000) + 1000;
+}
+
+function yieldToEventLoop() {
+  return new Promise(resolve => setImmediate(resolve));
 }
 
 async function fetchGuildTagMembers(guild) {
@@ -216,8 +221,14 @@ async function scanGuildTagMembers(client) {
     if (!context) return null;
 
     const members = await fetchGuildTagMembers(context.guild);
+    let processedMembers = 0;
     for (const member of members.values()) {
       await syncGuildTagMember(member, member.user);
+      processedMembers += 1;
+
+      if (processedMembers % TAG_SCAN_YIELD_INTERVAL === 0) {
+        await yieldToEventLoop();
+      }
     }
 
     return members.size;
