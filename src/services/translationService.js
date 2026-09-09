@@ -322,7 +322,9 @@ async function translateModesStack(interaction) {
 }
 
 export async function handleMessageTranslate(interaction) {
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  if (!interaction.deferred && !interaction.replied) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  }
 
   const member = interaction.member;
   const lang = await getLanguage(member);

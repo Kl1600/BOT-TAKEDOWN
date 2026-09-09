@@ -1,3 +1,4 @@
+import { MessageFlags } from 'discord.js';
 import {
   handleTicketOpenClick,
   handleTicketLangClick,
@@ -21,6 +22,14 @@ export async function handleComponentInteraction(interaction) {
   if (!interaction.isButton()) return;
 
   const customId = interaction.customId;
+
+  if (customId.startsWith('msg_translate')) {
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    }
+    await handleMessageTranslate(interaction);
+    return;
+  }
 
   if (await handleVoiceButton(interaction)) {
     return;
@@ -106,20 +115,6 @@ export async function handleComponentInteraction(interaction) {
       break;
     case 'ticket_delete':
       await handleTicketDelete(interaction);
-      break;
-    case 'msg_translate':
-    case 'msg_translate_annonce':
-    case 'msg_translate_patchnote':
-    case 'msg_translate_guide':
-    case 'msg_translate_crew':
-    case 'msg_translate_modes':
-    case 'msg_translate_ticket':
-    case 'msg_translate_reglement':
-    case 'msg_translate_reglementcp':
-    case 'msg_translate_beta':
-    case 'msg_translate_connect':
-    case 'msg_translate_staffapply':
-      await handleMessageTranslate(interaction);
       break;
     default:
       if (customId.startsWith('staffapply_reject_')) {
