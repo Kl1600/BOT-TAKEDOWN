@@ -1,5 +1,5 @@
 import { ContainerBuilder, TextDisplayBuilder, MessageFlags, Routes } from 'discord.js';
-import { getLanguage, t, translateText } from '../utils/language.js';
+import { getLanguage, isTranslationUnavailableError, t, translateText } from '../utils/language.js';
 import { editV2InteractionReply } from '../utils/v2Helper.js';
 import { resolveModesTranslationGroup } from './modesService.js';
 import dbService from '../database/dbProxy.js';
@@ -321,11 +321,7 @@ async function translateModesStack(interaction) {
   return translatedContainersByMessage;
 }
 
-export async function handleMessageTranslate(interaction) {
-  if (!interaction.deferred && !interaction.replied) {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  }
-
+async function executeMessageTranslate(interaction) {
   const member = interaction.member;
   const lang = await getLanguage(member);
   const allowedPanelTypes = new Set(['annonce', 'patchnote', 'ticket', 'reglement', 'reglementcp', 'guide', 'crew', 'staffapply', 'beta', 'modes', 'connect']);
@@ -437,6 +433,21 @@ export async function handleMessageTranslate(interaction) {
     .setAccentColor(config.colors.primary)
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(translatedText));
   return editV2InteractionReply(interaction, container);
+}
+
+export async function handleMessageTranslate(interaction) {
+  if (!interaction.deferred && !interaction.replied) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  }
+
+  try {
+    return await executeMessageTranslate(interaction);
+  } catch (error) {
+    if (!isTranslationUnavailableError(error)) throw error;
+    return interaction.editReply({
+      content: '-# The translation service is temporarily unavailable. Please try again in one minute.'
+    });
+  }
 }
 
 export default {

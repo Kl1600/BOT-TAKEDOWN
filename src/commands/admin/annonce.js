@@ -10,16 +10,17 @@ import {
   TextInputBuilder,
   TextInputStyle
 } from 'discord.js';
-import { t, isEnglishOnly } from '../../utils/language.js';
+import { getLanguage, isTranslationUnavailableError, t } from '../../utils/language.js';
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
 import { logAnnouncement } from '../../services/logService.js';
 import { appendSeparatorComponent, splitContentBySeparator, sendV2Container } from '../../utils/v2Helper.js';
 import { preparePanelTranslation, storePanelTranslation } from '../../services/translationService.js';
 import config from '../../config/config.js';
+import * as logger from '../../utils/logger.js';
 
 const translateHint = '-# 🇬🇧 Click below to translate to English.';
 
-function buildAnnouncementContainer(content, translateDisabled = false) {
+function buildAnnouncementContainer(content) {
   const button = new ButtonBuilder()
     .setCustomId('msg_translate_annonce')
     .setLabel('🇬🇧 Translate')
@@ -44,14 +45,28 @@ function buildAnnouncementContainer(content, translateDisabled = false) {
   return container;
 }
 
-export async function handleAnnonceModalSubmit(interaction, lang) {
-  const content = interaction.fields.getTextInputValue('annonce_content_input');
-  const translateDisabled = !(await isEnglishOnly(interaction.member));
+async function prepareAndStoreAnnouncementTranslation(messageId, container) {
+  if (!messageId) return;
 
+  try {
+    const translatedComponents = await preparePanelTranslation([container]);
+    await storePanelTranslation(messageId, 'annonce', translatedComponents);
+  } catch (error) {
+    if (isTranslationUnavailableError(error)) {
+      logger.warn('Traduction de l’annonce non préparée ; elle sera retentée lors d’un clic sur Translate.');
+      return;
+    }
+    logger.error('Impossible de préparer la traduction de l’annonce:', error);
+  }
+}
+
+export async function handleAnnonceModalSubmit(interaction) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const container = buildAnnouncementContainer(content, translateDisabled);
-  const translatedComponents = await preparePanelTranslation([container]);
+  const content = interaction.fields.getTextInputValue('annonce_content_input');
+  const lang = await getLanguage(interaction.member).catch(() => 'fr');
+
+  const container = buildAnnouncementContainer(content);
 
   const shouldPing = interaction.customId === 'annonce_modal_ping';
   if (shouldPing) {
@@ -59,8 +74,8 @@ export async function handleAnnonceModalSubmit(interaction, lang) {
   }
 
   const announcementMessage = await sendV2Container(interaction.channel, container);
-  await storePanelTranslation(announcementMessage?.id, 'annonce', translatedComponents);
   await interaction.editReply({ content: t(lang, 'commands.annonce.success') });
+  void prepareAndStoreAnnouncementTranslation(announcementMessage?.id, container);
 
   await logAnnouncement(interaction.client, {
     title: 'Annonce publiee',
@@ -108,14 +123,12 @@ export default {
 
     const content = args.join(' ').trim();
     if (!content) return;
-    const translateDisabled = !(await isEnglishOnly(message.member));
 
     await message.delete().catch(() => null);
 
-    const container = buildAnnouncementContainer(content, translateDisabled);
-    const translatedComponents = await preparePanelTranslation([container]);
+    const container = buildAnnouncementContainer(content);
     const announcementMessage = await sendV2Container(message.channel, container);
-    await storePanelTranslation(announcementMessage?.id, 'annonce', translatedComponents);
+    void prepareAndStoreAnnouncementTranslation(announcementMessage?.id, container);
 
     await logAnnouncement(message.client, {
       title: 'Annonce publiee',

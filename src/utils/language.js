@@ -25,13 +25,27 @@ const TRANSLATION_MAX_ATTEMPTS = 3;
 const TRANSLATION_MIN_INTERVAL_MS = 750;
 const TRANSLATION_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const TRANSLATION_CACHE_MAX_ENTRIES = 500;
+const TRANSLATION_OUTAGE_COOLDOWN_MS = 60 * 1000;
 const translationCache = new Map();
 const inFlightTranslations = new Map();
 let translationRequestQueue = Promise.resolve();
 let nextTranslationRequestAt = 0;
+let translationUnavailableUntil = 0;
+let translationOutageWarningLogged = false;
 
 function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function createTranslationUnavailableError(cause = null) {
+  const error = new Error('Le service de traduction est temporairement indisponible.', cause ? { cause } : undefined);
+  error.code = 'TRANSLATION_UNAVAILABLE';
+  return error;
+}
+
+export function isTranslationUnavailableError(error) {
+  return error?.code === 'TRANSLATION_UNAVAILABLE'
+    || error?.message === 'Le service de traduction est temporairement indisponible.';
 }
 
 function isRetryableTranslationStatus(status) {
@@ -422,6 +436,10 @@ export async function translateText(text, fromLang = 'fr', toLang = 'en') {
   const pendingTranslation = inFlightTranslations.get(cacheKey);
   if (pendingTranslation) return pendingTranslation;
 
+  if (Date.now() < translationUnavailableUntil) {
+    throw createTranslationUnavailableError();
+  }
+
   const translationPromise = (async () => {
     try {
       const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURIComponent(sourceText)}`;
@@ -435,17 +453,19 @@ export async function translateText(text, fromLang = 'fr', toLang = 'en') {
           applyTranslationFixes(sourceText, translated, fromLang, toLang)
         );
         cacheTranslation(cacheKey, result);
+        translationUnavailableUntil = 0;
+        translationOutageWarningLogged = false;
         return result;
       }
       throw new Error('Le service de traduction a renvoyé une réponse invalide.');
     } catch (err) {
       const logMessage = `Échec de la traduction ${fromLang} vers ${toLang} après ${TRANSLATION_MAX_ATTEMPTS} tentatives:`;
-      if (err?.status === 429) {
-        logger.warn(`${logMessage} limite temporaire atteinte.`);
-      } else {
-        logger.error(logMessage, err);
+      translationUnavailableUntil = Date.now() + TRANSLATION_OUTAGE_COOLDOWN_MS;
+      if (!translationOutageWarningLogged) {
+        translationOutageWarningLogged = true;
+        logger.warn(`${logMessage} service externe temporairement indisponible.`);
       }
-      throw new Error('Le service de traduction est temporairement indisponible.', { cause: err });
+      throw createTranslationUnavailableError(err);
     }
   })();
 

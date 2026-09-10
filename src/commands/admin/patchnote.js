@@ -10,16 +10,17 @@ import {
   TextInputBuilder,
   TextInputStyle
 } from 'discord.js';
-import { t, isEnglishOnly } from '../../utils/language.js';
+import { getLanguage, isTranslationUnavailableError, t } from '../../utils/language.js';
 import { checkPermissions } from '../../middlewares/permissionCheck.js';
 import { logAnnouncement } from '../../services/logService.js';
 import { appendSeparatorComponent, splitContentBySeparator, sendV2Container } from '../../utils/v2Helper.js';
 import { preparePanelTranslation, storePanelTranslation } from '../../services/translationService.js';
 import config from '../../config/config.js';
+import * as logger from '../../utils/logger.js';
 
 const translateHint = '-# 🇬🇧 Click below to translate to English.';
 
-function buildPatchnoteContainer(content, translateDisabled = false) {
+function buildPatchnoteContainer(content) {
   const container = new ContainerBuilder().setAccentColor(config.colors.primary);
   const blocks = splitContentBySeparator(content);
 
@@ -47,14 +48,28 @@ function buildPatchnoteContainer(content, translateDisabled = false) {
   return container;
 }
 
-export async function handlePatchNoteModalSubmit(interaction, lang) {
-  const content = interaction.fields.getTextInputValue('patchnote_content_input');
-  const translateDisabled = !(await isEnglishOnly(interaction.member));
+async function prepareAndStorePatchnoteTranslation(messageId, container) {
+  if (!messageId) return;
 
+  try {
+    const translatedComponents = await preparePanelTranslation([container]);
+    await storePanelTranslation(messageId, 'patchnote', translatedComponents);
+  } catch (error) {
+    if (isTranslationUnavailableError(error)) {
+      logger.warn('Traduction du patch note non préparée ; elle sera retentée lors d’un clic sur Translate.');
+      return;
+    }
+    logger.error('Impossible de préparer la traduction du patch note:', error);
+  }
+}
+
+export async function handlePatchNoteModalSubmit(interaction) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const container = buildPatchnoteContainer(content, translateDisabled);
-  const translatedComponents = await preparePanelTranslation([container]);
+  const content = interaction.fields.getTextInputValue('patchnote_content_input');
+  const lang = await getLanguage(interaction.member).catch(() => 'fr');
+
+  const container = buildPatchnoteContainer(content);
 
   const shouldPing = interaction.customId === 'patchnote_modal_ping';
   if (shouldPing) {
@@ -62,8 +77,8 @@ export async function handlePatchNoteModalSubmit(interaction, lang) {
   }
 
   const patchnoteMessage = await sendV2Container(interaction.channel, container);
-  await storePanelTranslation(patchnoteMessage?.id, 'patchnote', translatedComponents);
   await interaction.editReply({ content: t(lang, 'commands.patchnote.success') });
+  void prepareAndStorePatchnoteTranslation(patchnoteMessage?.id, container);
 
   await logAnnouncement(interaction.client, {
     title: 'Patch note publiee',
@@ -108,7 +123,6 @@ export default {
 
   async executePrefix(message, args, lang) {
     if (!await checkPermissions(message, message.member)) return;
-    const translateDisabled = !(await isEnglishOnly(message.member));
 
     const prefix = config.prefix;
     const commandUsed = message.content.slice(prefix.length).trim().split(/ +/)[0];
@@ -121,12 +135,11 @@ export default {
       return;
     }
 
-    const container = buildPatchnoteContainer(content, translateDisabled);
-    const translatedComponents = await preparePanelTranslation([container]);
+    const container = buildPatchnoteContainer(content);
 
     await message.delete().catch(() => null);
     const patchnoteMessage = await sendV2Container(message.channel, container);
-    await storePanelTranslation(patchnoteMessage?.id, 'patchnote', translatedComponents);
+    void prepareAndStorePatchnoteTranslation(patchnoteMessage?.id, container);
 
     await logAnnouncement(message.client, {
       title: 'Patch note publiee',

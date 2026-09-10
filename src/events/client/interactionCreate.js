@@ -18,6 +18,8 @@ import { handleMuteUserModalSubmit } from '../../commands/admin/muteUser.js';
 import { handleDmUserModalSubmit } from '../../commands/admin/dmUser.js';
 import { handleVoiceUserSelect, handleVoiceModalSubmit } from '../../services/voiceService.js';
 import { handleRolePanelModalSubmit } from '../../services/rolePanelService.js';
+import { handleAnnonceModalSubmit } from '../../commands/admin/annonce.js';
+import { handlePatchNoteModalSubmit } from '../../commands/admin/patchnote.js';
 
 const SLASH_MODAL_COMMANDS = new Set(['en', 'annonce', 'patchnote']);
 const SLASH_EPHEMERAL_COMMANDS = new Set(['help', 'restart', 'sync', 'clear', 'categorie']);
@@ -319,18 +321,14 @@ export default {
         }
       } else if (interaction.customId.startsWith('annonce_modal')) {
         try {
-          const { handleAnnonceModalSubmit } = await import('../../commands/admin/annonce.js');
-          const lang = await getLanguage(interaction.member);
-          await handleAnnonceModalSubmit(interaction, lang);
+          await handleAnnonceModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal annonce:', err);
           await replyInteractionFailure(interaction, 'fr', err);
         }
       } else if (interaction.customId.startsWith('patchnote_modal')) {
         try {
-          const { handlePatchNoteModalSubmit } = await import('../../commands/admin/patchnote.js');
-          const lang = await getLanguage(interaction.member);
-          await handlePatchNoteModalSubmit(interaction, lang);
+          await handlePatchNoteModalSubmit(interaction);
         } catch (err) {
           logger.error('Erreur modal patchnote:', err);
           await replyInteractionFailure(interaction, 'fr', err);
