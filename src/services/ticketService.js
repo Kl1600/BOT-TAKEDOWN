@@ -14,6 +14,11 @@ function isUnknownChannelError(error) {
   return Number(error?.code ?? error?.rawError?.code) === 10003;
 }
 
+function isExpiredOrAcknowledgedInteractionError(error) {
+  const code = Number(error?.code ?? error?.rawError?.code);
+  return code === 10062 || code === 40060;
+}
+
 function canOpenMultipleTickets(userId) {
   return String(userId) === BOT_OWNER_ID;
 }
@@ -336,7 +341,20 @@ export async function handleTicketModalSubmit(interaction) {
 export async function handleTicketClose(interaction) {
   const channel = interaction.channel;
   const user = interaction.user;
-  await interaction.deferUpdate();
+
+  if (!interaction.deferred && !interaction.replied) {
+    try {
+      await interaction.deferUpdate();
+    } catch (err) {
+      if (!isExpiredOrAcknowledgedInteractionError(err)) {
+        throw err;
+      }
+
+      // Une interaction Discord expire rapidement. La fermeture reste exécutée
+      // afin qu'un retard réseau ne laisse pas le ticket bloqué.
+      logger.debug?.(`Interaction de fermeture du ticket ${channel?.id || 'inconnu'} déjà expirée ou acquittée.`);
+    }
+  }
 
   const lang = await getLanguage(interaction.member);
 
@@ -359,7 +377,7 @@ export async function handleTicketClose(interaction) {
   const creatorId = ticket.creator_id;
 
   try {
-    await interaction.followUp({
+    await channel.send({
       content: 'Fermeture du ticket dans 3 secondes.'
     });
   } catch (err) {
@@ -490,5 +508,4 @@ export async function handleTicketDelete(interaction) {
     });
   }, 5000);
 }
-
 

@@ -33,6 +33,7 @@ const BUTTON_MODAL_PREFIXES = [
   'streamer_go_live',
   'rolepanel_choose_',
   'voice_limit_',
+  'ticket_close',
   'msg_translate'
 ];
 const AUTO_ACK_DELAY_MS = 1200;
